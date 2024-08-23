@@ -3,7 +3,7 @@ document.getElementById('init').innerHTML = window.location.href + 'initialize';
 document.getElementById('submit').innerHTML = window.location.href + 'submit';
 
 // Install the Messenger
-const WORKSPACE_ID = 'bbbg61y1';
+const WORKSPACE_ID = '121095';
 
 window.intercomSettings = {
   app_id: WORKSPACE_ID,
@@ -23,8 +23,6 @@ window.intercomSettings = {
   i.q = [];
   w.Intercom = i;
   function l() {
-    console.log('function l');
-    console.log();
     var s = d.createElement('script');
     s.type = 'text/javascript';
     s.async = true;

@@ -7,7 +7,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -15,9 +14,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use(express.static(path.join(__dirname)));
 
-const listener = app.listen(PORT, (error) => {
+const listener = app.listen(process.env.PORT, (error) => {
   if (!error) {
-    console.log(`Your app is ready at: ${PORT}`);
+    console.log(`Your app is ready at: ${listener.address().port}`);
   } else {
     console.error("Error occurred, server can't start", error);
   }
@@ -39,19 +38,19 @@ const initialCanvas = {
         {
           type: 'text',
           id: 'department',
-          text: 'What would you say you do here?',
+          text: 'This contact works in:',
           align: 'center',
           style: 'header',
         },
         {
-          type: 'radio',
+          type: 'checkbox',
           id: 'departmentChoice',
           label: '',
           options: [
             {
               type: 'option',
-              id: 'sales',
-              text: 'Sales',
+              id: 'butt',
+              text: 'Butt',
             },
             {
               type: 'option',
@@ -60,19 +59,14 @@ const initialCanvas = {
             },
             {
               type: 'option',
-              id: 'engineering',
-              text: 'Engineering',
-            },
-            {
-              type: 'option',
-              id: 'avoid',
-              text: 'Avoid Customers & Engineers',
+              id: 'it',
+              text: 'IT',
             },
           ],
         },
         {
           type: 'button',
-          label: 'Submit',
+          label: 'Snooze',
           style: 'primary',
           id: 'submit_button',
           action: {
