@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const PORT = 3000;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -14,7 +15,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use(express.static(path.join(__dirname)));
 
-const listener = app.listen(process.env.PORT, (error) => {
+const listener = app.listen(PORT, (error) => {
   if (!error) {
     console.log(`Your app is ready at: ${listener.address().port}`);
   } else {
