@@ -1,31 +1,50 @@
-name: Trigger auto deployment for snoozeplus
+#########################################################################################
+##  WORKFLOW NAME
+#########################################################################################
+name: Create, Publish, and Deploy SnoozePlus Container Image
 
-# When this action will be executed
+#########################################################################################
+##  WORKFLOW TRIGGER
+#########################################################################################
 on:
-  # Automatically trigger it when detected changes in repo
-  push:
-    branches: 
-      [ main ]
-    paths:
-    - '**'
-    - '.github/workflows/snoozeplus-AutoDeployTrigger-37a09839-68be-4674-959c-74cf70127168.yml'
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - '**'
+  #     - '.github/workflows/snoozeplus-AutoDeployTrigger-37a09839-68be-4674-959c-74cf70127168.yml'
+  workflow_dispatch:
 
-  # Allow manual trigger 
-  workflow_dispatch:      
+#########################################################################################
+##  WORKFLOW CONCURRENCY
+#########################################################################################
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
+#########################################################################################
+##  WORKFLOW ENVIRONMENT VARIABLES
+#########################################################################################
+env:
+  AZURE_REGISTRY: pixelcovetech.azurecr.io
+  IMAGE_NAME: snoozeplus
+
+#########################################################################################
+##  WORKFLOW JOBS
+#########################################################################################
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions: 
-      id-token: write #This is required for requesting the OIDC JWT Token
-      contents: read #Required when GH token is used to authenticate with private repo
+    # Sets `GITHUB_TOKEN` permissions for the actions in this job.
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout to the branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           client-id: ${{ secrets.SNOOZEPLUS_AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.SNOOZEPLUS_AZURE_TENANT_ID }}
@@ -34,14 +53,12 @@ jobs:
       - name: Build and push container image to registry
         uses: azure/container-apps-deploy-action@v2
         with:
-          appSourcePath: ${{ github.workspace }} 
-          registryUrl: pixelcovetech.azurecr.io
+          appSourcePath: ${{ github.workspace }}
+          registryUrl: ${{ env.AZURE_REGISTRY }}
           registryUsername: ${{ secrets.SNOOZEPLUS_REGISTRY_USERNAME }}
           registryPassword: ${{ secrets.SNOOZEPLUS_REGISTRY_PASSWORD }}
-          containerAppName: snoozeplus
+          containerAppName: ${{ env.IMAGE_NAME }}
           resourceGroup: snoozeplus-intercom-integration
-          imageToBuild: pixelcovetech.azurecr.io/snoozeplus:${{ github.sha }}
+          imageToBuild: ${{ env.AZURE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           _buildArgumentsKey_: |
             _buildArgumentsValues_
-
-
