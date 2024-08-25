@@ -40,38 +40,59 @@ const initialCanvas = {
       components: [
         {
           type: 'text',
-          id: 'department',
-          text: 'This contact works in:',
-          align: 'center',
+          text: 'Welcome to Snooze+',
           style: 'header',
         },
         {
-          type: 'checkbox',
-          id: 'departmentChoice',
-          label: '',
+          type: 'text',
+          text: 'To get started, first select how many times you would like to bump the conversation.',
+          style: 'muted',
+        },
+        {
+          type: 'spacer',
+          size: 's',
+        },
+        {
+          type: 'dropdown',
+          id: 'num_of_snoozes',
+          label: 'How many snoozes?',
           options: [
             {
               type: 'option',
-              id: 'it',
-              text: 'IT',
+              id: 'one_snooze',
+              text: '1 snooze 😴',
             },
             {
               type: 'option',
-              id: 'operations',
-              text: 'Operations',
+              id: 'two_snooze',
+              text: '2 snoozes 😴😴',
             },
             {
               type: 'option',
-              id: 'engineering',
-              text: 'Engineering',
+              id: 'three_snooze',
+              text: '3 snoozes 😴😴😴',
+            },
+            {
+              type: 'option',
+              id: 'four_snooze',
+              text: '4 snoozes 😴😴😴😴',
+            },
+            {
+              type: 'option',
+              id: 'five_snooze',
+              text: '5 snoozes 😴😴😴😴😴',
             },
           ],
         },
         {
+          type: 'spacer',
+          size: 'xl',
+        },
+        {
           type: 'button',
-          label: 'Snooze 😴',
-          style: 'primary',
-          id: 'submit_button',
+          id: 'submit_num_of_snooze',
+          label: 'Next >',
+          style: 'secondary',
           action: {
             type: 'submit',
           },
