@@ -17,6 +17,8 @@ app.use(express.static(path.join(__dirname)));
 
 const listener = app.listen(PORT, (error) => {
   if (!error) {
+    console.log('Express server is running');
+    console.log('*** SnoozePlus Intercom Integration ***');
     console.log(`Your app is ready at: ${listener.address().port}`);
   } else {
     console.error("Error occurred, server can't start", error);
