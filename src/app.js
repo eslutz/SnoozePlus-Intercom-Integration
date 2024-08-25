@@ -52,8 +52,8 @@ const initialCanvas = {
           options: [
             {
               type: 'option',
-              id: 'butt',
-              text: 'Butt',
+              id: 'it',
+              text: 'IT',
             },
             {
               type: 'option',
@@ -62,14 +62,14 @@ const initialCanvas = {
             },
             {
               type: 'option',
-              id: 'it',
-              text: 'IT',
+              id: 'engineering',
+              text: 'Engineering',
             },
           ],
         },
         {
           type: 'button',
-          label: 'Snooze',
+          label: 'Snooze 😴',
           style: 'primary',
           id: 'submit_button',
           action: {
@@ -115,13 +115,13 @@ app.post('/submit', (request, response) => {
             {
               type: 'text',
               id: 'thanks',
-              text: 'You said you: ' + department,
+              text: 'You submitted: ' + department,
               align: 'center',
               style: 'header',
             },
             {
               type: 'button',
-              label: 'Submit another',
+              label: 'Try another?',
               style: 'primary',
               id: 'refresh_button',
               action: {
