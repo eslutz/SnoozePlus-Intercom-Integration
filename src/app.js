@@ -54,32 +54,32 @@ const initialCanvas = {
         },
         {
           type: 'dropdown',
-          id: 'num_of_snoozes',
+          id: 'numOfSnoozes',
           label: 'How many snoozes?',
           options: [
             {
               type: 'option',
-              id: 'one_snooze',
+              id: '1',
               text: '1 snooze 😴',
             },
             {
               type: 'option',
-              id: 'two_snooze',
+              id: '2',
               text: '2 snoozes 😴😴',
             },
             {
               type: 'option',
-              id: 'three_snooze',
+              id: '3',
               text: '3 snoozes 😴😴😴',
             },
             {
               type: 'option',
-              id: 'four_snooze',
+              id: '4',
               text: '4 snoozes 😴😴😴😴',
             },
             {
               type: 'option',
-              id: 'five_snooze',
+              id: '5',
               text: '5 snoozes 😴😴😴😴😴',
             },
           ],
@@ -90,9 +90,65 @@ const initialCanvas = {
         },
         {
           type: 'button',
-          id: 'submit_num_of_snooze',
+          id: 'submitNumOfSnooze',
           label: 'Next >',
           style: 'secondary',
+          action: {
+            type: 'submit',
+          },
+        },
+      ],
+    },
+  },
+};
+
+const messageCanvas = {
+  canvas: {
+    content: {
+      components: [
+        {
+          type: 'text',
+          text: 'Set Messages',
+          style: 'header',
+        },
+        {
+          type: 'spacer',
+          size: 's',
+        },
+        {
+          type: 'spacer',
+          size: 'xl',
+        },
+        {
+          type: 'button',
+          id: 'submitSnooze',
+          label: 'Start Snoozing 😴',
+          style: 'primary',
+          action: {
+            type: 'submit',
+          },
+        },
+      ],
+    },
+  },
+};
+
+const finalCanvas = {
+  canvas: {
+    content: {
+      components: [
+        {
+          type: 'text',
+          id: 'thanks',
+          text: 'Snooze Submitted!',
+          align: 'center',
+          style: 'header',
+        },
+        {
+          type: 'button',
+          label: 'Try another?',
+          style: 'primary',
+          id: 'refresh_button',
           action: {
             type: 'submit',
           },
@@ -126,35 +182,100 @@ app.post('/initialize', (request, response) => {
   another, it will show the initial canvas once again to repeat the process.
 */
 app.post('/submit', (request, response) => {
-  if (request.body.component_id == 'submit_button') {
-    let department = request.body.input_values.departmentChoice;
+  if (request.body.component_id === 'submitNumOfSnooze') {
+    const numOfSnoozes = request.body.input_values.numOfSnoozes;
 
-    let finalCanvas = {
-      canvas: {
-        content: {
-          components: [
-            {
-              type: 'text',
-              id: 'thanks',
-              text: 'You submitted: ' + department,
-              align: 'center',
-              style: 'header',
-            },
-            {
-              type: 'button',
-              label: 'Try another?',
-              style: 'primary',
-              id: 'refresh_button',
-              action: {
-                type: 'submit',
-              },
-            },
-          ],
-        },
-      },
-    };
+    // Build the canvas component array based on the number of snoozes selected.
+    for (let i = numOfSnoozes; i >= i; i--) {
+      messageCanvas.canvas.content.components.splice(2, 0, {
+        type: 'dropdown',
+        id: `snoozeLength${i}`,
+        label: 'Snooze for:',
+        options: [
+          {
+            type: 'option',
+            id: '1',
+            text: '1 day',
+          },
+          {
+            type: 'option',
+            id: '2',
+            text: '2 days',
+          },
+          {
+            type: 'option',
+            id: '3',
+            text: '3 days',
+          },
+          {
+            type: 'option',
+            id: '4',
+            text: '4 days',
+          },
+          {
+            type: 'option',
+            id: '5',
+            text: '5 days',
+          },
+          {
+            type: 'option',
+            id: '6',
+            text: '6 days',
+          },
+          {
+            type: 'option',
+            id: '7',
+            text: '7 days',
+          },
+        ],
+      });
+      messageCanvas.canvas.content.components.splice(3, 0, {
+        type: 'textarea',
+        id: `message${i}`,
+        label: 'With message:',
+        placeholder: 'Enter message to send at end of snooze...',
+      });
+      messageCanvas.canvas.content.components.splice(4, 0, {
+        type: 'single-select',
+        id: `then${i}`,
+        label: 'Then:',
+        options: [
+          {
+            type: 'option',
+            id: 'snooze',
+            text: 'Snooze ',
+          },
+          {
+            type: 'option',
+            id: 'close',
+            text: 'Close',
+          },
+        ],
+      });
+      // Do not insert divider if only one snooze or last of multiple snoozes.
+      if (i != 1) {
+        messageCanvas.canvas.content.components.splice(5, 0, {
+          type: 'spacer',
+          size: 'm',
+        });
+        messageCanvas.canvas.content.components.splice(6, 0, {
+          type: 'divider',
+        });
+      }
+    }
+    // Send the completed message canvas.
+    response.send(messageCanvas);
+  } else if (request.body.component_id == 'submitSnooze') {
+    const firstSnoozeLength = request.body.input_values.snoozeLength1;
+    finalCanvas.canvas.content.components.splice(1, 0, {
+      type: 'text',
+      text: `Your first message will send in ${firstSnoozeLength} days.`,
+      style: 'paragraph',
+    });
+    // Send the final canvas.
     response.send(finalCanvas);
   } else {
+    // Reset to original canvas.
     response.send(initialCanvas);
   }
 });
