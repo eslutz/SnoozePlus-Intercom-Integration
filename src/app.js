@@ -19,7 +19,7 @@ const listener = app.listen(PORT, (error) => {
   if (!error) {
     console.log('Express server is running');
     console.log('*** SnoozePlus Intercom Integration ***');
-    console.log(`Your app is ready at: ${listener.address().port}`);
+    console.log(`Your app is ready at port: ${listener.address().port}`);
   } else {
     console.error("Error occurred, server can't start", error);
   }
@@ -182,96 +182,111 @@ app.post('/initialize', (request, response) => {
   another, it will show the initial canvas once again to repeat the process.
 */
 app.post('/submit', (request, response) => {
+  console.log('Submit request received.');
+  console.log('Request type:', request.body.component_id);
+  console.log('Request input values:', request.body.input_values);
   if (request.body.component_id === 'submitNumOfSnooze') {
-    const numOfSnoozes = request.body.input_values.numOfSnoozes;
-
-    // Build the canvas component array based on the number of snoozes selected.
-    for (let i = numOfSnoozes; i >= i; i--) {
-      messageCanvas.canvas.content.components.splice(2, 0, {
-        type: 'dropdown',
-        id: `snoozeLength${i}`,
-        label: 'Snooze for:',
-        options: [
-          {
-            type: 'option',
-            id: '1',
-            text: '1 day',
-          },
-          {
-            type: 'option',
-            id: '2',
-            text: '2 days',
-          },
-          {
-            type: 'option',
-            id: '3',
-            text: '3 days',
-          },
-          {
-            type: 'option',
-            id: '4',
-            text: '4 days',
-          },
-          {
-            type: 'option',
-            id: '5',
-            text: '5 days',
-          },
-          {
-            type: 'option',
-            id: '6',
-            text: '6 days',
-          },
-          {
-            type: 'option',
-            id: '7',
-            text: '7 days',
-          },
-        ],
-      });
-      messageCanvas.canvas.content.components.splice(3, 0, {
-        type: 'textarea',
-        id: `message${i}`,
-        label: 'With message:',
-        placeholder: 'Enter message to send at end of snooze...',
-      });
-      messageCanvas.canvas.content.components.splice(4, 0, {
-        type: 'single-select',
-        id: `then${i}`,
-        label: 'Then:',
-        options: [
-          {
-            type: 'option',
-            id: 'snooze',
-            text: 'Snooze ',
-          },
-          {
-            type: 'option',
-            id: 'close',
-            text: 'Close',
-          },
-        ],
-      });
-      // Do not insert divider if only one snooze or last of multiple snoozes.
-      if (i != 1) {
-        messageCanvas.canvas.content.components.splice(5, 0, {
-          type: 'spacer',
-          size: 'm',
+    console.log('Building message canvas.');
+    try {
+      const numOfSnoozes = request.body.input_values.numOfSnoozes;
+      console.log('Number of snoozes requested:', numOfSnoozes);
+      // Build the canvas component array based on the number of snoozes selected.
+      for (let i = numOfSnoozes; i >= i; i--) {
+        messageCanvas.canvas.content.components.splice(2, 0, {
+          type: 'dropdown',
+          id: `snoozeLength${i}`,
+          label: 'Snooze for:',
+          options: [
+            {
+              type: 'option',
+              id: '1',
+              text: '1 day',
+            },
+            {
+              type: 'option',
+              id: '2',
+              text: '2 days',
+            },
+            {
+              type: 'option',
+              id: '3',
+              text: '3 days',
+            },
+            {
+              type: 'option',
+              id: '4',
+              text: '4 days',
+            },
+            {
+              type: 'option',
+              id: '5',
+              text: '5 days',
+            },
+            {
+              type: 'option',
+              id: '6',
+              text: '6 days',
+            },
+            {
+              type: 'option',
+              id: '7',
+              text: '7 days',
+            },
+          ],
         });
-        messageCanvas.canvas.content.components.splice(6, 0, {
-          type: 'divider',
+        messageCanvas.canvas.content.components.splice(3, 0, {
+          type: 'textarea',
+          id: `message${i}`,
+          label: 'With message:',
+          placeholder: 'Enter message to send at end of snooze...',
         });
+        messageCanvas.canvas.content.components.splice(4, 0, {
+          type: 'single-select',
+          id: `then${i}`,
+          label: 'Then:',
+          options: [
+            {
+              type: 'option',
+              id: 'snooze',
+              text: 'Snooze ',
+            },
+            {
+              type: 'option',
+              id: 'close',
+              text: 'Close',
+            },
+          ],
+        });
+        // Do not insert divider if only one snooze or last of multiple snoozes.
+        if (i != 1) {
+          messageCanvas.canvas.content.components.splice(5, 0, {
+            type: 'spacer',
+            size: 'm',
+          });
+          messageCanvas.canvas.content.components.splice(6, 0, {
+            type: 'divider',
+          });
+        }
       }
+    } catch (error) {
+      console.error('An error ocurred building the message canvas:', error);
     }
+    console.log('Completed message canvas', messageCanvas);
     // Send the completed message canvas.
     response.send(messageCanvas);
   } else if (request.body.component_id == 'submitSnooze') {
-    const firstSnoozeLength = request.body.input_values.snoozeLength1;
-    finalCanvas.canvas.content.components.splice(1, 0, {
-      type: 'text',
-      text: `Your first message will send in ${firstSnoozeLength} days.`,
-      style: 'paragraph',
-    });
+    console.log('Building final canvas.');
+    try {
+      const firstSnoozeLength = request.body.input_values.snoozeLength1;
+      finalCanvas.canvas.content.components.splice(1, 0, {
+        type: 'text',
+        text: `Your first message will send in ${firstSnoozeLength} days.`,
+        style: 'paragraph',
+      });
+    } catch (error) {
+      console.error('An error ocurred building the final canvas:', error);
+    }
+    console.log('Completed final canvas', finalCanvas);
     // Send the final canvas.
     response.send(finalCanvas);
   } else {
