@@ -1,0 +1,29 @@
+#!/bin/bash
+
+APPNAME=snoozeplus
+
+# set node version via scl
+source scl_source enable nodejs20
+NODE=$( which node )
+NPM=$( which npm )
+
+# set your project info here
+PROJECT=SnoozePlus
+STARTCMD="$NPM start"
+
+APPDIR=$HOME/apps/$APPNAME
+LOGDIR=$HOME/logs/apps/$APPNAME
+TMPDIR=$APPDIR/tmp
+PROJECTDIR=$APPDIR/$PROJECT
+PIDFILE=$TMPDIR/node.pid
+
+mkdir -p $APPDIR/tmp
+
+if [ -e "$PIDFILE" ] && (pgrep -F $PIDFILE &> /dev/null); then
+  echo "$APPNAME already running."
+  exit 99
+fi
+
+/usr/sbin/daemonize -c $PROJECTDIR -a -e $LOGDIR/error.log -o $LOGDIR/console.log -p $PIDFILE $STARTCMD
+
+echo "Started $APPNAME"

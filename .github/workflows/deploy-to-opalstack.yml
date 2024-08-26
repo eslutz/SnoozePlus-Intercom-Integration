@@ -1,0 +1,51 @@
+#########################################################################################
+##  WORKFLOW NAME
+#########################################################################################
+name: Deploy SnoozePlus to Opalstack
+
+#########################################################################################
+##  WORKFLOW TRIGGER
+#########################################################################################
+on:
+  workflow_dispatch:
+
+#########################################################################################
+##  WORKFLOW CONCURRENCY
+#########################################################################################
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+#########################################################################################
+##  WORKFLOW JOBS
+#########################################################################################
+jobs:
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v4
+
+      - name: Prep app for deployment
+        run: npm run build
+
+      - name: SFTP upload
+        uses: wearesection/sftp-remote@1.0.1
+        with:
+          host: ${{ env.HOST }}
+          port: ${{ env.PORT }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSOWRD }}
+          localPath: ${{ env.LOCAL_PATH }}
+          remotePath: ${{ env.REMOTE_PATH }}
+
+      - name: SSH to server and start application
+        shell: bash
+        env:
+          PASSWORD: ${{ secrets.SFTP_PASSOWRD }}
+          USERNAME: ${{ secrets.SFTP_USERNAME }}
+          HOST: ${{ env.HOST }}
+        run: |
+          ssh -p $PASSOWRD $USERNAME@$HOST
+          /home/activelabs/apps/snoozeplus/start

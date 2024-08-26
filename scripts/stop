@@ -1,0 +1,23 @@
+#!/bin/bash
+
+APPNAME=snoozeplus
+
+PIDFILE="$HOME/apps/$APPNAME/tmp/node.pid"
+
+if [ ! -e "$PIDFILE" ]; then
+    echo "$PIDFILE missing, maybe $APPNAME is already stopped?"
+    exit 99
+fi
+
+if [ -e "$PIDFILE" ] && (pgrep -F $PIDFILE &> /dev/null); then
+  pkill -g $(cat $PIDFILE)
+  sleep 3
+fi
+
+if [ -e "$PIDFILE" ] && (pgrep -F $PIDFILE &> /dev/null); then
+  echo "$APPNAME did not stop, killing it."
+  sleep 3
+  pkill -9 -g $(cat $PIDFILE)
+fi
+rm -f $PIDFILE
+echo "Stopped $APPNAME."

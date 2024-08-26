@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+const PORT = 8706;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -17,8 +17,8 @@ app.use(express.static(path.join(__dirname)));
 
 const listener = app.listen(PORT, (error) => {
   if (!error) {
-    console.log('Express server is running');
     console.log('*** SnoozePlus Intercom Integration ***');
+    console.log('Express server is running');
     console.log(`Your app is ready at port: ${listener.address().port}`);
   } else {
     console.error("Error occurred, server can't start", error);
@@ -171,6 +171,7 @@ app.get('/', (request, response) => {
 app.post('/initialize', (request, response) => {
   console.log('Initialize request received.');
   console.log('Request body:', request.body);
+  console.log('Initial canvas', JSON.stringify(initialCanvas));
   response.send(initialCanvas);
 });
 
@@ -234,7 +235,17 @@ app.post('/submit', (request, response) => {
             {
               type: 'option',
               id: '7',
-              text: '7 days',
+              text: '1 week',
+            },
+            {
+              type: 'option',
+              id: '14',
+              text: '2 weeks',
+            },
+            {
+              type: 'option',
+              id: '30',
+              text: '1 month',
             },
           ],
         });
@@ -275,7 +286,7 @@ app.post('/submit', (request, response) => {
     } catch (error) {
       console.error('An error ocurred building the message canvas:', error);
     }
-    console.log('Completed message canvas', messageCanvas);
+    console.log('Completed message canvas', JSON.stringify(messageCanvas));
     // Send the completed message canvas.
     response.send(messageCanvas);
   } else if (request.body.component_id == 'submitSnooze') {
@@ -290,7 +301,7 @@ app.post('/submit', (request, response) => {
     } catch (error) {
       console.error('An error ocurred building the final canvas:', error);
     }
-    console.log('Completed final canvas', finalCanvas);
+    console.log('Completed final canvas', JSON.stringify(finalCanvas));
     // Send the final canvas.
     response.send(finalCanvas);
   } else {
