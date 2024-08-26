@@ -191,7 +191,7 @@ app.post('/submit', (request, response) => {
       const numOfSnoozes = request.body.input_values.numOfSnoozes;
       console.log('Number of snoozes requested:', numOfSnoozes);
       // Build the canvas component array based on the number of snoozes selected.
-      for (let i = numOfSnoozes; i >= i; i--) {
+      for (let i = numOfSnoozes; i >= 1; i--) {
         messageCanvas.canvas.content.components.splice(2, 0, {
           type: 'dropdown',
           id: `snoozeLength${i}`,
@@ -258,7 +258,7 @@ app.post('/submit', (request, response) => {
           ],
         });
         // Do not insert divider if only one snooze or last of multiple snoozes.
-        if (i != 1) {
+        if (i < numOfSnoozes) {
           messageCanvas.canvas.content.components.splice(5, 0, {
             type: 'spacer',
             size: 'm',
