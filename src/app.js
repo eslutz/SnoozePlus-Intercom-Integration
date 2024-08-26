@@ -158,7 +158,9 @@ const finalCanvas = {
   },
 };
 
-app.get('/', (response) => {
+app.get('/', (request, response) => {
+  console.warn('Index page loaded.');
+  console.warn('Request:', request);
   response.sendFile(path.join(__dirname, 'index.html'));
 });
 
@@ -167,6 +169,8 @@ app.get('/', (response) => {
   the app into the inbox, or a new conversation is viewed.
 */
 app.post('/initialize', (request, response) => {
+  console.log('Initialize request received.');
+  console.log('Request body:', request.body);
   response.send(initialCanvas);
 });
 
