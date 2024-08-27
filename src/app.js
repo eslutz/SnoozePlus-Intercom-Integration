@@ -27,13 +27,11 @@ const listener = app.listen(PORT, (error) => {
 
 /*
   This object defines the canvas that will display when your app initializes.
-  It includes test, checkboxes, and a button.
 
   More information on these can be found in the reference docs.
   Canvas docs: https://developers.intercom.com/docs/references/canvas-kit/responseobjects/canvas/
   Components docs: https://developers.intercom.com/docs/references/canvas-kit/interactivecomponents/button/
 */
-
 const initialCanvas = {
   canvas: {
     content: {
@@ -103,9 +101,8 @@ const initialCanvas = {
 };
 
 app.get('/', (request, response) => {
-  console.warn('Index page loaded.');
-  console.warn('Request:', request);
-  response.sendFile(path.join(__dirname, 'index.html'));
+  console.log('GET request:', request);
+  response.status(200).send('Snooze+ is active.');
 });
 
 /*
@@ -125,10 +122,6 @@ app.post('/initialize', (request, response) => {
   You can use this endpoint as many times as needed within a flow. You will need
   to set up the conditions that will show it the required canvas object based on a
   teammate's actions.
-
-  In this example, if a user has clicked the initial submit button, it will show
-  them the final submission canvas. If they click the refresh button to submit
-  another, it will show the initial canvas once again to repeat the process.
 */
 app.post('/submit', (request, response) => {
   console.log('Submit request received.');
@@ -246,8 +239,7 @@ app.post('/submit', (request, response) => {
           label: 'With message:',
           placeholder: 'Enter message to send at end of snooze...',
         });
-        // Insert single-select if only one snooze or last of multiple snoozes.
-        // Otherwise, insert a divider.
+        // Do not insert a divider if only one snooze or last of multiple snoozes.
         if (i < numOfSnoozes) {
           messageCanvas.canvas.content.components.splice(4, 0, {
             type: 'spacer',
