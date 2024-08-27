@@ -33,15 +33,12 @@ jobs:
           npm install
           npm run build
 
-      - name: SFTP upload
-        uses: wearesection/sftp-remote@1.0.1
+      - name: Upload app to server
+        uses: actions/github-script@v7
         with:
-          host: ${{ env.HOST }}
-          port: ${{ env.PORT }}
-          username: ${{ secrets.SFTP_USERNAME }}
-          password: ${{ secrets.SFTP_PASSOWRD }}
-          localPath: ${{ env.LOCAL_PATH }}
-          remotePath: ${{ env.REMOTE_PATH }}
+          script: |
+            import sftpFileUpload from 'sftp-upload.js';
+            sftpFileUpload(${{ env.HOST }}, ${{ env.PORT }}, ${{ secrets.SFTP_USERNAME }}, ${{ secrets.SFTP_PASSOWRD }}, ${{ env.LOCAL_PATH }}, ${{ env.REMOTE_PATH }})
 
       - name: SSH to server and start application
         shell: bash
