@@ -35,10 +35,60 @@ jobs:
 
       - name: Upload app to server
         uses: actions/github-script@v7
+        env:
+          HOST: ${{ env.HOST }}
+          PORT: ${{ env.PORT }}
+          USERNAME: ${{ secrets.SFTP_USERNAME }}
+          PASSWORD: ${{ secrets.SFTP_PASSOWRD }}
+          LOCAL_PATH: ${{ env.LOCAL_PATH }}
+          REMOTE_PATH: ${{ env.REMOTE_PATH }}
         with:
           script: |
-            import sftpFileUpload from 'sftp-upload.js';
-            sftpFileUpload(${{ env.HOST }}, ${{ env.PORT }}, ${{ secrets.SFTP_USERNAME }}, ${{ secrets.SFTP_PASSOWRD }}, ${{ env.LOCAL_PATH }}, ${{ env.REMOTE_PATH }})
+            const fs = require('fs');
+            const path = require('path');
+            const Client = require('ssh2-sftp-client');
+            const sftp = new Client();
+
+            sftp
+              .connect({
+                host: process.env.HOST,
+                port: process.env.PORT,
+                username: process.env.USERNAME,
+                password: process.env.PASSOWRD
+              })
+              .then(async () => {
+                console.log(`Connection established to ${host}`);
+                console.log(`Current working directory: ${await sftp.cwd()}`);
+                await processPath(process.env.LOCAL_PATH, process.env.REMOTE_PATH));
+              })
+              .then(() => {
+                console.log('Upload finished');
+                return sftp.end();
+              })
+              .catch((error) => {
+                core.setFailed(`Action failed with error ${error}`);
+                process.exit(1);
+              });
+
+            async function processPath(local, remote) {
+              console.log(`Uploading: ${local} to ${remote}`);
+              if (fs.lstatSync(local).isDirectory()) {
+                return sftp.uploadDir(local, remote);
+              } else {
+                var directory = await sftp.realPath(path.dirname(remote));
+                if (!(await sftp.exists(directory))) {
+                  await sftp.mkdir(directory, true);
+                  console.log(`Created directory ${directory}`);
+                }
+                var modifiedPath = remote;
+                if (await sftp.exists(remote)) {
+                  if ((await sftp.stat(remote)).isDirectory) {
+                    var modifiedPath = modifiedPath + path.basename(local);
+                  }
+                }
+                return sftp.put(fs.createReadStream(local), modifiedPath);
+              }
+            }
 
       - name: SSH to server and start application
         shell: bash
