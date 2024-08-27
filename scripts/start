@@ -20,7 +20,7 @@ PIDFILE=$TMPDIR/node.pid
 mkdir -p $APPDIR/tmp
 
 if [ -e "$PIDFILE" ] && (pgrep -F $PIDFILE &> /dev/null); then
-  echo "$APPNAME already running."
+  echo "$APPNAME already running"
   exit 99
 fi
 

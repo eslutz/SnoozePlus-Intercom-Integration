@@ -102,62 +102,6 @@ const initialCanvas = {
   },
 };
 
-const messageCanvas = {
-  canvas: {
-    content: {
-      components: [
-        {
-          type: 'text',
-          text: 'Set Messages',
-          style: 'header',
-        },
-        {
-          type: 'spacer',
-          size: 's',
-        },
-        {
-          type: 'spacer',
-          size: 'xl',
-        },
-        {
-          type: 'button',
-          id: 'submitSnooze',
-          label: 'Start Snoozing 😴',
-          style: 'primary',
-          action: {
-            type: 'submit',
-          },
-        },
-      ],
-    },
-  },
-};
-
-const finalCanvas = {
-  canvas: {
-    content: {
-      components: [
-        {
-          type: 'text',
-          id: 'thanks',
-          text: 'Snooze Submitted!',
-          align: 'center',
-          style: 'header',
-        },
-        {
-          type: 'button',
-          label: 'Try another?',
-          style: 'primary',
-          id: 'refresh_button',
-          action: {
-            type: 'submit',
-          },
-        },
-      ],
-    },
-  },
-};
-
 app.get('/', (request, response) => {
   console.warn('Index page loaded.');
   console.warn('Request:', request);
@@ -192,6 +136,53 @@ app.post('/submit', (request, response) => {
   console.log('Request input values:', request.body.input_values);
   if (request.body.component_id === 'submitNumOfSnooze') {
     console.log('Building message canvas.');
+    const messageCanvas = {
+      canvas: {
+        content: {
+          components: [
+            {
+              type: 'text',
+              text: 'Set Messages',
+              style: 'header',
+            },
+            {
+              type: 'spacer',
+              size: 's',
+            },
+            {
+              type: 'single-select',
+              id: 'then',
+              label: 'Then:',
+              options: [
+                {
+                  type: 'option',
+                  id: 'snooze',
+                  text: 'Snooze ',
+                },
+                {
+                  type: 'option',
+                  id: 'close',
+                  text: 'Close',
+                },
+              ],
+            },
+            {
+              type: 'spacer',
+              size: 'xl',
+            },
+            {
+              type: 'button',
+              id: 'submitSnooze',
+              label: 'Start Snoozing 😴',
+              style: 'primary',
+              action: {
+                type: 'submit',
+              },
+            },
+          ],
+        },
+      },
+    };
     try {
       const numOfSnoozes = request.body.input_values.numOfSnoozes;
       console.log('Number of snoozes requested:', numOfSnoozes);
@@ -255,30 +246,14 @@ app.post('/submit', (request, response) => {
           label: 'With message:',
           placeholder: 'Enter message to send at end of snooze...',
         });
-        messageCanvas.canvas.content.components.splice(4, 0, {
-          type: 'single-select',
-          id: `then${i}`,
-          label: 'Then:',
-          options: [
-            {
-              type: 'option',
-              id: 'snooze',
-              text: 'Snooze ',
-            },
-            {
-              type: 'option',
-              id: 'close',
-              text: 'Close',
-            },
-          ],
-        });
-        // Do not insert divider if only one snooze or last of multiple snoozes.
+        // Insert single-select if only one snooze or last of multiple snoozes.
+        // Otherwise, insert a divider.
         if (i < numOfSnoozes) {
-          messageCanvas.canvas.content.components.splice(5, 0, {
+          messageCanvas.canvas.content.components.splice(4, 0, {
             type: 'spacer',
             size: 'm',
           });
-          messageCanvas.canvas.content.components.splice(6, 0, {
+          messageCanvas.canvas.content.components.splice(5, 0, {
             type: 'divider',
           });
         }
@@ -291,6 +266,30 @@ app.post('/submit', (request, response) => {
     response.send(messageCanvas);
   } else if (request.body.component_id == 'submitSnooze') {
     console.log('Building final canvas.');
+    const finalCanvas = {
+      canvas: {
+        content: {
+          components: [
+            {
+              type: 'text',
+              id: 'thanks',
+              text: 'Snooze Submitted!',
+              align: 'center',
+              style: 'header',
+            },
+            {
+              type: 'button',
+              label: 'Try another?',
+              style: 'primary',
+              id: 'refresh_button',
+              action: {
+                type: 'submit',
+              },
+            },
+          ],
+        },
+      },
+    };
     try {
       const firstSnoozeLength = request.body.input_values.snoozeLength1;
       finalCanvas.canvas.content.components.splice(1, 0, {
