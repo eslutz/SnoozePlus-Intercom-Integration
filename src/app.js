@@ -1,7 +1,9 @@
 import bodyParser from 'body-parser';
 import express from 'express';
-import { fileURLToPath } from 'url';
+import expressWinston from 'express-winston';
+import winston from 'winston';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import * as CanvasService from './services/canvas-service.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -9,6 +11,38 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 8706;
+
+app.use(
+  expressWinston.logger({
+    transports: [new winston.transports.Console()],
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.json()
+    ),
+    expressFormat: true,
+  })
+);
+
+app.use(
+  expressWinston.errorLogger({
+    transports: [new winston.transports.Console()],
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.json()
+    ),
+    expressFormat: true,
+  })
+);
+
+const logger = winston.createLogger({
+  level: 'debug',
+  transports: [new winston.transports.Console()],
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  expressFormat: true,
+});
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -18,16 +52,16 @@ app.use(express.static(path.join(__dirname)));
 
 const listener = app.listen(PORT, (err) => {
   if (!err) {
-    console.log('*** SnoozePlus Intercom Integration ***');
-    console.log('Express server is running');
-    console.log(`Your app is ready at port: ${listener.address().port}`);
+    logger.info('*** SnoozePlus Intercom Integration ***');
+    logger.info('Express server is running');
+    logger.info(`Your app is ready at port: ${listener.address().port}`);
   } else {
-    console.error("Error occurred, server can't start", err);
+    logger.error(`Error occurred, server can't start: ${err}`);
   }
 });
 
 app.get('/', (req, res) => {
-  console.log('GET request:', req);
+  logger.debug(`GET request: ${JSON.stringify(req)}`);
   res.status(200).send('Snooze+ is active.');
 });
 
@@ -36,11 +70,10 @@ app.get('/', (req, res) => {
   the app into the inbox, or a new conversation is viewed.
 */
 app.post('/initialize', (req, res) => {
-  console.log('Initialize request received.');
-  console.log('Request body:', req.body);
+  logger.info('Initialize request received.');
+  logger.debug(`Request body: ${JSON.stringify(req.body)}`);
   const initialCanvas = CanvasService.getInitialCanvas();
-  console.log('Initial canvas', JSON.stringify(initialCanvas));
-
+  logger.debug(`Initial canvas: ${JSON.stringify(initialCanvas)}`);
   res.send(initialCanvas);
 });
 
@@ -53,26 +86,28 @@ app.post('/initialize', (req, res) => {
 */
 app.post('/submit', (req, res) => {
   const initialCanvas = CanvasService.getInitialCanvas();
-  console.log('Submit request received.');
-  console.log('Request type:', req.body.component_id);
-  console.log('Request input values:', req.body.input_values);
+  logger.info('Submit request received.');
+  logger.info(`Request type: ${req.body.component_id}`);
+  logger.debug(
+    `Request input values: ${JSON.stringify(req.body.input_values)}`
+  );
   if (req.body.component_id === 'submitNumOfSnoozes') {
     let messageCanvas;
-    console.log('Building message canvas.');
+    logger.info('Building message canvas.');
     try {
       const numOfSnoozes = req.body?.input_values?.numOfSnoozes;
-      console.log('Number of snoozes requested:', numOfSnoozes);
+      logger.info(`Number of snoozes requested: ${numOfSnoozes}`);
       messageCanvas = CanvasService.getMessageCanvas(numOfSnoozes);
     } catch (err) {
-      console.error('An error ocurred building the message canvas:', err);
+      logger.error(`An error ocurred building the message canvas: ${err}`);
     }
-    console.log('Completed message canvas', JSON.stringify(messageCanvas));
-
+    logger.debug('Completed message canvas.');
+    logger.debug(`Message canvas: ${JSON.stringify(messageCanvas)}`);
     // Send the completed message canvas.
     res.send(messageCanvas);
   } else if (req.body.component_id == 'submitSnooze') {
     let finalCanvas;
-    console.log('Building final canvas.');
+    logger.info('Building final canvas.');
     try {
       const firstSnoozeLength = req.body.input_values?.snoozeLength1;
       const firstMessage = req.body.input_values?.message1;
@@ -81,10 +116,10 @@ app.post('/submit', (req, res) => {
         firstMessage
       );
     } catch (err) {
-      console.error('An error ocurred building the final canvas:', err);
+      logger.error(`An error ocurred building the final canvas: ${err}`);
     }
-    console.log('Completed final canvas', JSON.stringify(finalCanvas));
-
+    logger.info('Completed final canvas.');
+    logger.debug(`Final canvas: ${JSON.stringify(finalCanvas)}`);
     // Send the final canvas.
     res.send(finalCanvas);
   } else {
