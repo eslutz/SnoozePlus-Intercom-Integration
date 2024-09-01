@@ -29,10 +29,9 @@
   "main": "app.js",
   "scripts": {
     "start:dev": "node src/app.js",
-    "minify": "minify src/app.js > dist/SnoozePlus/app.js && npm run minify-services",
-    "minify-services": "minify src/services/canvas-service.js > dist/SnoozePlus/services/canvas-service.js",
-    "copy-files": "cp README.md dist/README.md && cp -r scripts/ dist/ && cp package.json dist/SnoozePlus/package.json",
-    "build": "npm run minify && npm run copy-files",
+    "copy-app": "cp -r src/ dist/SnoozePlus/ && cp package.json dist/SnoozePlus/package.json",
+    "copy-extras": "cp README.md dist/README.md && cp -r scripts/ dist/",
+    "build": "npm run copy-app && npm run copy-extras",
     "start": "npm install && node app.js"
   },
   "engines": {
@@ -45,8 +44,5 @@
     "express-winston": "^4.2.0",
     "node-fetch": "^3.3.2",
     "winston": "^3.14.2"
-  },
-  "devDependencies": {
-    "minify": "^11.4.0"
   }
 }
