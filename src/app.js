@@ -61,7 +61,7 @@ const listener = app.listen(PORT, (err) => {
 });
 
 app.get('/', (req, res) => {
-  logger.debug(`GET request: ${JSON.stringify(req)}`);
+  logger.debug(`GET request: ${req}`);
   res.status(200).send('Snooze+ is active.');
 });
 
