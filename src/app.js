@@ -1,38 +1,14 @@
-import bodyParser from 'body-parser';
-import express from 'express';
-import expressWinston from 'express-winston';
-import winston from 'winston';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import * as CanvasService from './services/canvas-service.js';
+'use strict';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require('express');
+const bodyParser = require('body-parser');
+const winston = require('winston');
+const morgan = require('morgan');
+const path = require('path');
+const CanvasService = require('./services/canvas-service');
 
 const app = express();
 const PORT = 8706;
-
-app.use(
-  expressWinston.logger({
-    transports: [new winston.transports.Console()],
-    format: winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.json()
-    ),
-    expressFormat: true,
-  })
-);
-
-app.use(
-  expressWinston.errorLogger({
-    transports: [new winston.transports.Console()],
-    format: winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.json()
-    ),
-    expressFormat: true,
-  })
-);
 
 const logger = winston.createLogger({
   level: 'debug',
@@ -41,9 +17,16 @@ const logger = winston.createLogger({
     winston.format.timestamp(),
     winston.format.json()
   ),
-  expressFormat: true,
 });
 
+const morganMiddleware = morgan('tiny', {
+  stream: {
+    // Configure Morgan to use our custom logger with the http severity
+    write: (message) => logger.http(message.trim()),
+  },
+});
+
+app.use(morganMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -54,15 +37,20 @@ const listener = app.listen(PORT, (err) => {
   if (!err) {
     logger.info('*** SnoozePlus Intercom Integration ***');
     logger.info('Express server is running');
-    logger.info(`Your app is ready at port: ${listener.address().port}`);
+    logger.info(`App is ready at port: ${listener.address().port}`);
   } else {
     logger.error(`Error occurred, server can't start: ${err}`);
   }
 });
 
 app.get('/', (req, res) => {
-  logger.debug(`GET request: ${req}`);
-  res.status(200).send('Snooze+ is active.');
+  try {
+    logger.debug(`GET request body: ${JSON.stringify(req.body)}}`);
+    res.status(200).send('Snooze+ is active.');
+  } catch (err) {
+    logger.error(`An error ocurred: ${err}`);
+    res.status(500).send(`An error ocurred: ${err}`);
+  }
 });
 
 /*
@@ -70,11 +58,16 @@ app.get('/', (req, res) => {
   the app into the inbox, or a new conversation is viewed.
 */
 app.post('/initialize', (req, res) => {
-  logger.info('Initialize request received.');
-  logger.debug(`Request body: ${JSON.stringify(req.body)}`);
-  const initialCanvas = CanvasService.getInitialCanvas();
-  logger.debug(`Initial canvas: ${JSON.stringify(initialCanvas)}`);
-  res.send(initialCanvas);
+  try {
+    logger.info('Initialize request received.');
+    logger.debug(`Request body: ${JSON.stringify(req.body)}`);
+    const initialCanvas = CanvasService.getInitialCanvas();
+    logger.debug(`Initial canvas: ${JSON.stringify(initialCanvas)}`);
+    res.send(initialCanvas);
+  } catch (err) {
+    logger.error(`An error ocurred with the initialize canvas: ${err}`);
+    res.status(500).send(`An error ocurred with the initialize canvas: ${err}`);
+  }
 });
 
 /*
@@ -100,6 +93,9 @@ app.post('/submit', (req, res) => {
       messageCanvas = CanvasService.getMessageCanvas(numOfSnoozes);
     } catch (err) {
       logger.error(`An error ocurred building the message canvas: ${err}`);
+      res
+        .status(500)
+        .send(`An error ocurred building the message canvas: ${err}`);
     }
     logger.debug('Completed message canvas.');
     logger.debug(`Message canvas: ${JSON.stringify(messageCanvas)}`);
@@ -117,6 +113,9 @@ app.post('/submit', (req, res) => {
       );
     } catch (err) {
       logger.error(`An error ocurred building the final canvas: ${err}`);
+      res
+        .status(500)
+        .send(`An error ocurred building the final canvas: ${err}`);
     }
     logger.info('Completed final canvas.');
     logger.debug(`Final canvas: ${JSON.stringify(finalCanvas)}`);

@@ -236,4 +236,4 @@ const getFinalCanvas = (snoozeLength, message) => {
   return finalCanvas;
 };
 
-export { getInitialCanvas, getMessageCanvas, getFinalCanvas };
+module.exports = { getInitialCanvas, getMessageCanvas, getFinalCanvas };
