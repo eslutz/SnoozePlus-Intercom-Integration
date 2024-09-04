@@ -1,3 +1,5 @@
+'use strict';
+
 const logger = require('../services/logger');
 
 // GET: / - Perform healthcheck.

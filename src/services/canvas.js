@@ -1,3 +1,5 @@
+'use strict';
+
 /*
   This object defines the canvas that will display when your app initializes.
 

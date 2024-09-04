@@ -1,9 +1,9 @@
 'use strict';
 
 const express = require('express');
+const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const path = require('path');
-const morgan = require('morgan');
 const logger = require('./services/logger');
 const router = require('./routes/router');
 

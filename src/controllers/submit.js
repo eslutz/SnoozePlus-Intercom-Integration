@@ -1,3 +1,5 @@
+'use strict';
+
 const canvasService = require('../services/canvas');
 const logger = require('../services/logger');
 
