@@ -27,7 +27,7 @@
   ],
   "main": "app.js",
   "scripts": {
-    "start:dev": "node src/app.js",
+    "dev": "nodemon src/app.js",
     "copy-app": "cp -r src/ dist/SnoozePlus/ && cp package.json dist/SnoozePlus/package.json",
     "copy-extras": "cp README.md dist/README.md && cp -r scripts/ dist/",
     "build": "npm run copy-app && npm run copy-extras",
@@ -42,5 +42,8 @@
     "morgan": "^1.10.0",
     "node-fetch": "^3.3.2",
     "winston": "^3.14.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
   }
 }
