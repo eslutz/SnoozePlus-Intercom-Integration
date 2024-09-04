@@ -9,7 +9,8 @@
       "program": "${workspaceFolder}/src/app.js",
       "request": "launch",
       "skipFiles": ["<node_internals>/**"],
-      "type": "node"
+      "type": "node",
+      "outputCapture": "std"
     },
     {
       "name": "Attach by Process ID",
