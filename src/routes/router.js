@@ -5,6 +5,7 @@ const router = express.Router();
 const healthcheckController = require('../controllers/healthcheck');
 const initializeController = require('../controllers/initialize');
 const submitController = require('../controllers/submit');
+const webhookController = require('../controllers/webhook');
 
 router.route('/').get(healthcheckController.healthcheck);
 
@@ -22,5 +23,9 @@ router.route('/initialize').post(initializeController.initialize);
   teammate's actions.
 */
 router.route('/submit').post(submitController.submit);
+
+router.route('/webhook').head(webhookController.validate);
+
+router.route('/webhook').post(webhookController.receiver);
 
 module.exports = router;

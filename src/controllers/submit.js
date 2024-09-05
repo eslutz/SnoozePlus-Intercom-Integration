@@ -12,21 +12,22 @@ const submit = async (req, res, next) => {
   );
   if (req.body.component_id === 'submitNumOfSnoozes') {
     let messageCanvas;
-    const numOfSnoozesRequested = req.body?.input_values?.numOfSnoozes;
+    const requestedNumOfSnoozes = req.body?.input_values?.numOfSnoozes;
     // Check if the input is a valid number.
-    const numOfSnoozes = Number(numOfSnoozesRequested);
-    if (typeof numOfSnoozes !== 'number') {
+    if (isNaN(requestedNumOfSnoozes)) {
       logger.error(
-        `Invalid input. The number of snoozes must be a number. Received: ${numOfSnoozesRequested}`
+        `Invalid input. The number of snoozes must be a number. Received: ${requestedNumOfSnoozes}`
       );
       res
         .status(400)
         .send(
-          `Invalid input. The number of snoozes must be a number. Received: ${numOfSnoozesRequested}`
+          `Invalid input. The number of snoozes must be a number. Received: ${requestedNumOfSnoozes}`
         );
+      return;
     } else {
       logger.info('Building message canvas.');
       try {
+        const numOfSnoozes = Number(requestedNumOfSnoozes);
         logger.info(`Number of snoozes requested: ${numOfSnoozes}`);
         messageCanvas = canvasService.getMessageCanvas(numOfSnoozes);
       } catch (err) {
