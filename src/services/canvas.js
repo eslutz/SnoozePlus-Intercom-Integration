@@ -1,81 +1,81 @@
 'use strict';
 
-/*
+const getInitialCanvas = () => {
+  /*
   This object defines the canvas that will display when your app initializes.
 
   More information on these can be found in the reference docs.
   Canvas docs: https://developers.intercom.com/docs/references/canvas-kit/responseobjects/canvas/
   Components docs: https://developers.intercom.com/docs/references/canvas-kit/interactivecomponents/button/
 */
-const initialCanvas = {
-  canvas: {
-    content: {
-      components: [
-        {
-          type: 'text',
-          text: 'Welcome to Snooze+',
-          style: 'header',
-        },
-        {
-          type: 'text',
-          text: 'To get started, first select how many times you would like to bump the conversation.',
-          style: 'muted',
-        },
-        {
-          type: 'spacer',
-          size: 's',
-        },
-        {
-          type: 'dropdown',
-          id: 'numOfSnoozes',
-          label: 'How many snoozes?',
-          options: [
-            {
-              type: 'option',
-              id: '1',
-              text: '1 snooze 😴',
-            },
-            {
-              type: 'option',
-              id: '2',
-              text: '2 snoozes 😴😴',
-            },
-            {
-              type: 'option',
-              id: '3',
-              text: '3 snoozes 😴😴😴',
-            },
-            {
-              type: 'option',
-              id: '4',
-              text: '4 snoozes 😴😴😴😴',
-            },
-            {
-              type: 'option',
-              id: '5',
-              text: '5 snoozes 😴😴😴😴😴',
-            },
-          ],
-        },
-        {
-          type: 'spacer',
-          size: 'xl',
-        },
-        {
-          type: 'button',
-          id: 'submitNumOfSnoozes',
-          label: 'Next >',
-          style: 'secondary',
-          action: {
-            type: 'submit',
+  const initialCanvas = {
+    canvas: {
+      content: {
+        components: [
+          {
+            type: 'text',
+            text: 'Welcome to Snooze+',
+            style: 'header',
           },
-        },
-      ],
+          {
+            type: 'text',
+            text: 'To get started, first select how many times you would like to bump the conversation.',
+            style: 'muted',
+          },
+          {
+            type: 'spacer',
+            size: 's',
+          },
+          {
+            type: 'dropdown',
+            id: 'numOfSnoozes',
+            label: 'How many snoozes?',
+            options: [
+              {
+                type: 'option',
+                id: '1',
+                text: '1 snooze 😴',
+              },
+              {
+                type: 'option',
+                id: '2',
+                text: '2 snoozes 😴😴',
+              },
+              {
+                type: 'option',
+                id: '3',
+                text: '3 snoozes 😴😴😴',
+              },
+              {
+                type: 'option',
+                id: '4',
+                text: '4 snoozes 😴😴😴😴',
+              },
+              {
+                type: 'option',
+                id: '5',
+                text: '5 snoozes 😴😴😴😴😴',
+              },
+            ],
+          },
+          {
+            type: 'spacer',
+            size: 'xl',
+          },
+          {
+            type: 'button',
+            id: 'submitNumOfSnoozes',
+            label: 'Next >',
+            style: 'secondary',
+            action: {
+              type: 'submit',
+            },
+          },
+        ],
+      },
     },
-  },
-};
+  };
 
-const getInitialCanvas = () => {
   return initialCanvas;
 };
 
@@ -203,7 +203,14 @@ const getMessageCanvas = (numOfSnoozes) => {
   }
 };
 
-const getFinalCanvas = (snoozeLength, message) => {
+const getFinalCanvas = (snoozeSummary) => {
+  const totalSnoozeLength = snoozeSummary.lengths.reduce(
+    (sum, currentValue) => {
+      return sum + Number(currentValue);
+    },
+    0
+  );
+
   const finalCanvas = {
     canvas: {
       content: {
@@ -214,6 +221,11 @@ const getFinalCanvas = (snoozeLength, message) => {
             text: 'Snooze Submitted!',
             align: 'center',
             style: 'header',
+          },
+          {
+            type: 'text',
+            text: `You set ${snoozeSummary.count} snooze(s) for a total of ${totalSnoozeLength} day(s).`,
+            style: 'paragraph',
           },
           {
             type: 'button',
@@ -228,12 +240,6 @@ const getFinalCanvas = (snoozeLength, message) => {
       },
     },
   };
-
-  finalCanvas.canvas.content.components.splice(1, 0, {
-    type: 'text',
-    text: `Your first message, "${message}" will send in ${snoozeLength} days.`,
-    style: 'paragraph',
-  });
 
   return finalCanvas;
 };
