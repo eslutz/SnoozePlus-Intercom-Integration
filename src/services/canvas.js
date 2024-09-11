@@ -198,9 +198,9 @@ const getMessageCanvas = (numOfSnoozes) => {
         type: 'divider',
       });
     }
-
-    return messageCanvas;
   }
+
+  return messageCanvas;
 };
 
 const getFinalCanvas = (snoozeSummary) => {

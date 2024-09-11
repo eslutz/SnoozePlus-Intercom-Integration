@@ -26,12 +26,12 @@ const addNote = async (conversationId, adminId, snoozeSummary) => {
     );
 
     if (response.ok) {
-      logger.debug(response.headers);
+      logger.debug(`Response headers: ${response.headers}`);
       const data = await response.json();
       logger.debug(data);
     } else {
-      logger.error(response.status);
-      logger.error(response.headers);
+      logger.error(`Response status: ${response.status}`);
+      logger.error(`Response headers: ${response.headers}`);
       const data = await response.json();
       logger.error(data);
     }
