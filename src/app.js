@@ -1,12 +1,14 @@
 'use strict';
 
-require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
-const bodyParser = require('body-parser');
 const path = require('path');
 const logger = require('./services/logger');
 const router = require('./routes/router');
+
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 const app = express();
 const PORT = 8706;
@@ -19,8 +21,8 @@ const morganMiddleware = morgan('tiny', {
 });
 
 app.use(morganMiddleware);
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 app.use(express.static('public'));
 app.use(express.static(path.join(__dirname)));

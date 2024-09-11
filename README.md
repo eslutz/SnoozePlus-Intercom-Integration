@@ -4,15 +4,17 @@ Snooze+ is an inbox app for Intercom to used to automate delayed responses to cu
 
 ## Local Development
 
-Navigate to the root folder of the application and run the below command.
-
-`npm run start:dev`
+1. Navigate to the root directory of the application.
+1. Create a .env file with the [required environment variables](#required-environment-variables).
+   - `INTERCOM_API_KEY`
+1. Run the command `npm run dev` to start the application.
 
 ## Steps To Deploy Application
 
 1. Clone this repo to your local machine.
 1. Run the command `npm run build` to get the application files ready for deployment.
 1. Start a SSH session with the server.
+1. Ensure the [required environment variables](#required-environment-variables) exist on the server.
 1. Run the [stop script](#stopping-your-app).
 1. Start a SFTP session with the server.
 1. Upload files from your local machine to the server.
@@ -42,3 +44,13 @@ If you want to install Node modules in your app directory:
 cd /home/activelabs/apps/snoozeplus
 npm install modulename
 ```
+
+## Required Environment Variables
+
+These environment variables are need in both prod and non-prod environments.
+
+- `INTERCOM_API_KEY=<<INTERCOM_ACCESS_TOKEN>>`
+
+These environment variables are only needed on the prod server.
+
+- `NODE_ENV=production`
