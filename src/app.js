@@ -6,10 +6,6 @@ const path = require('path');
 const logger = require('./services/logger');
 const router = require('./routes/router');
 
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
-
 const app = express();
 const PORT = 8706;
 

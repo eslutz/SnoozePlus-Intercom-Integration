@@ -27,18 +27,18 @@
   ],
   "main": "app.js",
   "scripts": {
-    "dev": "npm run lint && nodemon src/app.js",
-    "format": "prettier ./src --write",
-    "lint": "eslint ./src --fix",
+    "dev": "npm run lint && dotenvx run --env-file=.env.local -- nodemon src/app.js",
+    "lint": "prettier ./src --write && eslint ./src --fix",
     "copy-app": "cp -r src/ dist/SnoozePlus/ && cp package.json dist/SnoozePlus/package.json",
-    "copy-extras": "cp README.md dist/README.md && cp -r scripts/ dist/",
-    "build": "npm run format && npm run lint && npm run copy-app && npm run copy-extras",
-    "start": "npm install --production && node app.js"
+    "copy-extras": "cp .env.production dist/SnoozePlus/.env && cp README.md dist/README.md && cp -r scripts/ dist/",
+    "build": "npm run lint && npm run copy-app && npm run copy-extras",
+    "start": "npm install && dotenvx run --env-file=.env -- node app.js"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@dotenvx/dotenvx": "^1.14.0",
     "express": "^5.0.0",
     "morgan": "^1.10.0",
     "node-fetch": "^3.3.2",
@@ -46,7 +46,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
-    "dotenv": "^16.4.5",
     "eslint": "^9.9.1",
     "eslint-config-prettier": "^9.1.0",
     "globals": "^15.9.0",
