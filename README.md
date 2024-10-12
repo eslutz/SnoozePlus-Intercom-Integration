@@ -1,6 +1,6 @@
 # SnoozePlus-Intercom-Integration
 
-Snooze+ is an inbox app for Intercom to used to automate delayed responses to customers.
+Snooze+ is an inbox app for Intercom used to automate sending delayed responses to customers.
 
 ## Local Development
 
