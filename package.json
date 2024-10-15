@@ -31,7 +31,7 @@
     "lint": "prettier ./src --write && eslint ./src --fix",
     "copy-app": "cp -r src/ dist/SnoozePlus/ && cp package.json dist/SnoozePlus/package.json",
     "copy-extras": "cp .env.production dist/SnoozePlus/.env && cp README.md dist/README.md && cp -rp scripts/ dist/",
-    "build": "npm run lint && npm run copy-app && npm run copy-extras",
+    "build": "npm outdated && npm run lint && npm run copy-app && npm run copy-extras",
     "start": "npm install && dotenvx run --env-file=.env -- node app.js"
   },
   "engines": {
