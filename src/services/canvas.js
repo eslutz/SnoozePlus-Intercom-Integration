@@ -217,7 +217,7 @@ const getFinalCanvas = (snoozeSummary) => {
           },
           {
             type: 'text',
-            text: `The conversation will be snoozed for ${snoozeSummary.length} days until ${snoozeSummary.snoozeUntil.toLocaleDateString()}.`,
+            text: `The conversation will be snoozed for ${snoozeSummary.length} days until ${snoozeSummary.until.toLocaleDateString()}.`,
             style: 'paragraph',
           },
           {

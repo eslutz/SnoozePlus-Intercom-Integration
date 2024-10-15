@@ -20,7 +20,7 @@ const addNote = async (conversationId, adminId, snoozeSummary) => {
           message_type: 'note',
           type: 'admin',
           admin_id: adminId,
-          body: `<p><strong>Snooze+ has been set.</strong></p><p>The conversation will be snoozed for ${snoozeSummary.length} days.</p><p>The conversation will stop snoozing on ${snoozeSummary.snoozeUntil.toLocaleDateString()}.</p>`,
+          body: `<p><strong>Snooze+ has been set.</strong></p><p>The conversation will be snoozed for ${snoozeSummary.length} days and will stop snoozing on ${snoozeSummary.until.toLocaleDateString()}.</p>`,
         }),
       }
     );
@@ -38,7 +38,7 @@ const addNote = async (conversationId, adminId, snoozeSummary) => {
   }
 };
 
-const sendReply = async (conversationId, adminId, message) => {
+const sendMessage = async (conversationId, adminId, message) => {
   try {
     const response = await fetch(
       `${baseUrl}/conversations/${conversationId}/reply`,
@@ -108,6 +108,6 @@ const setSnooze = async (conversationId, adminId, snoozeUntil) => {
 
 module.exports = {
   addNote,
-  sendReply,
+  sendMessage,
   setSnooze,
 };
