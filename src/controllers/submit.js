@@ -60,8 +60,22 @@ const submit = async (req, res, next) => {
 
       logger.info('Adding snooze summary note to conversation.');
       // Add note to conversation with summary of set snoozes.
-      client.addNote(conversationId, adminId, snoozeSummary);
+      const noteResponse = await client.addNote(
+        conversationId,
+        adminId,
+        snoozeSummary
+      );
       logger.info('Snooze summary note added to conversation.');
+      logger.debug(`Add Note response: ${JSON.stringify(noteResponse)}`);
+
+      logger.info('Setting conversation snooze.');
+      const snoozeResponse = await client.setSnooze(
+        conversationId,
+        adminId,
+        snoozeSummary.until
+      );
+      logger.info('Conversation snooze set.');
+      logger.debug(`Set Snooze response: ${JSON.stringify(snoozeResponse)}`);
 
       // Send the final canvas.
       res.send(finalCanvas);
@@ -99,7 +113,20 @@ const getSnoozeSummary = (inputs) => {
   }
   logger.info(`Snooze lengths: ${snoozeLengths.join(', ')}`);
 
-  return { count: snoozeCount, lengths: snoozeLengths };
+  // Get total snooze length.
+  const totalSnoozeLength = snoozeLengths.reduce(
+    (sum, currentValue) => sum + Number(currentValue),
+    0
+  );
+  logger.info(`Total snooze length: ${totalSnoozeLength}`);
+
+  logger.info('Getting snooze until date.');
+  // Get the date the snooze will end.
+  const snoozeUntil = new Date();
+  snoozeUntil.setDate(snoozeUntil.getDate() + totalSnoozeLength);
+  logger.info(`Snooze until date: ${snoozeUntil}`);
+
+  return { length: totalSnoozeLength, until: snoozeUntil };
 };
 
 module.exports = { submit };

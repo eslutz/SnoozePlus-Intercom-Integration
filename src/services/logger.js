@@ -3,7 +3,7 @@
 const winston = require('winston');
 
 // TODO: uncomment and remove existing log level before final release.
-// let logLevel = 'info';
+// let logLevel = 'http';
 
 // if (process.env.NODE_ENV !== 'production') {
 //   logLevel = 'debug';

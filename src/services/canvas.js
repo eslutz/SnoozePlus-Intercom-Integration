@@ -204,13 +204,6 @@ const getMessageCanvas = (numOfSnoozes) => {
 };
 
 const getFinalCanvas = (snoozeSummary) => {
-  const totalSnoozeLength = snoozeSummary.lengths.reduce(
-    (sum, currentValue) => {
-      return sum + Number(currentValue);
-    },
-    0
-  );
-
   const finalCanvas = {
     canvas: {
       content: {
@@ -224,7 +217,7 @@ const getFinalCanvas = (snoozeSummary) => {
           },
           {
             type: 'text',
-            text: `You set ${snoozeSummary.count} snooze(s) for a total of ${totalSnoozeLength} day(s).`,
+            text: `The conversation will be snoozed for ${snoozeSummary.length} days until ${snoozeSummary.snoozeUntil}.`,
             style: 'paragraph',
           },
           {
