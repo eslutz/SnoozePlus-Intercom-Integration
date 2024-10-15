@@ -2,7 +2,7 @@
 
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
-const logger = require('./logger');
+const logger = require('../config/logger-config');
 const baseUrl = 'https://api.intercom.io';
 
 const addNote = async (conversationId, adminId, snoozeSummary) => {

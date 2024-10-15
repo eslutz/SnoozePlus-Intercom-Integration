@@ -1,8 +1,9 @@
 'use strict';
 
-const canvasService = require('../services/canvas');
-const client = require('../services/intercom-client');
-const logger = require('../services/logger');
+const canvasService = require('../services/canvas-service');
+const intercomClient = require('../services/intercom-service');
+const logger = require('../config/logger-config');
+const { getSnoozeSummary } = require('../utilities/snooze');
 
 // POST: /submit - Send the next canvas based on submit component id.
 const submit = async (req, res, next) => {
@@ -60,7 +61,7 @@ const submit = async (req, res, next) => {
 
       logger.info('Adding snooze summary note to conversation.');
       // Add note to conversation with summary of set snoozes.
-      const noteResponse = await client.addNote(
+      const noteResponse = await intercomClient.addNote(
         conversationId,
         adminId,
         snoozeSummary
@@ -69,7 +70,7 @@ const submit = async (req, res, next) => {
       logger.debug(`Add Note response: ${JSON.stringify(noteResponse)}`);
 
       logger.info('Setting conversation snooze.');
-      const snoozeResponse = await client.setSnooze(
+      const snoozeResponse = await intercomClient.setSnooze(
         conversationId,
         adminId,
         snoozeSummary.until
@@ -91,42 +92,6 @@ const submit = async (req, res, next) => {
     const initialCanvas = canvasService.getInitialCanvas();
     res.send(initialCanvas);
   }
-};
-
-// Take the input value object and determine how many snoozes were set.
-const getSnoozeSummary = (inputs) => {
-  logger.info('Getting number of snoozes set.');
-  // Get the keys from the inputs object and use array length property to get number of inputs.
-  const keysArray = Object.keys(inputs);
-  const keysArrayCount = keysArray.length;
-  const snoozeCount = Math.floor(keysArrayCount / 2);
-  logger.debug(`Input keys: ${keysArray}`);
-  logger.debug(`Input keys count: ${keysArrayCount}`);
-  logger.info(`Number of snoozes set: ${snoozeCount}`);
-
-  logger.info('Getting lengths of snoozes.');
-  // Get length for each snooze.
-  const snoozeLengths = [];
-  for (let i = 1; i <= snoozeCount; i++) {
-    logger.debug(`Snooze length: ${inputs[`snoozeLength${i}`]}`);
-    snoozeLengths.push(inputs[`snoozeLength${i}`]);
-  }
-  logger.info(`Snooze lengths: ${snoozeLengths.join(', ')}`);
-
-  // Get total snooze length.
-  const totalSnoozeLength = snoozeLengths.reduce(
-    (sum, currentValue) => sum + Number(currentValue),
-    0
-  );
-  logger.info(`Total snooze length: ${totalSnoozeLength}`);
-
-  logger.info('Getting snooze until date.');
-  // Get the date the snooze will end.
-  const snoozeUntil = new Date();
-  snoozeUntil.setDate(snoozeUntil.getDate() + totalSnoozeLength);
-  logger.info(`Snooze until date: ${snoozeUntil}`);
-
-  return { length: totalSnoozeLength, until: snoozeUntil };
 };
 
 module.exports = { submit };

@@ -2,10 +2,10 @@
 
 const express = require('express');
 const router = express.Router();
-const healthcheckController = require('../controllers/healthcheck');
-const initializeController = require('../controllers/initialize');
-const submitController = require('../controllers/submit');
-const webhookController = require('../controllers/webhook');
+const healthcheckController = require('../controllers/healthcheck-controller');
+const initializeController = require('../controllers/initialize-controller');
+const submitController = require('../controllers/submit-controller');
+const webhookController = require('../controllers/webhook-controller');
 
 router.route('/').get(healthcheckController.healthcheck);
 

@@ -1,6 +1,6 @@
 'use strict';
 
-const logger = require('../services/logger');
+const logger = require('../config/logger-config');
 
 // HEAD: /webhook - Receive webhook request to validate endpoint.
 const validate = async (req, res, next) => {

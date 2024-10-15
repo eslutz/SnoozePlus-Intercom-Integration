@@ -1,7 +1,7 @@
 'use strict';
 
-const canvasService = require('../services/canvas');
-const logger = require('../services/logger');
+const canvasService = require('../services/canvas-service');
+const logger = require('../config/logger-config');
 
 // POST: /initialize - Send the initial canvas.
 const initialize = async (req, res, next) => {
