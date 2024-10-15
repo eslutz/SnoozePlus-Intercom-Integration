@@ -20,42 +20,94 @@ const addNote = async (conversationId, adminId, snoozeSummary) => {
           message_type: 'note',
           type: 'admin',
           admin_id: adminId,
-          body: `<p><strong>Snooze+ has been set.</strong></p><p>A total of ${snoozeSummary.count} snoozes has been set.</p><p>The conversation will be snoozed for ${formatLengths(snoozeSummary.lengths)} days.</p>`,
+          body: `<p><strong>Snooze+ has been set.</strong></p><p>The conversation will be snoozed for ${snoozeSummary.length} days.</p><p>The conversation will stop snoozing on ${snoozeSummary.snoozeUntil.toLocaleDateString()}.</p>`,
         }),
       }
     );
 
-    if (response.ok) {
-      logger.debug(`Response headers: ${response.headers}`);
-      const data = await response.json();
-      logger.debug(data);
-    } else {
+    if (!response.ok) {
+      logger.error('Error during add note request');
       logger.error(`Response status: ${response.status}`);
       logger.error(`Response headers: ${response.headers}`);
-      const data = await response.json();
-      logger.error(data);
     }
+    const data = await response.json();
+
+    return data;
   } catch (err) {
     logger.error(`Error during POST request: ${err}`);
   }
 };
 
-const deleteScheduledMessage = async () => {};
+const sendReply = async (conversationId, adminId, message) => {
+  try {
+    const response = await fetch(
+      `${baseUrl}/conversations/${conversationId}/reply`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Intercom-Version': '2.11',
+          Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+        },
+        body: JSON.stringify({
+          message_type: 'comment',
+          type: 'admin',
+          admin_id: adminId,
+          body: `<p>${message.message}</p>`,
+        }),
+      }
+    );
 
-const setScheduledMessage = async () => {};
+    if (!response.ok) {
+      logger.error('Error during send reply request');
+      logger.error(`Response status: ${response.status}`);
+      logger.error(`Response headers: ${response.headers}`);
+    }
+    const data = await response.json();
 
-const setSnooze = async () => {};
+    return data;
+  } catch (err) {
+    logger.error(`Error during POST request: ${err}`);
+  }
+};
 
-const formatLengths = (lengths) => {
-  if (lengths.length <= 2) return lengths.join(' and ');
-  return (
-    lengths.slice(0, -1).join(', ') + ', and ' + lengths[lengths.length - 1]
-  );
+const setSnooze = async (conversationId, adminId, snoozeUntil) => {
+  // Convert snoozeUntil to Unix timestamp.
+  snoozeUntil = Math.floor(new Date(snoozeUntil).getTime() / 1000);
+
+  try {
+    const response = await fetch(
+      `${baseUrl}/conversations/${conversationId}/parts`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Intercom-Version': '2.11',
+          Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+        },
+        body: JSON.stringify({
+          message_type: 'snoozed',
+          admin_id: adminId,
+          snoozed_until: snoozeUntil,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      logger.error('Error during send reply request');
+      logger.error(`Response status: ${response.status}`);
+      logger.error(`Response headers: ${response.headers}`);
+    }
+    const data = await response.json();
+
+    return data;
+  } catch (err) {
+    logger.error(`Error during POST request: ${err}`);
+  }
 };
 
 module.exports = {
   addNote,
-  deleteScheduledMessage,
-  setScheduledMessage,
+  sendReply,
   setSnooze,
 };
