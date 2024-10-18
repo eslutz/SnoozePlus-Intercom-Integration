@@ -7,7 +7,12 @@ const initializeController = require('../controllers/initialize-controller');
 const submitController = require('../controllers/submit-controller');
 const webhookController = require('../controllers/webhook-controller');
 
+/*
+  Healthcheck routes for the application and database connection.
+*/
 router.route('/').get(healthcheckController.healthcheck);
+
+router.route('/db-healthcheck').get(healthcheckController.dbHealthcheck);
 
 /*
   This is an endpoint that Intercom will POST HTTP request when a teammate inserts
@@ -24,6 +29,9 @@ router.route('/initialize').post(initializeController.initialize);
 */
 router.route('/submit').post(submitController.submit);
 
+/*
+  Webhook route for receiving events from Intercom.
+*/
 router.route('/webhook').head(webhookController.validate);
 
 router.route('/webhook').post(webhookController.receiver);

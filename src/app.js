@@ -3,8 +3,9 @@
 const express = require('express');
 const morgan = require('morgan');
 const path = require('path');
-const logger = require('./services/logger');
+const logger = require('./config/logger-config');
 const router = require('./routes/router');
+const { pool } = require('./config/db-config');
 
 const app = express();
 const PORT = 8706;
@@ -25,12 +26,22 @@ app.use(express.static(path.join(__dirname)));
 
 app.use('/', router);
 
-const listener = app.listen(PORT, (err) => {
+const server = app.listen(PORT, (err) => {
   if (!err) {
     logger.info('*** SnoozePlus Intercom Integration ***');
     logger.info('Express server is running');
-    logger.info(`App is ready at port: ${listener.address().port}`);
+    logger.info(`App is ready at port: ${server.address().port}`);
   } else {
     logger.error(`Error occurred, server can't start: ${err}`);
   }
+});
+
+process.on('SIGTERM', () => {
+  logger.debug('SIGTERM signal received: closing HTTP server');
+  server.close(async () => {
+    logger.info('Draining DB pool');
+    await pool.end();
+    logger.info('DB pool drained');
+    logger.info('HTTP server closed');
+  });
 });

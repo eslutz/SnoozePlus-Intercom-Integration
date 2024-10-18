@@ -10,7 +10,9 @@
       "request": "launch",
       "skipFiles": ["<node_internals>/**"],
       "type": "node",
-      "outputCapture": "std"
+      "outputCapture": "std",
+      "runtimeExecutable": "dotenvx",
+      "runtimeArgs": ["run", "--env-file=.env.local", "--", "node"]
     },
     {
       "name": "Attach by Process ID",
