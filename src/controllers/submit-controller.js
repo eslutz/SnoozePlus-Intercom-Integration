@@ -2,6 +2,7 @@
 
 const canvasService = require('../services/canvas-service');
 const intercomClient = require('../services/intercom-service');
+const messageService = require('../services/message-service');
 const logger = require('../config/logger-config');
 const { getSnoozeSummary } = require('../utilities/snooze');
 
@@ -77,6 +78,36 @@ const submit = async (req, res, next) => {
       );
       logger.info('Conversation snooze set.');
       logger.debug(`Set Snooze response: ${JSON.stringify(snoozeResponse)}`);
+
+      /*
+        TODO
+          - Rename snoozeSummary to snoozeRequest
+          - Determine the proper object structure of snoozeRequest
+            - Need messages to save w/ dates to send, info to set snooze, and info to add note
+            - Save messages to DB:
+              - Array of message objects
+                - message
+                - sendDate
+              - Workspace ID
+              - Admin ID
+              - Conversation ID
+            - Set snooze:
+              - Snooze until date
+              - Admin ID
+              - Conversation ID
+            - Set note:
+              - Number of snoozes
+              - Total snooze length
+              - Snooze until date
+              - Admin ID
+              - Conversation ID
+      */
+      logger.info('Saving messages to the database.');
+      // Save messages to the database.
+      const messageResponse = await messageService.saveMessage(snoozeSummary);
+      logger.debug(
+        `Save Messages response: ${JSON.stringify(messageResponse)}`
+      );
 
       // Send the final canvas.
       res.send(finalCanvas);
