@@ -2,14 +2,10 @@
 
 const winston = require('winston');
 
-// TODO: uncomment and remove existing log level before final release.
-// let logLevel = 'http';
-
-// if (process.env.NODE_ENV !== 'production') {
-//   logLevel = 'debug';
-// }
-
-let logLevel = 'debug';
+// Set the log level based on environment variable or default options.
+const logLevel =
+  process.env.LOG_LEVEL ||
+  (process.env.NODE_ENV === 'production' ? 'http' : 'debug');
 
 const logger = winston.createLogger({
   level: logLevel,
