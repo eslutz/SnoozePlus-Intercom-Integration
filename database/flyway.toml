@@ -1,0 +1,29 @@
+databaseType = "PostgreSql"
+id = "9f2a6227-536d-4d28-90b3-0854706f446a"
+name = "snoozeplus"
+
+[flyway]
+locations = [ "filesystem:migrations" ]
+mixed = true
+outOfOrder = true
+schemaModelLocation = "schema-model"
+validateMigrationNaming = true
+
+  [flyway.check]
+  majorTolerance = 0
+
+[flywayDesktop]
+developmentEnvironment = "development"
+schemaModel = "schema-model"
+shadowEnvironment = "shadow"
+
+[redgateCompare]
+filterFile = "filter.rgf"
+
+[redgateCompare.postgresql.options.ignores]
+ignoreNewlinesInTextObjects = "off"
+
+[environments.snoozeplus]
+url = "jdbc:postgresql://localhost/snoozeplus"
+schemas = [ "public" ]
+displayName = "SnoozePlus"
