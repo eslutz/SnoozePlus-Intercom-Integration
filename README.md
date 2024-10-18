@@ -16,12 +16,12 @@ Snooze+ is an inbox app for Intercom used to automate sending delayed responses 
 1. Create a **.env.production** file with the [required environment variables](#required-environment-variables)
 1. Run the command `npm run build` to get the application files ready for deployment
 1. Start a SSH session with the server
-1. Run the [stop script](#stopping-your-app)
+1. On the server run the [stop script](#stopping-your-app)
 1. Start a SFTP session with the server
 1. Upload files from your local machine to the server
-   - local file path: `/SnoozePlus-Intercom-Integration/dist/`
+   - local file path: `./SnoozePlus-Intercom-Integration/dist/`
    - remote server path: `/home/activelabs/apps/snoozeplus/`
-1. Go back to the SSH session and run the [start script](#starting-your-app)
+1. Go back to the SSH session and on the server run the [start script](#starting-your-app)
 
 ## Application Hosting - Opalstack Node.js
 
@@ -39,21 +39,10 @@ Start your app by running:
 Stop your app by running:
 `/home/activelabs/apps/snoozeplus/stop`
 
-### Installing modules
-
-If you want to install Node modules in your app directory:
-
-```bash
-cd /home/activelabs/apps/snoozeplus
-npm install modulename
-```
-
 ## Required Environment Variables
 
-These environment variables are need in both **.env.local** and **.env.production** files.
+The environment variables for this application can be found in the **[.env.sample](.env.sample)** file.
 
-- `INTERCOM_API_KEY=<<INTERCOM_ACCESS_TOKEN>>`
-
-These environment variables are only needed in the **.env.production** file.
+_NODE_ENV_ must be set to _production_ int the **.env.production** file.
 
 - `NODE_ENV=production`
