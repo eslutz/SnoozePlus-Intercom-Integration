@@ -1,11 +1,16 @@
-'use strict';
-
+// @ts-expect-error: type not yet defined
 const fetch = (...args) =>
+  // @ts-expect-error: type not yet defined
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
-const logger = require('../config/logger-config');
-const baseUrl = 'https://api.intercom.io';
+import logger from '../config/logger-config';
 
-const addNote = async (conversationId, adminId, snoozeSummary) => {
+const baseUrl = process.env.INTERCOM_BASE_URL ?? 'https://api.intercom.io';
+
+const addNote = async (
+  conversationId: number,
+  adminId: number,
+  snoozeRequest: any
+) => {
   try {
     const response = await fetch(
       `${baseUrl}/conversations/${conversationId}/reply`,
@@ -20,7 +25,7 @@ const addNote = async (conversationId, adminId, snoozeSummary) => {
           message_type: 'note',
           type: 'admin',
           admin_id: adminId,
-          body: `<p><strong>Snooze+ has been set.</strong></p><p>The conversation will be snoozed for ${snoozeSummary.length} days and will stop snoozing on ${snoozeSummary.until.toLocaleDateString()}.</p>`,
+          body: `<p><strong>Snooze+ has been set.</strong></p><p>The conversation will be snoozed for ${snoozeRequest.length} days and will stop snoozing on ${snoozeRequest.until.toLocaleDateString()}.</p>`,
         }),
       }
     );
@@ -38,7 +43,11 @@ const addNote = async (conversationId, adminId, snoozeSummary) => {
   }
 };
 
-const sendMessage = async (conversationId, adminId, message) => {
+const sendMessage = async (
+  conversationId: number,
+  adminId: number,
+  message: any
+) => {
   try {
     const response = await fetch(
       `${baseUrl}/conversations/${conversationId}/reply`,
@@ -71,9 +80,15 @@ const sendMessage = async (conversationId, adminId, message) => {
   }
 };
 
-const setSnooze = async (conversationId, adminId, snoozeUntil) => {
+const setSnooze = async (
+  conversationId: number,
+  adminId: number,
+  snoozeUntil: Date
+) => {
   // Convert snoozeUntil to Unix timestamp.
-  snoozeUntil = Math.floor(new Date(snoozeUntil).getTime() / 1000);
+  const snoozeUntilUnixTimestamp = Math.floor(
+    new Date(snoozeUntil).getTime() / 1000
+  );
 
   try {
     const response = await fetch(
@@ -88,7 +103,7 @@ const setSnooze = async (conversationId, adminId, snoozeUntil) => {
         body: JSON.stringify({
           message_type: 'snoozed',
           admin_id: adminId,
-          snoozed_until: snoozeUntil,
+          snoozed_until: snoozeUntilUnixTimestamp,
         }),
       }
     );
@@ -106,8 +121,4 @@ const setSnooze = async (conversationId, adminId, snoozeUntil) => {
   }
 };
 
-module.exports = {
-  addNote,
-  sendMessage,
-  setSnooze,
-};
+export { addNote, sendMessage, setSnooze };

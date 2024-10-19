@@ -1,7 +1,5 @@
-'use strict';
-
-const db = require('../config/db-config');
-const logger = require('../config/logger-config');
+import { query } from '../config/db-config';
+import logger from '../config/logger-config';
 
 const deleteMessage = async () => {
   throw new Error('Not implemented');
@@ -11,7 +9,7 @@ const getMessage = async () => {
   throw new Error('Not implemented');
 };
 
-const saveMessage = async (message) => {
+const saveMessage = async (message: any) => {
   const insertMessage = `
     INSERT INTO messages (workspace_id, admin_id, conversation_id, message, send_date)
     VALUES ($1, $2, $3, $4, $5)
@@ -26,13 +24,13 @@ const saveMessage = async (message) => {
   ];
 
   try {
-    const response = await db.query(insertMessage, messageValues);
-    return response.rows[0].id;
+    // TODO: update to return ID of created message
+    const response = await query(insertMessage, messageValues);
+    // return response.rows[0]!.id;
+    return response.rows[0];
   } catch (err) {
     logger.error(`Error executing insert message query ${err}`);
   }
-
-  throw new Error('Not implemented');
 };
 
-module.exports = { deleteMessage, getMessage, saveMessage };
+export { deleteMessage, getMessage, saveMessage };

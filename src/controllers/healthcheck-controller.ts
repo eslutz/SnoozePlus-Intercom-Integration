@@ -1,10 +1,13 @@
-'use strict';
-
-const { pool } = require('./config/db-config');
-const logger = require('../config/logger-config');
+import { Response, Request, NextFunction } from 'express';
+import { pool } from '../config/db-config';
+import logger from '../config/logger-config';
 
 // GET: / - Perform healthcheck.
-const healthcheck = async (req, res, next) => {
+const healthcheck = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   logger.debug('Checking health of the application.');
   try {
     res.status(200).send('Snooze+ is active.');
@@ -16,7 +19,11 @@ const healthcheck = async (req, res, next) => {
 };
 
 // GET: /db-healthcheck - Perform healthcheck on the database.
-const dbHealthcheck = async (req, res, next) => {
+const dbHealthcheck = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   logger.debug('Checking database connection.');
   try {
     pool.query('SELECT NOW()', (err, result) => {
@@ -37,4 +44,4 @@ const dbHealthcheck = async (req, res, next) => {
   }
 };
 
-module.exports = { healthcheck, dbHealthcheck };
+export { healthcheck, dbHealthcheck };

@@ -6,20 +6,16 @@
   "configurations": [
     {
       "name": "Launch Program",
-      "program": "${workspaceFolder}/src/app.js",
+      "program": "${workspaceFolder}/src/app.ts",
       "request": "launch",
-      "skipFiles": ["<node_internals>/**"],
+      "skipFiles": [
+        "<node_internals>/**",
+        "${workspaceFolder}/node_modules/**"
+      ],
       "type": "node",
       "outputCapture": "std",
-      "runtimeExecutable": "dotenvx",
-      "runtimeArgs": ["run", "--env-file=.env.local", "--", "node"]
-    },
-    {
-      "name": "Attach by Process ID",
-      "processId": "${command:PickProcess}",
-      "request": "attach",
-      "skipFiles": ["<node_internals>/**"],
-      "type": "node"
+      "console": "integratedTerminal",
+      "runtimeExecutable": "tsx"
     }
   ]
 }

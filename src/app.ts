@@ -1,11 +1,9 @@
-'use strict';
-
-const express = require('express');
-const morgan = require('morgan');
-const path = require('path');
-const logger = require('./config/logger-config');
-const router = require('./routes/router');
-const { pool } = require('./config/db-config');
+import express from 'express';
+import morgan from 'morgan';
+import path from 'path';
+import logger from './config/logger-config';
+import router from './routes/router';
+import { pool } from './config/db-config';
 
 const app = express();
 const PORT = 8706;
@@ -26,15 +24,17 @@ app.use(express.static(path.join(__dirname)));
 
 app.use('/', router);
 
-const server = app.listen(PORT, (err) => {
-  if (!err) {
+const server = app
+  .listen(PORT, () => {
     logger.info('*** SnoozePlus Intercom Integration ***');
     logger.info('Express server is running');
-    logger.info(`App is ready at port: ${server.address().port}`);
-  } else {
+    const address = server.address();
+    const port = typeof address === 'string' ? address : address?.port;
+    logger.info(`App is ready at port: ${port}`);
+  })
+  .on('error', (err) => {
     logger.error(`Error occurred, server can't start: ${err}`);
-  }
-});
+  });
 
 process.on('SIGTERM', () => {
   logger.debug('SIGTERM signal received: closing HTTP server');

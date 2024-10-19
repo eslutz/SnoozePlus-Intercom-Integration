@@ -1,9 +1,8 @@
-'use strict';
-
-const logger = require('../config/logger-config');
+import { Response, Request, NextFunction } from 'express';
+import logger from '../config/logger-config';
 
 // HEAD: /webhook - Receive webhook request to validate endpoint.
-const validate = async (req, res, next) => {
+const validate = async (req: Request, res: Response, next: NextFunction) => {
   try {
     logger.debug(`HEAD request headers: ${JSON.stringify(req.headers)}}`);
     res.status(200).send();
@@ -15,7 +14,7 @@ const validate = async (req, res, next) => {
 };
 
 // POST: /webhook - Receive webhook notifications.
-const receiver = async (req, res, next) => {
+const receiver = async (req: Request, res: Response, next: NextFunction) => {
   try {
     logger.info('Webhook notification received.');
     logger.debug(`Webhook notification body: ${JSON.stringify(req.body)}}`);
@@ -27,7 +26,4 @@ const receiver = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  validate,
-  receiver,
-};
+export { validate, receiver };

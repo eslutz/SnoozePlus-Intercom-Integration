@@ -1,13 +1,16 @@
-'use strict';
-
-const canvasService = require('../services/canvas-service');
-const intercomClient = require('../services/intercom-service');
-const messageService = require('../services/message-service');
-const logger = require('../config/logger-config');
-const { getSnoozeSummary } = require('../utilities/snooze');
+import { Response, Request, NextFunction } from 'express';
+import { addNote, setSnooze } from '../services/intercom-service';
+import logger from '../config/logger-config';
+import getSnoozeSummary from '../utilities/snooze';
+import {
+  getFinalCanvas,
+  getInitialCanvas,
+  getMessageCanvas,
+} from '../services/canvas-service';
+import { saveMessage } from '../services/message-service';
 
 // POST: /submit - Send the next canvas based on submit component id.
-const submit = async (req, res, next) => {
+const submit = async (req: Request, res: Response, next: NextFunction) => {
   logger.info('Submit request received.');
   logger.info(`Request type: ${req.body.component_id}`);
   logger.debug(`POST request body: ${JSON.stringify(req.body)}`);
@@ -33,7 +36,7 @@ const submit = async (req, res, next) => {
       try {
         const numOfSnoozes = Number(requestedNumOfSnoozes);
         logger.info(`Number of snoozes requested: ${numOfSnoozes}`);
-        messageCanvas = canvasService.getMessageCanvas(numOfSnoozes);
+        messageCanvas = getMessageCanvas(numOfSnoozes);
       } catch (err) {
         logger.error(`An error ocurred building the message canvas: ${err}`);
         res
@@ -56,13 +59,13 @@ const submit = async (req, res, next) => {
 
       logger.info('Building final canvas.');
       // Populate finalCanvas with summary of set snoozes.
-      const finalCanvas = canvasService.getFinalCanvas(snoozeSummary);
+      const finalCanvas = getFinalCanvas(snoozeSummary);
       logger.info('Completed final canvas.');
       logger.debug(`Final canvas: ${JSON.stringify(finalCanvas)}`);
 
       logger.info('Adding snooze summary note to conversation.');
       // Add note to conversation with summary of set snoozes.
-      const noteResponse = await intercomClient.addNote(
+      const noteResponse = await addNote(
         conversationId,
         adminId,
         snoozeSummary
@@ -71,7 +74,7 @@ const submit = async (req, res, next) => {
       logger.debug(`Add Note response: ${JSON.stringify(noteResponse)}`);
 
       logger.info('Setting conversation snooze.');
-      const snoozeResponse = await intercomClient.setSnooze(
+      const snoozeResponse = await setSnooze(
         conversationId,
         adminId,
         snoozeSummary.until
@@ -104,7 +107,7 @@ const submit = async (req, res, next) => {
       */
       logger.info('Saving messages to the database.');
       // Save messages to the database.
-      const messageResponse = await messageService.saveMessage(snoozeSummary);
+      const messageResponse = await saveMessage(snoozeSummary);
       logger.debug(
         `Save Messages response: ${JSON.stringify(messageResponse)}`
       );
@@ -120,9 +123,9 @@ const submit = async (req, res, next) => {
     }
   } else {
     // Reset to original canvas.
-    const initialCanvas = canvasService.getInitialCanvas();
+    const initialCanvas = getInitialCanvas();
     res.send(initialCanvas);
   }
 };
 
-module.exports = { submit };
+export default submit;

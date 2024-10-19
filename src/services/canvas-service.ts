@@ -1,5 +1,3 @@
-'use strict';
-
 const getInitialCanvas = () => {
   /*
   This object defines the canvas that will display when your app initializes.
@@ -79,7 +77,7 @@ const getInitialCanvas = () => {
   return initialCanvas;
 };
 
-const getMessageCanvas = (numOfSnoozes) => {
+const getMessageCanvas = (numOfSnoozes: number) => {
   const messageCanvas = {
     canvas: {
       content: {
@@ -186,6 +184,7 @@ const getMessageCanvas = (numOfSnoozes) => {
       type: 'textarea',
       id: `message${i}`,
       label: 'With message:',
+      // @ts-expect-error: type not yet defined
       placeholder: 'Enter message to send at end of snooze...',
     });
     // Do not insert a divider if only one snooze or last of multiple snoozes.
@@ -194,6 +193,7 @@ const getMessageCanvas = (numOfSnoozes) => {
         type: 'spacer',
         size: 'm',
       });
+      // @ts-expect-error: type not yet defined
       messageCanvas.canvas.content.components.splice(5, 0, {
         type: 'divider',
       });
@@ -203,7 +203,7 @@ const getMessageCanvas = (numOfSnoozes) => {
   return messageCanvas;
 };
 
-const getFinalCanvas = (snoozeSummary) => {
+const getFinalCanvas = (snoozeRequest: any) => {
   const finalCanvas = {
     canvas: {
       content: {
@@ -217,7 +217,7 @@ const getFinalCanvas = (snoozeSummary) => {
           },
           {
             type: 'text',
-            text: `The conversation will be snoozed for ${snoozeSummary.length} days until ${snoozeSummary.until.toLocaleDateString()}.`,
+            text: `The conversation will be snoozed for ${snoozeRequest.length} days until ${snoozeRequest.until.toLocaleDateString()}.`,
             style: 'paragraph',
           },
           {
@@ -237,4 +237,4 @@ const getFinalCanvas = (snoozeSummary) => {
   return finalCanvas;
 };
 
-module.exports = { getInitialCanvas, getMessageCanvas, getFinalCanvas };
+export { getInitialCanvas, getMessageCanvas, getFinalCanvas };

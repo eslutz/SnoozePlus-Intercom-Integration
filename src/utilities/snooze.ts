@@ -1,9 +1,7 @@
-'use strict';
-
-const logger = require('../config/logger-config');
+import logger from '../config/logger-config';
 
 // Take the input value object and determine how many snoozes were set.
-const getSnoozeSummary = (inputs) => {
+const getSnoozeSummary = (inputs: any) => {
   logger.info('Getting number of snoozes set.');
   // Get the keys from the inputs object and use array length property to get number of inputs.
   const keysArray = Object.keys(inputs);
@@ -38,4 +36,4 @@ const getSnoozeSummary = (inputs) => {
   return { length: totalSnoozeLength, until: snoozeUntil };
 };
 
-module.exports = { getSnoozeSummary };
+export default getSnoozeSummary;

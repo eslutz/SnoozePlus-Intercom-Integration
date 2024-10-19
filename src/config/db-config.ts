@@ -1,0 +1,8 @@
+import { Pool, QueryArrayResult } from 'pg';
+
+const pool = new Pool();
+
+const query = (text: any, params: any): Promise<QueryArrayResult<any[]>> =>
+  pool.query(text, params);
+
+export { pool, query };
