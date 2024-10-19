@@ -1,9 +1,9 @@
-import { Response, Request, NextFunction } from 'express';
+import { RequestHandler } from 'express';
 import { getInitialCanvas } from '../services/canvas-service';
 import logger from '../config/logger-config';
 
 // POST: /initialize - Send the initial canvas.
-const initialize = async (req: Request, res: Response, next: NextFunction) => {
+const initialize: RequestHandler = async (req, res, next) => {
   try {
     logger.info('Initialize request received.');
     logger.debug(`Request body: ${JSON.stringify(req.body)}`);
@@ -17,4 +17,4 @@ const initialize = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export default initialize;
+export { initialize };

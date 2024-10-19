@@ -1,4 +1,4 @@
-import { Response, Request, NextFunction } from 'express';
+import { RequestHandler } from 'express';
 import { addNote, setSnooze } from '../services/intercom-service';
 import logger from '../config/logger-config';
 import getSnoozeSummary from '../utilities/snooze';
@@ -10,7 +10,7 @@ import {
 import { saveMessage } from '../services/message-service';
 
 // POST: /submit - Send the next canvas based on submit component id.
-const submit = async (req: Request, res: Response, next: NextFunction) => {
+const submit: RequestHandler = async (req, res, next) => {
   logger.info('Submit request received.');
   logger.info(`Request type: ${req.body.component_id}`);
   logger.debug(`POST request body: ${JSON.stringify(req.body)}`);
@@ -128,4 +128,4 @@ const submit = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export default submit;
+export { submit };

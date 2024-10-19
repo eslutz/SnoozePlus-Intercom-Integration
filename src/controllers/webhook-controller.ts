@@ -1,8 +1,8 @@
-import { Response, Request, NextFunction } from 'express';
+import { RequestHandler } from 'express';
 import logger from '../config/logger-config';
 
 // HEAD: /webhook - Receive webhook request to validate endpoint.
-const validate = async (req: Request, res: Response, next: NextFunction) => {
+const validate: RequestHandler = async (req, res, next) => {
   try {
     logger.debug(`HEAD request headers: ${JSON.stringify(req.headers)}}`);
     res.status(200).send();
@@ -14,7 +14,7 @@ const validate = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 // POST: /webhook - Receive webhook notifications.
-const receiver = async (req: Request, res: Response, next: NextFunction) => {
+const receiver: RequestHandler = async (req, res, next) => {
   try {
     logger.info('Webhook notification received.');
     logger.debug(`Webhook notification body: ${JSON.stringify(req.body)}}`);

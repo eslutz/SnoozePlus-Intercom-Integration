@@ -1,13 +1,9 @@
-import { Response, Request, NextFunction } from 'express';
+import { RequestHandler } from 'express';
 import { pool } from '../config/db-config';
 import logger from '../config/logger-config';
 
 // GET: / - Perform healthcheck.
-const healthcheck = async (
-  _req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const healthcheck: RequestHandler = async (_req, res, next) => {
   logger.debug('Checking health of the application.');
   try {
     res.status(200).send('Snooze+ is active.');
@@ -19,11 +15,7 @@ const healthcheck = async (
 };
 
 // GET: /db-healthcheck - Perform healthcheck on the database.
-const dbHealthcheck = async (
-  _req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const dbHealthcheck: RequestHandler = async (_req, res, next) => {
   logger.debug('Checking database connection.');
   try {
     pool.query('SELECT NOW()', (err, result) => {

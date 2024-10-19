@@ -1,26 +1,23 @@
 import express from 'express';
-import initialize from '../controllers/initialize-controller';
-import submit from '../controllers/submit-controller';
-import { receiver, validate } from '../controllers/webhook-controller';
-import {
-  healthcheck,
-  dbHealthcheck,
-} from '../controllers/healthcheck-controller';
+import * as initializeController from '../controllers/initialize-controller';
+import * as submitController from '../controllers/submit-controller';
+import * as webhookController from '../controllers/webhook-controller';
+import * as healthcheckController from '../controllers/healthcheck-controller';
 
 const router = express.Router();
 
 /*
   Healthcheck routes for the application and database connection.
 */
-router.route('/').get(healthcheck);
+router.route('/').get(healthcheckController.healthcheck);
 
-router.route('/db-healthcheck').get(dbHealthcheck);
+router.route('/db-healthcheck').get(healthcheckController.dbHealthcheck);
 
 /*
   This is an endpoint that Intercom will POST HTTP request when a teammate inserts
   the app into the inbox, or a new conversation is viewed.
 */
-router.route('/initialize').post(initialize);
+router.route('/initialize').post(initializeController.initialize);
 
 /*
   When a submit action is taken in a canvas component, it will hit this endpoint.
@@ -29,13 +26,13 @@ router.route('/initialize').post(initialize);
   to set up the conditions that will show it the required canvas object based on a
   teammate's actions.
 */
-router.route('/submit').post(submit);
+router.route('/submit').post(submitController.submit);
 
 /*
   Webhook route for receiving events from Intercom.
 */
-router.route('/webhook').head(validate);
+router.route('/webhook').head(webhookController.validate);
 
-router.route('/webhook').post(receiver);
+router.route('/webhook').post(webhookController.receiver);
 
 export default router;
