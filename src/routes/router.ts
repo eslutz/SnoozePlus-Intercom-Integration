@@ -1,8 +1,8 @@
 import express from 'express';
+import * as healthcheckController from '../controllers/healthcheck-controller';
 import * as initializeController from '../controllers/initialize-controller';
 import * as submitController from '../controllers/submit-controller';
 import * as webhookController from '../controllers/webhook-controller';
-import * as healthcheckController from '../controllers/healthcheck-controller';
 
 const router = express.Router();
 
