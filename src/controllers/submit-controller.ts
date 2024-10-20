@@ -3,7 +3,7 @@ import logger from '../config/logger-config';
 import * as canvasService from '../services/canvas-service';
 import * as intercomService from '../services/intercom-service';
 import * as messageService from '../services/message-service';
-import { createSnoozeRequest } from '../utilities/snooze';
+import createSnoozeRequest from '../utilities/snooze';
 
 // POST: /submit - Send the next canvas based on submit component id.
 const submit: RequestHandler = async (req, res, next) => {
@@ -64,6 +64,8 @@ const submit: RequestHandler = async (req, res, next) => {
       const snoozeResponse = await intercomService.setSnooze(snoozeRequest);
       logger.info('Conversation snooze set.');
       logger.debug(`Set Snooze response: ${JSON.stringify(snoozeResponse)}`);
+
+      // TODO: logic for close conversation selection should probably go here
 
       logger.info('Saving messages to the database.');
       // Save messages to the database.
