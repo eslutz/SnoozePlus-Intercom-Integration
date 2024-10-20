@@ -27,18 +27,19 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
     logger.debug(`Current snooze duration total: ${snoozeDurationTotal}`);
     logger.debug(`Message: ${input.input_values[`message${i}`]}`);
     // Determine the send date as the current date and time plus the snooze duration.
-    const currentDate = new Date();
-    const sendDate = new Date(
-      currentDate.getDate() + Number(input.input_values[`snoozeDuration${i}`])
+    const sendDate = new Date();
+    sendDate.setDate(
+      sendDate.getDate() + Number(input.input_values[`snoozeDuration${i}`])
     );
     logger.debug(`Message send date: ${sendDate}`);
+    // TODO: Ensure input is sanitized
     messages.push({
       message: input.input_values[`message${i}`],
       sendDate: sendDate,
     });
   }
   logger.info(`Snooze messages: ${JSON.stringify(messages)}`);
-  logger.info(`Final snooze duration total: ${snoozeDurationTotal}`);
+  logger.info(`Final snooze duration total: ${snoozeDurationTotal} day(s)`);
 
   logger.info('Getting snooze until date.');
   // Get the date the snooze will end.
@@ -78,4 +79,4 @@ const setSnoozeNote = (
 const setUnixTimestamp = (date: Date): number =>
   Math.floor(date.getTime() / 1000);
 
-export { createSnoozeRequest, setSnoozeNote, setUnixTimestamp };
+export default createSnoozeRequest;
