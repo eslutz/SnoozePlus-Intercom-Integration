@@ -15,7 +15,8 @@
       "type": "node",
       "outputCapture": "std",
       "console": "integratedTerminal",
-      "runtimeExecutable": "tsx"
+      "runtimeExecutable": "tsx",
+      "envFile": "${workspaceFolder}/.env.local"
     }
   ]
 }
