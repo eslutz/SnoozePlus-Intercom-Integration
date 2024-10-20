@@ -69,9 +69,9 @@ const setSnoozeNote = (
   snoozeDuration: number,
   snoozeUntil: Date
 ): string => {
-  const time = snoozeCount > 1 ? 'times' : 'time';
   const day = snoozeDuration > 1 ? 'days' : 'day';
-  const note = `<p><strong>Snooze+ has been set.</strong></p><br /><p>The conversation will be snoozed ${snoozeCount} ${time} for a total of ${snoozeDuration} ${day}.  The snooze will end on ${snoozeUntil.toLocaleDateString()}.</p>`;
+  const message = snoozeCount > 1 ? 'messages' : 'message';
+  const note = `<p><strong>Snooze+ has been set.</strong></p><br /><p>The conversation will be snoozed for a total of ${snoozeDuration} ${day}, with ${snoozeCount} ${message} being sent.  The snooze will end on ${snoozeUntil.toLocaleDateString()}.</p>`;
 
   return note;
 };

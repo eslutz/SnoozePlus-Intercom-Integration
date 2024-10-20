@@ -60,16 +60,17 @@ const submit: RequestHandler = async (req, res, next) => {
       logger.info('Snooze summary note added to conversation.');
       logger.debug(`Add Note response: ${JSON.stringify(noteResponse)}`);
 
+      // TODO: logic for close conversation selection should probably go here
+
       logger.info('Setting conversation snooze.');
       const snoozeResponse = await intercomService.setSnooze(snoozeRequest);
       logger.info('Conversation snooze set.');
       logger.debug(`Set Snooze response: ${JSON.stringify(snoozeResponse)}`);
 
-      // TODO: logic for close conversation selection should probably go here
-
       logger.info('Saving messages to the database.');
       // Save messages to the database.
       const messageResponse = await messageService.saveMessage(snoozeRequest);
+      logger.info('Messages saved to the database.');
       logger.debug(`Save Messages response: ${messageResponse}`);
 
       // Send the final canvas.

@@ -3,7 +3,6 @@ const fetch = (...args) =>
   // @ts-expect-error: type not yet defined
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 import logger from '../config/logger-config';
-import { setUnixTimestamp } from '../utilities/snooze';
 
 const baseUrl = process.env.INTERCOM_BASE_URL ?? 'https://api.intercom.io';
 

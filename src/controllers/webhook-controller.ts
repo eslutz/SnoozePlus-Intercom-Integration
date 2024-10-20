@@ -13,6 +13,7 @@ const validate: RequestHandler = async (req, res, next) => {
   }
 };
 
+// TODO: Determine how to tell when notification is received for a canceled snooze and what steps to take next
 // POST: /webhook - Receive webhook notifications.
 const receiver: RequestHandler = async (req, res, next) => {
   try {
