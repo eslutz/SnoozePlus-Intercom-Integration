@@ -203,7 +203,7 @@ const getMessageCanvas = (numOfSnoozes: number) => {
   return messageCanvas;
 };
 
-const getFinalCanvas = (snoozeRequest: any) => {
+const getFinalCanvas = (snoozeRequest: SnoozeRequest) => {
   const finalCanvas = {
     canvas: {
       content: {
@@ -217,7 +217,7 @@ const getFinalCanvas = (snoozeRequest: any) => {
           },
           {
             type: 'text',
-            text: `The conversation will be snoozed for ${snoozeRequest.length} days until ${snoozeRequest.until.toLocaleDateString()}.`,
+            text: snoozeRequest.snoozeDetails.snoozeNote,
             style: 'paragraph',
           },
           {

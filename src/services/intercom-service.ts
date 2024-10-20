@@ -3,17 +3,14 @@ const fetch = (...args) =>
   // @ts-expect-error: type not yet defined
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 import logger from '../config/logger-config';
+import { setUnixTimestamp } from '../utilities/snooze';
 
 const baseUrl = process.env.INTERCOM_BASE_URL ?? 'https://api.intercom.io';
 
-const addNote = async (
-  conversationId: number,
-  adminId: number,
-  snoozeRequest: any
-) => {
+const addNote = async (snoozeRequest: SnoozeRequest) => {
   try {
     const response = await fetch(
-      `${baseUrl}/conversations/${conversationId}/reply`,
+      `${baseUrl}/conversations/${snoozeRequest.conversationId}/reply`,
       {
         method: 'POST',
         headers: {
@@ -24,8 +21,8 @@ const addNote = async (
         body: JSON.stringify({
           message_type: 'note',
           type: 'admin',
-          admin_id: adminId,
-          body: `<p><strong>Snooze+ has been set.</strong></p><p>The conversation will be snoozed for ${snoozeRequest.length} days and will stop snoozing on ${snoozeRequest.until.toLocaleDateString()}.</p>`,
+          admin_id: snoozeRequest.adminId,
+          body: snoozeRequest.snoozeDetails.snoozeNote,
         }),
       }
     );
@@ -43,14 +40,10 @@ const addNote = async (
   }
 };
 
-const sendMessage = async (
-  conversationId: number,
-  adminId: number,
-  message: any
-) => {
+const sendMessage = async (message: MessageOutbound) => {
   try {
     const response = await fetch(
-      `${baseUrl}/conversations/${conversationId}/reply`,
+      `${baseUrl}/conversations/${message.conversationId}/reply`,
       {
         method: 'POST',
         headers: {
@@ -61,7 +54,7 @@ const sendMessage = async (
         body: JSON.stringify({
           message_type: 'comment',
           type: 'admin',
-          admin_id: adminId,
+          admin_id: message.adminId,
           body: `<p>${message.message}</p>`,
         }),
       }
@@ -80,19 +73,10 @@ const sendMessage = async (
   }
 };
 
-const setSnooze = async (
-  conversationId: number,
-  adminId: number,
-  snoozeUntil: Date
-) => {
-  // Convert snoozeUntil to Unix timestamp.
-  const snoozeUntilUnixTimestamp = Math.floor(
-    new Date(snoozeUntil).getTime() / 1000
-  );
-
+const setSnooze = async (snoozeRequest: SnoozeRequest) => {
   try {
     const response = await fetch(
-      `${baseUrl}/conversations/${conversationId}/parts`,
+      `${baseUrl}/conversations/${snoozeRequest.conversationId}/parts`,
       {
         method: 'POST',
         headers: {
@@ -102,8 +86,8 @@ const setSnooze = async (
         },
         body: JSON.stringify({
           message_type: 'snoozed',
-          admin_id: adminId,
-          snoozed_until: snoozeUntilUnixTimestamp,
+          admin_id: snoozeRequest.adminId,
+          snoozed_until: snoozeRequest.snoozeDetails.snoozeUntilUnixTimestamp,
         }),
       }
     );
