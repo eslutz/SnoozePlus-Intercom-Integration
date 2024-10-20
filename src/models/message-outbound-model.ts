@@ -1,6 +1,6 @@
 interface MessageOutbound {
-  workspaceId: number;
-  adminId: number;
-  conversationId: number;
-  message: string;
+  readonly workspaceId: string;
+  readonly adminId: number;
+  readonly conversationId: number;
+  readonly message: string;
 }

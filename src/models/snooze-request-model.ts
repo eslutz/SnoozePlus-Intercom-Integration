@@ -1,5 +1,5 @@
 interface SnoozeRequest {
-  readonly workspaceId: number;
+  readonly workspaceId: string;
   readonly adminId: number;
   readonly conversationId: number;
   readonly messages: Array<Message>;

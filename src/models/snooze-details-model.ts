@@ -1,7 +1,7 @@
 interface SnoozeDetails {
-  snoozeCount: number;
-  snoozeDuration: number;
-  snoozeUntil: Date;
-  snoozeUntilUnixTimestamp: number;
-  snoozeNote: string;
+  readonly snoozeCount: number;
+  readonly snoozeDuration: number;
+  readonly snoozeUntil: Date;
+  readonly snoozeUntilUnixTimestamp: number;
+  readonly snoozeNote: string;
 }

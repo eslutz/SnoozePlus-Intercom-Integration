@@ -1,4 +1,4 @@
 interface Message {
-  message: string;
-  sendDate: Date;
+  readonly message: string;
+  readonly sendDate: Date;
 }
