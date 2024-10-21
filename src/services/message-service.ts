@@ -1,9 +1,42 @@
 import pool from '../config/db-config';
 import logger from '../config/logger-config';
 
-// TODO: Implement deleteMessage
-const deleteMessage = async () => {
-  throw new Error('Not implemented');
+const deleteMessage = async (messageGUID: string): Promise<number> => {
+  const deleteMessage = `
+    DELETE FROM messages
+    WHERE id = $1;
+  `;
+  const deleteParameters = [messageGUID];
+
+  try {
+    const response = await pool.query(deleteMessage, deleteParameters);
+    logger.debug(`Messages deleted: ${JSON.stringify(response.rowCount)}`);
+
+    return response.rowCount ?? 0;
+  } catch (err) {
+    logger.error(`Error executing select message query ${err}`);
+
+    return 0;
+  }
+};
+
+const deleteMessages = async (adminId: number, conversationId: number) => {
+  const deleteMessages = `
+    DELETE FROM messages
+    WHERE admin_id = $1 AND conversation_id = $2;
+  `;
+  const deleteParameters = [adminId, conversationId];
+
+  try {
+    const response = await pool.query(deleteMessages, deleteParameters);
+    logger.debug(`Messages deleted: ${JSON.stringify(response.rowCount)}`);
+
+    return response.rowCount;
+  } catch (err) {
+    logger.error(`Error executing select message query ${err}`);
+
+    return 0;
+  }
 };
 
 const getMessage = async (messageGUID: string): Promise<MessageOutbound> => {
@@ -11,10 +44,10 @@ const getMessage = async (messageGUID: string): Promise<MessageOutbound> => {
     SELECT * FROM messages
     WHERE id = $1;
   `;
-  const messageId = [messageGUID];
+  const messageParameters = [messageGUID];
 
   try {
-    const response = await pool.query(selectMessage, messageId);
+    const response = await pool.query(selectMessage, messageParameters);
     const message = response.rows[0] as MessageOutbound;
     logger.debug(`Message retrieved: ${JSON.stringify(response.rows[0])}`);
 
@@ -36,7 +69,7 @@ const saveMessage = async (snoozeRequest: SnoozeRequest): Promise<string[]> => {
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id;
       `;
-      const messageValues = [
+      const messageParameters = [
         snoozeRequest.workspaceId,
         snoozeRequest.adminId,
         snoozeRequest.conversationId,
@@ -45,7 +78,7 @@ const saveMessage = async (snoozeRequest: SnoozeRequest): Promise<string[]> => {
       ];
 
       try {
-        const response = await pool.query(insertMessage, messageValues);
+        const response = await pool.query(insertMessage, messageParameters);
         const messageGUID = response.rows[0].id;
         logger.debug(`Message saved with GUID: ${messageGUID}`);
 
@@ -67,4 +100,4 @@ const saveMessage = async (snoozeRequest: SnoozeRequest): Promise<string[]> => {
   return messageGUIDs;
 };
 
-export { deleteMessage, getMessage, saveMessage };
+export { deleteMessage, deleteMessages, getMessage, saveMessage };
