@@ -31,6 +31,7 @@ const addNote = async (snoozeRequest: SnoozeRequest): Promise<any> => {
         `Response status ${response.status}: Error during add note request`
       );
       logger.debug(`Response: ${JSON.stringify(response)}`);
+
       return null;
     }
     const data = await response.json();
@@ -38,6 +39,7 @@ const addNote = async (snoozeRequest: SnoozeRequest): Promise<any> => {
     return data;
   } catch (err) {
     logger.error(`Error during POST request: ${err}`);
+
     return null;
   }
 };
@@ -73,6 +75,8 @@ const sendMessage = async (message: MessageOutbound): Promise<any> => {
     return data;
   } catch (err) {
     logger.error(`Error during POST request: ${err}`);
+
+    return null;
   }
 };
 
@@ -106,6 +110,7 @@ const setSnooze = async (snoozeRequest: SnoozeRequest): Promise<any> => {
     return data;
   } catch (err) {
     logger.error(`Error during POST request: ${err}`);
+
     return null;
   }
 };

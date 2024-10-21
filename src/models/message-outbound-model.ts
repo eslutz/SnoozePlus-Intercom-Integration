@@ -3,4 +3,5 @@ interface MessageOutbound {
   readonly adminId: number;
   readonly conversationId: number;
   readonly message: string;
+  readonly sendDate: Date;
 }

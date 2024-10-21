@@ -6,9 +6,24 @@ const deleteMessage = async () => {
   throw new Error('Not implemented');
 };
 
-// TODO: Implement getMessage
-const getMessage = async () => {
-  throw new Error('Not implemented');
+const getMessage = async (messageGUID: string): Promise<MessageOutbound> => {
+  const selectMessage = `
+    SELECT * FROM messages
+    WHERE id = $1;
+  `;
+  const messageId = [messageGUID];
+
+  try {
+    const response = await pool.query(selectMessage, messageId);
+    const message = response.rows[0] as MessageOutbound;
+    logger.debug(`Message retrieved: ${JSON.stringify(response.rows[0])}`);
+
+    return message;
+  } catch (err) {
+    logger.error(`Error executing select message query ${err}`);
+
+    return {} as MessageOutbound;
+  }
 };
 
 const saveMessage = async (snoozeRequest: SnoozeRequest): Promise<string[]> => {
@@ -29,15 +44,17 @@ const saveMessage = async (snoozeRequest: SnoozeRequest): Promise<string[]> => {
         message.sendDate,
       ];
 
-      let messageGUID = '';
       try {
         const response = await pool.query(insertMessage, messageValues);
-        messageGUID = response.rows[0].id;
+        const messageGUID = response.rows[0].id;
         logger.debug(`Message saved with GUID: ${messageGUID}`);
+
+        return messageGUID;
       } catch (err) {
         logger.error(`Error executing insert message query ${err}`);
+
+        return '';
       }
-      return messageGUID;
     }
   );
 
