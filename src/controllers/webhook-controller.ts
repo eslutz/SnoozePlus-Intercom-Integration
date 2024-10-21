@@ -7,7 +7,7 @@ const validate: RequestHandler = async (req, res, next) => {
     logger.debug(`HEAD request headers: ${JSON.stringify(req.headers)}}`);
     res.status(200).send();
   } catch (err) {
-    logger.error(`An error ocurred: ${err}`);
+    logger.error(`An error occurred: ${err}`);
     res.status(500).send();
     return next(err);
   }
@@ -21,8 +21,8 @@ const receiver: RequestHandler = async (req, res, next) => {
     logger.debug(`Webhook notification body: ${JSON.stringify(req.body)}}`);
     res.status(200).send('Webhook notification received.');
   } catch (err) {
-    logger.error(`An error ocurred: ${err}`);
-    res.status(500).send(`An error ocurred: ${err}`);
+    logger.error(`An error occurred: ${err}`);
+    res.status(500).send(`An error occurred: ${err}`);
     return next(err);
   }
 };

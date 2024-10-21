@@ -11,8 +11,10 @@ const initialize: RequestHandler = async (req, res, next) => {
     logger.debug(`Initial canvas: ${JSON.stringify(initialCanvas)}`);
     res.send(initialCanvas);
   } catch (err) {
-    logger.error(`An error ocurred with the initialize canvas: ${err}`);
-    res.status(500).send(`An error ocurred with the initialize canvas: ${err}`);
+    logger.error(`An error occurred with the initialize canvas: ${err}`);
+    res
+      .status(500)
+      .send(`An error occurred with the initialize canvas: ${err}`);
     return next(err);
   }
 };

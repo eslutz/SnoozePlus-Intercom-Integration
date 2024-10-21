@@ -31,10 +31,10 @@ const submit: RequestHandler = async (req, res, next) => {
         logger.info(`Number of snoozes requested: ${numOfSnoozes}`);
         messageCanvas = canvasService.getMessageCanvas(numOfSnoozes);
       } catch (err) {
-        logger.error(`An error ocurred building the message canvas: ${err}`);
+        logger.error(`An error occurred building the message canvas: ${err}`);
         res
           .status(500)
-          .send(`An error ocurred building the message canvas: ${err}`);
+          .send(`An error occurred building the message canvas: ${err}`);
         return next(err);
       }
       logger.debug('Completed message canvas.');
@@ -71,15 +71,17 @@ const submit: RequestHandler = async (req, res, next) => {
       // Save messages to the database.
       const messageResponse = await messageService.saveMessage(snoozeRequest);
       logger.info('Messages saved to the database.');
-      logger.debug(`Save Messages response: ${messageResponse}`);
+      logger.debug(
+        `Save Messages response: ${JSON.stringify(messageResponse)}`
+      );
 
       // Send the final canvas.
       res.send(finalCanvas);
     } catch (err) {
-      logger.error(`An error ocurred building the final canvas: ${err}`);
+      logger.error(`An error occurred building the final canvas: ${err}`);
       res
         .status(500)
-        .send(`An error ocurred building the final canvas: ${err}`);
+        .send(`An error occurred building the final canvas: ${err}`);
       return next(err);
     }
   } else {

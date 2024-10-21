@@ -6,7 +6,7 @@ import logger from '../config/logger-config';
 
 const baseUrl = process.env.INTERCOM_BASE_URL ?? 'https://api.intercom.io';
 
-const addNote = async (snoozeRequest: SnoozeRequest) => {
+const addNote = async (snoozeRequest: SnoozeRequest): Promise<any> => {
   try {
     const response = await fetch(
       `${baseUrl}/conversations/${snoozeRequest.conversationId}/reply`,
@@ -27,19 +27,22 @@ const addNote = async (snoozeRequest: SnoozeRequest) => {
     );
 
     if (!response.ok) {
-      logger.error('Error during add note request');
-      logger.error(`Response status: ${response.status}`);
-      logger.error(`Response headers: ${response.headers}`);
+      logger.error(
+        `Response status ${response.status}: Error during add note request`
+      );
+      logger.debug(`Response: ${JSON.stringify(response)}`);
+      return null;
     }
     const data = await response.json();
 
     return data;
   } catch (err) {
     logger.error(`Error during POST request: ${err}`);
+    return null;
   }
 };
 
-const sendMessage = async (message: MessageOutbound) => {
+const sendMessage = async (message: MessageOutbound): Promise<any> => {
   try {
     const response = await fetch(
       `${baseUrl}/conversations/${message.conversationId}/reply`,
@@ -60,9 +63,10 @@ const sendMessage = async (message: MessageOutbound) => {
     );
 
     if (!response.ok) {
-      logger.error('Error during send reply request');
-      logger.error(`Response status: ${response.status}`);
-      logger.error(`Response headers: ${response.headers}`);
+      logger.error(
+        `Response status ${response.status}: Error during send reply request`
+      );
+      logger.debug(`Response: ${JSON.stringify(response)}`);
     }
     const data = await response.json();
 
@@ -72,7 +76,7 @@ const sendMessage = async (message: MessageOutbound) => {
   }
 };
 
-const setSnooze = async (snoozeRequest: SnoozeRequest) => {
+const setSnooze = async (snoozeRequest: SnoozeRequest): Promise<any> => {
   try {
     const response = await fetch(
       `${baseUrl}/conversations/${snoozeRequest.conversationId}/parts`,
@@ -92,15 +96,17 @@ const setSnooze = async (snoozeRequest: SnoozeRequest) => {
     );
 
     if (!response.ok) {
-      logger.error('Error during send reply request');
-      logger.error(`Response status: ${response.status}`);
-      logger.error(`Response headers: ${response.headers}`);
+      logger.error(
+        `Response status ${response.status}: Error during set snooze request`
+      );
+      logger.debug(`Response: ${JSON.stringify(response)}`);
     }
     const data = await response.json();
 
     return data;
   } catch (err) {
     logger.error(`Error during POST request: ${err}`);
+    return null;
   }
 };
 

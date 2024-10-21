@@ -1,5 +1,4 @@
-import { QueryArrayResult } from 'pg';
-import { query } from '../config/db-config';
+import pool from '../config/db-config';
 import logger from '../config/logger-config';
 
 // TODO: Implement deleteMessage
@@ -15,32 +14,38 @@ const getMessage = async () => {
 const saveMessage = async (snoozeRequest: SnoozeRequest): Promise<string[]> => {
   let messageGUIDs: string[] = [];
 
-  snoozeRequest.messages.forEach(async (message) => {
-    const insertMessage = `
+  const promises = snoozeRequest.messages.map(
+    async (message): Promise<string> => {
+      const insertMessage = `
       INSERT INTO messages (workspace_id, admin_id, conversation_id, message, send_date)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id;
       `;
-    // TODO: Or ensure message input is sanitized here
-    // TODO: Probably need to encrypt data at this point
-    const messageValues = [
-      snoozeRequest.workspaceId,
-      snoozeRequest.adminId,
-      snoozeRequest.conversationId,
-      message.message,
-      message.sendDate,
-    ];
+      const messageValues = [
+        snoozeRequest.workspaceId,
+        snoozeRequest.adminId,
+        snoozeRequest.conversationId,
+        message.message,
+        message.sendDate,
+      ];
 
-    try {
-      const response = await query(insertMessage, messageValues);
-      const messageGUID = (response.rows[0] as unknown as MessageSaveResponse)
-        .id;
-      logger.debug(`Message saved with GUID: ${messageGUID}`);
-      messageGUIDs.push(messageGUID);
-    } catch (err) {
-      logger.error(`Error executing insert message query ${err}`);
+      let messageGUID = '';
+      try {
+        const response = await pool.query(insertMessage, messageValues);
+        messageGUID = response.rows[0].id;
+        logger.debug(`Message saved with GUID: ${messageGUID}`);
+      } catch (err) {
+        logger.error(`Error executing insert message query ${err}`);
+      }
+      return messageGUID;
     }
-  });
+  );
+
+  try {
+    messageGUIDs = await Promise.all(promises);
+  } catch (err) {
+    logger.error(`Error saving messages: ${err}`);
+  }
 
   return messageGUIDs;
 };

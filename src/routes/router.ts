@@ -6,10 +6,14 @@ import * as webhookController from '../controllers/webhook-controller';
 
 const router = express.Router();
 
+router.route('/').get((_req, res) => {
+  res.send('Welcome to Snooze+');
+});
+
 /*
   Healthcheck routes for the application and database connection.
 */
-router.route('/').get(healthcheckController.healthcheck);
+router.route('/healthcheck').get(healthcheckController.healthcheck);
 
 router.route('/db-healthcheck').get(healthcheckController.dbHealthcheck);
 
