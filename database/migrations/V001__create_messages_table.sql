@@ -6,3 +6,5 @@ CREATE TABLE messages (
     send_date TIMESTAMP NOT NULL,
     close_conversation BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+CREATE INDEX idx_messages_send_date ON messages (send_date);

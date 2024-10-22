@@ -70,7 +70,8 @@ const getMessage = async (messageGUID: string): Promise<MessageOutbound> => {
 const getTodaysMessages = async (): Promise<MessageOutbound[]> => {
   const selectMessages = `
     SELECT * FROM messages
-    WHERE DATE(send_date) = CURRENT_DATE;
+    WHERE send_date >= CURRENT_DATE
+    AND send_date < CURRENT_DATE + INTERVAL '1 day';
   `;
 
   try {
