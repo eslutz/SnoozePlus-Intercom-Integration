@@ -4,5 +4,5 @@ CREATE TABLE messages (
     admin_id INTEGER NOT NULL,
     conversation_id INTEGER NOT NULL,
     message TEXT NOT NULL,
-    send_date DATE NOT NULL
+    send_date TIMESTAMP NOT NULL
 );

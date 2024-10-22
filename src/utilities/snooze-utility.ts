@@ -1,51 +1,54 @@
 import logger from '../config/logger-config';
 
+const snoozeLogger = logger.child({ module: 'snooze-utility' });
+
 // Take the input value object and determine how many snoozes were set.
 const createSnoozeRequest = (input: any): SnoozeRequest => {
-  logger.info('Getting workspace, admin, and conversation ids.');
+  snoozeLogger.info('Getting workspace, admin, and conversation ids.');
   const workspaceId = input.workspace_id;
   const adminId = input.admin.id;
   const conversationId = input.conversation.id;
-  logger.info('Workspace, admin, and conversation ids retrieved.');
+  snoozeLogger.info('Workspace, admin, and conversation ids retrieved.');
 
-  logger.info('Getting number of snoozes set.');
+  snoozeLogger.info('Getting number of snoozes set.');
   // Get the keys from the inputs object and use array length property to get number of inputs.
   const keysArray = Object.keys(input.input_values);
   const keysArrayCount = keysArray.length;
   const snoozeCount = Math.floor(keysArrayCount / 2);
-  logger.info(`Number of snoozes set: ${snoozeCount}`);
+  snoozeLogger.info(`Number of snoozes set: ${snoozeCount}`);
 
-  logger.info('Getting messages and duration of each snooze.');
+  snoozeLogger.info('Getting messages and duration of each snooze.');
   // Get messages and send date for each snooze.
   let snoozeDurationTotal = 0;
   const messages: Array<Message> = [];
   for (let i = 1; i <= snoozeCount; i++) {
-    logger.debug(
+    snoozeLogger.debug(
       `Snooze duration: ${input.input_values[`snoozeDuration${i}`]}`
     );
     snoozeDurationTotal += Number(input.input_values[`snoozeDuration${i}`]);
-    logger.debug(`Current snooze duration total: ${snoozeDurationTotal}`);
-    logger.debug(`Message: ${input.input_values[`message${i}`]}`);
+    snoozeLogger.debug(`Current snooze duration total: ${snoozeDurationTotal}`);
+    snoozeLogger.debug(`Message: ${input.input_values[`message${i}`]}`);
     // Determine the send date as the current date and time plus the snooze duration.
     const sendDate = new Date();
     sendDate.setDate(
       sendDate.getDate() + Number(input.input_values[`snoozeDuration${i}`])
     );
-    logger.debug(`Message send date: ${sendDate}`);
-    // TODO: Ensure input is sanitized
+    snoozeLogger.debug(`Message send date: ${sendDate}`);
     messages.push({
       message: input.input_values[`message${i}`],
       sendDate: sendDate,
     });
   }
-  logger.info(`Snooze messages: ${JSON.stringify(messages)}`);
-  logger.info(`Final snooze duration total: ${snoozeDurationTotal} day(s)`);
+  snoozeLogger.info(`Snooze messages: ${JSON.stringify(messages)}`);
+  snoozeLogger.info(
+    `Final snooze duration total: ${snoozeDurationTotal} day(s)`
+  );
 
-  logger.info('Getting snooze until date.');
+  snoozeLogger.info('Getting snooze until date.');
   // Get the date the snooze will end.
   const snoozeUntil = new Date();
   snoozeUntil.setDate(snoozeUntil.getDate() + snoozeDurationTotal);
-  logger.info(`Snooze until date: ${snoozeUntil}`);
+  snoozeLogger.info(`Snooze until date: ${snoozeUntil}`);
 
   const snoozeRequest: SnoozeRequest = {
     workspaceId: workspaceId,

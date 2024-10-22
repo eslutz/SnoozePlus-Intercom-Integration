@@ -1,6 +1,8 @@
 import pool from '../config/db-config';
 import logger from '../config/logger-config';
 
+const messageLogger = logger.child({ module: 'message-service' });
+
 const deleteMessage = async (messageGUID: string): Promise<number> => {
   const deleteMessage = `
     DELETE FROM messages
@@ -10,11 +12,13 @@ const deleteMessage = async (messageGUID: string): Promise<number> => {
 
   try {
     const response = await pool.query(deleteMessage, deleteParameters);
-    logger.debug(`Messages deleted: ${JSON.stringify(response.rowCount)}`);
+    messageLogger.debug(
+      `Messages deleted: ${JSON.stringify(response.rowCount)}`
+    );
 
     return response.rowCount ?? 0;
   } catch (err) {
-    logger.error(`Error executing select message query ${err}`);
+    messageLogger.error(`Error executing select message query ${err}`);
 
     return 0;
   }
@@ -29,11 +33,13 @@ const deleteMessages = async (adminId: number, conversationId: number) => {
 
   try {
     const response = await pool.query(deleteMessages, deleteParameters);
-    logger.debug(`Messages deleted: ${JSON.stringify(response.rowCount)}`);
+    messageLogger.debug(
+      `Messages deleted: ${JSON.stringify(response.rowCount)}`
+    );
 
     return response.rowCount;
   } catch (err) {
-    logger.error(`Error executing select message query ${err}`);
+    messageLogger.error(`Error executing select message query ${err}`);
 
     return 0;
   }
@@ -49,11 +55,13 @@ const getMessage = async (messageGUID: string): Promise<MessageOutbound> => {
   try {
     const response = await pool.query(selectMessage, messageParameters);
     const message = response.rows[0] as MessageOutbound;
-    logger.debug(`Message retrieved: ${JSON.stringify(response.rows[0])}`);
+    messageLogger.debug(
+      `Message retrieved: ${JSON.stringify(response.rows[0])}`
+    );
 
     return message;
   } catch (err) {
-    logger.error(`Error executing select message query ${err}`);
+    messageLogger.error(`Error executing select message query ${err}`);
 
     return {} as MessageOutbound;
   }
@@ -80,11 +88,11 @@ const saveMessage = async (snoozeRequest: SnoozeRequest): Promise<string[]> => {
       try {
         const response = await pool.query(insertMessage, messageParameters);
         const messageGUID = response.rows[0].id;
-        logger.debug(`Message saved with GUID: ${messageGUID}`);
+        messageLogger.debug(`Message saved with GUID: ${messageGUID}`);
 
         return messageGUID;
       } catch (err) {
-        logger.error(`Error executing insert message query ${err}`);
+        messageLogger.error(`Error executing insert message query ${err}`);
 
         return '';
       }
@@ -94,7 +102,7 @@ const saveMessage = async (snoozeRequest: SnoozeRequest): Promise<string[]> => {
   try {
     messageGUIDs = await Promise.all(promises);
   } catch (err) {
-    logger.error(`Error saving messages: ${err}`);
+    messageLogger.error(`Error saving messages: ${err}`);
   }
 
   return messageGUIDs;

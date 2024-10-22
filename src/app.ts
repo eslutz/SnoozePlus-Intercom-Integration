@@ -16,24 +16,26 @@ app.use(express.static(path.join(__dirname)));
 
 app.use('/', router);
 
+const appLogger = logger.child({ module: 'app' });
+
 const server = app
   .listen(PORT, () => {
-    logger.info('*** SnoozePlus Intercom Integration ***');
-    logger.info('Express server is running');
+    appLogger.info('*** SnoozePlus Intercom Integration ***');
+    appLogger.info('Express server is running');
     const address = server.address();
     const port = typeof address === 'string' ? address : address?.port;
-    logger.info(`App is ready at port: ${port}`);
+    appLogger.info(`App is ready at port: ${port}`);
   })
   .on('error', (err) => {
-    logger.error(`Error occurred, server can't start: ${err}`);
+    appLogger.error(`Error occurred, server can't start: ${err}`);
   });
 
 process.on('SIGTERM', () => {
-  logger.debug('SIGTERM signal received: closing HTTP server');
+  appLogger.debug('SIGTERM signal received: closing HTTP server');
   server.close(async () => {
-    logger.info('Draining DB pool');
+    appLogger.info('Draining DB pool');
     await pool.end();
-    logger.info('DB pool drained');
-    logger.info('HTTP server closed');
+    appLogger.info('DB pool drained');
+    appLogger.info('HTTP server closed');
   });
 });

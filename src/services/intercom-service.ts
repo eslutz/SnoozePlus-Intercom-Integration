@@ -4,6 +4,7 @@ const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 import logger from '../config/logger-config';
 
+const intercomLogger = logger.child({ module: 'intercom-service' });
 const baseUrl = process.env.INTERCOM_BASE_URL ?? 'https://api.intercom.io';
 
 const addNote = async (snoozeRequest: SnoozeRequest): Promise<any> => {
@@ -27,10 +28,10 @@ const addNote = async (snoozeRequest: SnoozeRequest): Promise<any> => {
     );
 
     if (!response.ok) {
-      logger.error(
+      intercomLogger.error(
         `Response status ${response.status}: Error during add note request`
       );
-      logger.debug(`Response: ${JSON.stringify(response)}`);
+      intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
 
       return null;
     }
@@ -38,7 +39,7 @@ const addNote = async (snoozeRequest: SnoozeRequest): Promise<any> => {
 
     return data;
   } catch (err) {
-    logger.error(`Error during POST request: ${err}`);
+    intercomLogger.error(`Error during POST request: ${err}`);
 
     return null;
   }
@@ -65,16 +66,16 @@ const sendMessage = async (message: MessageOutbound): Promise<any> => {
     );
 
     if (!response.ok) {
-      logger.error(
+      intercomLogger.error(
         `Response status ${response.status}: Error during send reply request`
       );
-      logger.debug(`Response: ${JSON.stringify(response)}`);
+      intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
     }
     const data = await response.json();
 
     return data;
   } catch (err) {
-    logger.error(`Error during POST request: ${err}`);
+    intercomLogger.error(`Error during POST request: ${err}`);
 
     return null;
   }
@@ -100,16 +101,16 @@ const setSnooze = async (snoozeRequest: SnoozeRequest): Promise<any> => {
     );
 
     if (!response.ok) {
-      logger.error(
+      intercomLogger.error(
         `Response status ${response.status}: Error during set snooze request`
       );
-      logger.debug(`Response: ${JSON.stringify(response)}`);
+      intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
     }
     const data = await response.json();
 
     return data;
   } catch (err) {
-    logger.error(`Error during POST request: ${err}`);
+    intercomLogger.error(`Error during POST request: ${err}`);
 
     return null;
   }

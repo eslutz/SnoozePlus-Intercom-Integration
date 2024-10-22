@@ -70,7 +70,7 @@ if (process.env.NODE_ENV !== 'production') {
     }),
     new winston.transports.DailyRotateFile({
       level: 'error',
-      filename: 'logs/error-%DATE%.log',
+      filename: 'logs/errors-%DATE%.log',
       datePattern: 'YYYY-MM-DD',
       maxFiles: '7d',
       format: winston.format.simple(),
