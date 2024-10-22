@@ -14,15 +14,15 @@ const addNote = async (noteRequest: NoteRequest): Promise<any> => {
       {
         method: 'POST',
         headers: {
+          Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
           'Content-Type': 'application/json',
           'Intercom-Version': '2.11',
-          Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
         },
         body: JSON.stringify({
-          message_type: 'note',
-          type: 'admin',
           admin_id: noteRequest.adminId,
           body: noteRequest.note,
+          message_type: 'note',
+          type: 'admin',
         }),
       }
     );
@@ -45,6 +45,41 @@ const addNote = async (noteRequest: NoteRequest): Promise<any> => {
   }
 };
 
+const closeConversation = async (message: MessageOutbound): Promise<any> => {
+  try {
+    const response = await fetch(
+      `${baseUrl}/conversations/${message.conversationId}/parts`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Intercom-Version': '2.11',
+        },
+        body: JSON.stringify({
+          admin_id: message.adminId,
+          message_type: 'close',
+          type: 'admin',
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      intercomLogger.error(
+        `Response status ${response.status}: Error during close conversation request`
+      );
+      intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
+    }
+    const data = await response.json();
+
+    return data;
+  } catch (err) {
+    intercomLogger.error(`Error during POST request: ${err}`);
+
+    return null;
+  }
+};
+
 const sendMessage = async (message: MessageOutbound): Promise<any> => {
   try {
     const response = await fetch(
@@ -52,15 +87,15 @@ const sendMessage = async (message: MessageOutbound): Promise<any> => {
       {
         method: 'POST',
         headers: {
+          Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
           'Content-Type': 'application/json',
           'Intercom-Version': '2.11',
-          Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
         },
         body: JSON.stringify({
-          message_type: 'comment',
-          type: 'admin',
           admin_id: message.adminId,
           body: `<p>${message.message}</p>`,
+          message_type: 'comment',
+          type: 'admin',
         }),
       }
     );
@@ -88,13 +123,13 @@ const setSnooze = async (snoozeRequest: SnoozeRequest): Promise<any> => {
       {
         method: 'POST',
         headers: {
+          Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
           'Content-Type': 'application/json',
           'Intercom-Version': '2.11',
-          Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
         },
         body: JSON.stringify({
-          message_type: 'snoozed',
           admin_id: snoozeRequest.adminId,
+          message_type: 'snoozed',
           snoozed_until: snoozeRequest.snoozeUntilUnixTimestamp,
         }),
       }
@@ -116,4 +151,4 @@ const setSnooze = async (snoozeRequest: SnoozeRequest): Promise<any> => {
   }
 };
 
-export { addNote, sendMessage, setSnooze };
+export { addNote, closeConversation, sendMessage, setSnooze };
