@@ -16,7 +16,7 @@ const validate: RequestHandler = async (req, res, next) => {
   } catch (err) {
     webhookLogger.error(`An error occurred: ${err}`);
     res.status(500).send();
-    return next(err);
+    next(err);
   }
 };
 
@@ -43,6 +43,7 @@ const receiver: RequestHandler = async (req, res, next) => {
       webhookLogger.info('Messages deleted.');
       webhookLogger.debug(`Messages deleted: ${JSON.stringify(response)}`);
     } else {
+      // Log warning if topic is not recognized.
       webhookLogger.warn(
         `Webhook notification topic ${fullTopic} not recognized.`
       );
@@ -50,7 +51,7 @@ const receiver: RequestHandler = async (req, res, next) => {
   } catch (err) {
     webhookLogger.error(`An error occurred: ${err}`);
     res.status(500).send(`An error occurred: ${err}`);
-    return next(err);
+    next(err);
   }
 
   // TODO: Add logic to add note to conversation after deleting messages.

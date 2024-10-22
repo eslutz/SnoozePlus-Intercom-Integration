@@ -39,7 +39,7 @@ const submit: RequestHandler = async (req, res, next) => {
         res
           .status(500)
           .send(`An error occurred building the message canvas: ${err}`);
-        return next(err);
+        next(err);
       }
       submitLogger.debug('Completed message canvas.');
       submitLogger.debug(`Message canvas: ${JSON.stringify(messageCanvas)}`);
@@ -64,8 +64,6 @@ const submit: RequestHandler = async (req, res, next) => {
       submitLogger.info('Snooze summary note added to conversation.');
       submitLogger.debug(`Add Note response: ${JSON.stringify(noteResponse)}`);
 
-      // TODO: logic for close conversation selection should probably go here
-
       submitLogger.info('Setting conversation snooze.');
       const snoozeResponse = await intercomService.setSnooze(snoozeRequest);
       submitLogger.info('Conversation snooze set.');
@@ -88,7 +86,7 @@ const submit: RequestHandler = async (req, res, next) => {
       res
         .status(500)
         .send(`An error occurred building the final canvas: ${err}`);
-      return next(err);
+      next(err);
     }
   } else {
     // Reset to original canvas.

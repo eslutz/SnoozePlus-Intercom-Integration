@@ -8,8 +8,8 @@ const healthcheckLogger = logger.child({ module: 'healthcheck-controller' });
 const healthcheck: RequestHandler = (_req, res, next) => {
   healthcheckLogger.debug('Checking health of the application.');
   try {
-    res.status(200).send('Snooze+ is active.');
     healthcheckLogger.debug('Application is active.');
+    res.status(200).send('Snooze+ is active.');
   } catch (err) {
     healthcheckLogger.error(`An error occurred: ${err}`);
     res.status(500).send(`An error occurred: ${err}`);

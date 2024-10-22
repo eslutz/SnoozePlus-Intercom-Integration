@@ -18,7 +18,7 @@ const deleteMessage = async (messageGUID: string): Promise<number> => {
 
     return response.rowCount ?? 0;
   } catch (err) {
-    messageLogger.error(`Error executing select message query ${err}`);
+    messageLogger.error(`Error executing delete message query ${err}`);
 
     return 0;
   }
@@ -37,9 +37,9 @@ const deleteMessages = async (adminId: number, conversationId: number) => {
       `Messages deleted: ${JSON.stringify(response.rowCount)}`
     );
 
-    return response.rowCount;
+    return response.rowCount ?? 0;
   } catch (err) {
-    messageLogger.error(`Error executing select message query ${err}`);
+    messageLogger.error(`Error executing delete messages query ${err}`);
 
     return 0;
   }
