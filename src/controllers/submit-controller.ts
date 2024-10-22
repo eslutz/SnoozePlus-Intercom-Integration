@@ -60,7 +60,11 @@ const submit: RequestHandler = async (req, res, next) => {
 
       submitLogger.info('Adding snooze summary note to conversation.');
       // Add note to conversation with summary of set snoozes.
-      const noteResponse = await intercomService.addNote(snoozeRequest);
+      const noteResponse = await intercomService.addNote({
+        adminId: snoozeRequest.adminId,
+        conversationId: snoozeRequest.conversationId,
+        note: snoozeRequest.note,
+      });
       submitLogger.info('Snooze summary note added to conversation.');
       submitLogger.debug(`Add Note response: ${JSON.stringify(noteResponse)}`);
 

@@ -73,21 +73,21 @@ const saveMessage = async (snoozeRequest: SnoozeRequest): Promise<string[]> => {
   const promises = snoozeRequest.messages.map(
     async (message): Promise<string> => {
       const insertMessage = `
-      INSERT INTO messages (workspace_id, admin_id, conversation_id, message, send_date)
+      INSERT INTO messages (admin_id, conversation_id, message, send_date, close_conversation)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id;
       `;
       const messageParameters = [
-        snoozeRequest.workspaceId,
         snoozeRequest.adminId,
         snoozeRequest.conversationId,
         message.message,
         message.sendDate,
+        message.closeConversation,
       ];
 
       try {
         const response = await pool.query(insertMessage, messageParameters);
-        const messageGUID = response.rows[0].id;
+        const messageGUID: string = response.rows[0].id;
         messageLogger.debug(`Message saved with GUID: ${messageGUID}`);
 
         return messageGUID;

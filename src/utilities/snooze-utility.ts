@@ -4,8 +4,7 @@ const snoozeLogger = logger.child({ module: 'snooze-utility' });
 
 // Take the input value object and determine how many snoozes were set.
 const createSnoozeRequest = (input: any): SnoozeRequest => {
-  snoozeLogger.info('Getting workspace, admin, and conversation ids.');
-  const workspaceId = input.workspace_id;
+  snoozeLogger.info('Getting admin and conversation ids.');
   const adminId = input.admin.id;
   const conversationId = input.conversation.id;
   snoozeLogger.info('Workspace, admin, and conversation ids retrieved.');
@@ -37,6 +36,7 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
     messages.push({
       message: input.input_values[`message${i}`],
       sendDate: sendDate,
+      closeConversation: input.input_values.then === 'close',
     });
   }
   snoozeLogger.info(`Snooze messages: ${JSON.stringify(messages)}`);
@@ -51,20 +51,24 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
   snoozeLogger.info(`Snooze until date: ${snoozeUntil}`);
 
   const snoozeRequest: SnoozeRequest = {
-    workspaceId: workspaceId,
     adminId: adminId,
     conversationId: conversationId,
     messages: messages,
-    snoozeDetails: {
-      snoozeCount: snoozeCount,
-      snoozeDuration: snoozeDurationTotal,
-      snoozeUntil: snoozeUntil,
-      snoozeUntilUnixTimestamp: setUnixTimestamp(snoozeUntil),
-      snoozeNote: setSnoozeNote(snoozeCount, snoozeDurationTotal, snoozeUntil),
-    },
+    note: setSnoozeNote(snoozeCount, snoozeDurationTotal, snoozeUntil),
+    snoozeUntilUnixTimestamp: setUnixTimestamp(snoozeUntil),
   };
 
   return snoozeRequest;
+};
+
+const setCloseNote = (
+  reasonClosed: string,
+  messagesDeleted: number
+): string => {
+  const message = messagesDeleted > 1 ? 'messages' : 'message';
+  const note = `<p><strong>Snooze+ has ended.</stronger></p><br /><p>The conversation has been ${reasonClosed}.</p><p>The remaining ${messagesDeleted} ${message} will not be sent.</p>`;
+
+  return note;
 };
 
 const setSnoozeNote = (
@@ -83,3 +87,4 @@ const setUnixTimestamp = (date: Date): number =>
   Math.floor(date.getTime() / 1000);
 
 export default createSnoozeRequest;
+export { setCloseNote };

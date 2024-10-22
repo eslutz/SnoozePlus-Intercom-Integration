@@ -217,7 +217,7 @@ const getFinalCanvas = (snoozeRequest: SnoozeRequest) => {
           },
           {
             type: 'text',
-            text: snoozeRequest.snoozeDetails.snoozeNote,
+            text: snoozeRequest.note,
             style: 'paragraph',
           },
           {

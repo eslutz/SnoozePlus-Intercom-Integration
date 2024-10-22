@@ -7,10 +7,10 @@ import logger from '../config/logger-config';
 const intercomLogger = logger.child({ module: 'intercom-service' });
 const baseUrl = process.env.INTERCOM_BASE_URL ?? 'https://api.intercom.io';
 
-const addNote = async (snoozeRequest: SnoozeRequest): Promise<any> => {
+const addNote = async (noteRequest: NoteRequest): Promise<any> => {
   try {
     const response = await fetch(
-      `${baseUrl}/conversations/${snoozeRequest.conversationId}/reply`,
+      `${baseUrl}/conversations/${noteRequest.conversationId}/reply`,
       {
         method: 'POST',
         headers: {
@@ -21,8 +21,8 @@ const addNote = async (snoozeRequest: SnoozeRequest): Promise<any> => {
         body: JSON.stringify({
           message_type: 'note',
           type: 'admin',
-          admin_id: snoozeRequest.adminId,
-          body: snoozeRequest.snoozeDetails.snoozeNote,
+          admin_id: noteRequest.adminId,
+          body: noteRequest.note,
         }),
       }
     );
@@ -95,7 +95,7 @@ const setSnooze = async (snoozeRequest: SnoozeRequest): Promise<any> => {
         body: JSON.stringify({
           message_type: 'snoozed',
           admin_id: snoozeRequest.adminId,
-          snoozed_until: snoozeRequest.snoozeDetails.snoozeUntilUnixTimestamp,
+          snoozed_until: snoozeRequest.snoozeUntilUnixTimestamp,
         }),
       }
     );

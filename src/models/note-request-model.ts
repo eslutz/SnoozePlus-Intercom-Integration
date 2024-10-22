@@ -1,5 +1,5 @@
-interface MessageOutbound {
+interface NoteRequest {
   readonly adminId: number;
   readonly conversationId: number;
-  readonly message: Message;
+  note: string;
 }
