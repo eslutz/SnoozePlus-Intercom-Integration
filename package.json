@@ -28,6 +28,7 @@
   "main": "app.js",
   "scripts": {
     "dev": "tsx --env-file=.env.local --watch src/app.ts",
+    "dev-build": "tsc --noEmit",
     "build": "npm outdated && tsc && npm run copy-files",
     "start": "node --env-file=.env app.js",
     "lint": "prettier ./src --write && eslint ./src --fix",
