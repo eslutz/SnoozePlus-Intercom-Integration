@@ -67,6 +67,26 @@ const getMessage = async (messageGUID: string): Promise<MessageOutbound> => {
   }
 };
 
+const getTodaysMessages = async (): Promise<MessageOutbound[]> => {
+  const selectMessages = `
+    SELECT * FROM messages
+    WHERE DATE(send_date) = CURRENT_DATE;
+  `;
+
+  try {
+    const response = await pool.query(selectMessages);
+    const messages = response.rows as MessageOutbound[];
+    messageLogger.info(`Messages retrieved: ${messages.length}`);
+    messageLogger.debug(`Messages retrieved: ${JSON.stringify(messages)}`);
+
+    return messages;
+  } catch (err) {
+    messageLogger.error(`Error executing select messages query ${err}`);
+
+    return [];
+  }
+};
+
 const saveMessage = async (snoozeRequest: SnoozeRequest): Promise<string[]> => {
   let messageGUIDs: string[] = [];
 
@@ -108,4 +128,10 @@ const saveMessage = async (snoozeRequest: SnoozeRequest): Promise<string[]> => {
   return messageGUIDs;
 };
 
-export { deleteMessage, deleteMessages, getMessage, saveMessage };
+export {
+  deleteMessage,
+  deleteMessages,
+  getMessage,
+  getTodaysMessages,
+  saveMessage,
+};
