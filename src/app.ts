@@ -1,19 +1,11 @@
 import express from 'express';
-import morgan from 'morgan';
 import path from 'path';
-import logger from './config/logger-config';
+import logger, { morganMiddleware } from './config/logger-config';
 import router from './routes/router';
-import { pool } from './config/db-config';
+import pool from './config/db-config';
 
 const app = express();
 const PORT = 8706;
-
-const morganMiddleware = morgan('tiny', {
-  stream: {
-    // Configure Morgan to logger with the http severity.
-    write: (message) => logger.http(message.trim()),
-  },
-});
 
 app.use(morganMiddleware);
 app.use(express.json());
