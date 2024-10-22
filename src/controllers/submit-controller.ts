@@ -77,7 +77,11 @@ const submit: RequestHandler = async (req, res, next) => {
 
       submitLogger.info('Saving messages to the database.');
       // Save messages to the database.
-      const messageResponse = await messageService.saveMessage(snoozeRequest);
+      const messageResponse = await messageService.saveMessages(
+        snoozeRequest.adminId,
+        snoozeRequest.conversationId,
+        snoozeRequest.messages
+      );
       submitLogger.info('Messages saved to the database.');
       submitLogger.debug(
         `Save Messages response: ${JSON.stringify(messageResponse)}`

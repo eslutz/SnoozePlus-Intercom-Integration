@@ -88,37 +88,39 @@ const getTodaysMessages = async (): Promise<MessageOutbound[]> => {
   }
 };
 
-const saveMessage = async (snoozeRequest: SnoozeRequest): Promise<string[]> => {
+const saveMessages = async (
+  adminId: number,
+  conversationId: number,
+  messages: Message[]
+): Promise<string[]> => {
   let messageGUIDs: string[] = [];
 
-  const promises = snoozeRequest.messages.map(
-    async (message): Promise<string> => {
-      const insertMessage = `
+  const promises = messages.map(async (message): Promise<string> => {
+    const insertMessage = `
       INSERT INTO messages (admin_id, conversation_id, message, send_date, close_conversation)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id;
       `;
-      const messageParameters = [
-        snoozeRequest.adminId,
-        snoozeRequest.conversationId,
-        message.message,
-        message.sendDate,
-        message.closeConversation,
-      ];
+    const messageParameters = [
+      adminId,
+      conversationId,
+      message.message,
+      message.sendDate,
+      message.closeConversation,
+    ];
 
-      try {
-        const response = await pool.query(insertMessage, messageParameters);
-        const messageGUID: string = response.rows[0].id;
-        messageLogger.debug(`Message saved with GUID: ${messageGUID}`);
+    try {
+      const response = await pool.query(insertMessage, messageParameters);
+      const messageGUID: string = response.rows[0].id;
+      messageLogger.debug(`Message saved with GUID: ${messageGUID}`);
 
-        return messageGUID;
-      } catch (err) {
-        messageLogger.error(`Error executing insert message query ${err}`);
+      return messageGUID;
+    } catch (err) {
+      messageLogger.error(`Error executing insert message query ${err}`);
 
-        return '';
-      }
+      return '';
     }
-  );
+  });
 
   try {
     messageGUIDs = await Promise.all(promises);
@@ -134,5 +136,5 @@ export {
   deleteMessages,
   getMessage,
   getTodaysMessages,
-  saveMessage,
+  saveMessages,
 };
