@@ -24,6 +24,10 @@ const validate: RequestHandler = async (req, res, next) => {
 
 // POST: /webhook - Receive webhook notifications.
 const receiver: RequestHandler = async (req, res, next) => {
+  webhookLogger.info('Webhook notification received.');
+  webhookLogger.profile('receiver');
+  res.status(200).send('Webhook notification received.');
+
   const fullTopic: string = req.body.topic;
   const topic: string = fullTopic.substring(fullTopic.lastIndexOf('.') + 1);
   const noteRequest: NoteRequest = {
@@ -32,10 +36,7 @@ const receiver: RequestHandler = async (req, res, next) => {
     note: '',
   };
   let messagesDeleted: number = 0;
-
-  webhookLogger.info('Webhook notification received.');
   webhookLogger.debug(`Webhook notification topic: ${fullTopic}`);
-  res.status(200).send('Webhook notification received.');
 
   // Determine if the conversation was unsnoozed, closed, or deleted.
   try {
@@ -45,11 +46,15 @@ const receiver: RequestHandler = async (req, res, next) => {
       webhookLogger.info(
         'Deleting messages associated with conversation from database.'
       );
+      webhookLogger.profile('deleteMessages');
       messagesDeleted = await messageService.deleteMessages(
         noteRequest.adminId,
         noteRequest.conversationId
       );
-      webhookLogger.info('Messages deleted.');
+      webhookLogger.profile('deleteMessages', {
+        level: 'info',
+        message: `Messages deleted: ${messagesDeleted}`,
+      });
       webhookLogger.debug(
         `Messages deleted: ${JSON.stringify(messagesDeleted)}`
       );
@@ -66,17 +71,31 @@ const receiver: RequestHandler = async (req, res, next) => {
   }
 
   // Add close note to conversation.
+  webhookLogger.info('Creating closing note for the conversation.');
+  webhookLogger.profile('setCloseNote');
   noteRequest.note = setCloseNote(topic, messagesDeleted);
+  webhookLogger.profile('setCloseNote', {
+    level: 'info',
+    message: 'Closing note created.',
+  });
   try {
     webhookLogger.info('Adding close note to conversation.');
+    webhookLogger.profile('addNote');
     const response = await addNote(noteRequest);
-    webhookLogger.info('Close note added to conversation.');
+    webhookLogger.profile('addNote', {
+      level: 'info',
+      message: 'Close note added to conversation.',
+    });
     webhookLogger.debug(`Add Note response: ${JSON.stringify(response)}`);
   } catch (err) {
     webhookLogger.error(`An error occurred: ${err}`);
     res.status(500).send(`An error occurred: ${err}`);
     next(err);
   }
+  webhookLogger.profile('receiver', {
+    level: 'info',
+    message: 'Webhook notification processed.',
+  });
 };
 
 export { validate, receiver };

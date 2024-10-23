@@ -26,15 +26,16 @@ const addNote = async (noteRequest: NoteRequest): Promise<any> => {
         }),
       }
     );
+    intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
 
     if (!response.ok) {
       intercomLogger.error(
         `Response status ${response.status}: Error during add note request`
       );
-      intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
 
       return null;
     }
+
     const data = await response.json();
 
     return data;
@@ -45,7 +46,7 @@ const addNote = async (noteRequest: NoteRequest): Promise<any> => {
   }
 };
 
-const closeConversation = async (message: MessageOutbound): Promise<any> => {
+const closeConversation = async (message: MessageDTO): Promise<any> => {
   try {
     const response = await fetch(
       `${baseUrl}/conversations/${message.conversationId}/parts`,
@@ -63,13 +64,16 @@ const closeConversation = async (message: MessageOutbound): Promise<any> => {
         }),
       }
     );
+    intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
 
     if (!response.ok) {
       intercomLogger.error(
         `Response status ${response.status}: Error during close conversation request`
       );
-      intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
+
+      return null;
     }
+
     const data = await response.json();
 
     return data;
@@ -80,7 +84,7 @@ const closeConversation = async (message: MessageOutbound): Promise<any> => {
   }
 };
 
-const sendMessage = async (message: MessageOutbound): Promise<any> => {
+const sendMessage = async (message: MessageDTO): Promise<any> => {
   try {
     const response = await fetch(
       `${baseUrl}/conversations/${message.conversationId}/reply`,
@@ -99,13 +103,16 @@ const sendMessage = async (message: MessageOutbound): Promise<any> => {
         }),
       }
     );
+    intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
 
     if (!response.ok) {
       intercomLogger.error(
         `Response status ${response.status}: Error during send reply request`
       );
-      intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
+
+      return null;
     }
+
     const data = await response.json();
 
     return data;
@@ -134,13 +141,16 @@ const setSnooze = async (snoozeRequest: SnoozeRequest): Promise<any> => {
         }),
       }
     );
+    intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
 
     if (!response.ok) {
       intercomLogger.error(
         `Response status ${response.status}: Error during set snooze request`
       );
-      intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
+
+      return null;
     }
+
     const data = await response.json();
 
     return data;

@@ -20,13 +20,17 @@ const healthcheck: RequestHandler = (_req, res, next) => {
 // GET: /db-healthcheck - Perform healthcheck on the database.
 const dbHealthcheck: RequestHandler = async (_req, res, next) => {
   healthcheckLogger.debug('Checking database connection.');
+  healthcheckLogger.profile('dbHealthcheck');
   pool.query('SELECT NOW()', (err, result) => {
     if (err) {
       healthcheckLogger.error(`Database connection error: ${err}`);
       res.status(500).send(`Unable to connect to the database: ${err}`);
       next(err);
     }
-    healthcheckLogger.debug(`Database connected: ${result.rows[0].now}`);
+    healthcheckLogger.profile('dbHealthcheck', {
+      level: 'debug',
+      message: `Database connected: ${result.rows[0].now}`,
+    });
     res
       .status(200)
       .send(`Database connection is active: ${result.rows[0].now}`);

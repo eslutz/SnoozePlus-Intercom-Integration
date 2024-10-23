@@ -1,5 +1,5 @@
-interface MessageOutbound {
-  readonly guid: string;
+interface MessageDTO {
+  readonly id: string;
   readonly adminId: number;
   readonly conversationId: number;
   readonly message: string;

@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import schedule from 'node-schedule';
 import pool from './config/db-config';
 import logger, { morganMiddleware } from './config/logger-config';
 import router from './routes/router';
@@ -35,11 +36,14 @@ const server = app
   });
 
 process.on('SIGTERM', () => {
-  appLogger.debug('SIGTERM signal received: closing HTTP server');
+  appLogger.warn('SIGTERM signal received: shutting down application');
   server.close(async () => {
-    appLogger.info('Draining DB pool');
+    appLogger.warn('Draining DB pool');
     await pool.end();
-    appLogger.info('DB pool drained');
-    appLogger.info('HTTP server closed');
+    appLogger.warn('DB pool drained');
+    appLogger.warn('Canceling scheduled jobs');
+    await schedule.gracefulShutdown();
+    appLogger.warn('Scheduled jobs canceled');
+    appLogger.warn('Application shut down');
   });
 });

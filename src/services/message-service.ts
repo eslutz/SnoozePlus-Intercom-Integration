@@ -3,12 +3,12 @@ import logger from '../config/logger-config';
 
 const messageLogger = logger.child({ module: 'message-service' });
 
-const deleteMessage = async (messageGUID: string): Promise<number> => {
+const deleteMessage = async (messageId: string): Promise<number> => {
   const deleteMessage = `
     DELETE FROM messages
     WHERE id = $1;
   `;
-  const deleteParameters = [messageGUID];
+  const deleteParameters = [messageId];
 
   try {
     const response = await pool.query(deleteMessage, deleteParameters);
@@ -24,7 +24,10 @@ const deleteMessage = async (messageGUID: string): Promise<number> => {
   }
 };
 
-const deleteMessages = async (adminId: number, conversationId: number) => {
+const deleteMessages = async (
+  adminId: number,
+  conversationId: number
+): Promise<number> => {
   const deleteMessages = `
     DELETE FROM messages
     WHERE admin_id = $1 AND conversation_id = $2;
@@ -45,7 +48,7 @@ const deleteMessages = async (adminId: number, conversationId: number) => {
   }
 };
 
-const getTodaysMessages = async (): Promise<MessageOutbound[]> => {
+const getTodaysMessages = async (): Promise<MessageDTO[]> => {
   const selectMessages = `
     SELECT * FROM messages
     WHERE send_date >= CURRENT_DATE
@@ -54,8 +57,7 @@ const getTodaysMessages = async (): Promise<MessageOutbound[]> => {
 
   try {
     const response = await pool.query(selectMessages);
-    const messages = response.rows as MessageOutbound[];
-    messageLogger.info(`Messages retrieved: ${messages.length}`);
+    const messages = response.rows as MessageDTO[];
     messageLogger.debug(`Messages retrieved: ${JSON.stringify(messages)}`);
 
     return messages;
