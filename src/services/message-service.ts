@@ -45,28 +45,6 @@ const deleteMessages = async (adminId: number, conversationId: number) => {
   }
 };
 
-const getMessage = async (messageGUID: string): Promise<MessageOutbound> => {
-  const selectMessage = `
-    SELECT * FROM messages
-    WHERE id = $1;
-  `;
-  const messageParameters = [messageGUID];
-
-  try {
-    const response = await pool.query(selectMessage, messageParameters);
-    const message = response.rows[0] as MessageOutbound;
-    messageLogger.debug(
-      `Message retrieved: ${JSON.stringify(response.rows[0])}`
-    );
-
-    return message;
-  } catch (err) {
-    messageLogger.error(`Error executing select message query ${err}`);
-
-    return {} as MessageOutbound;
-  }
-};
-
 const getTodaysMessages = async (): Promise<MessageOutbound[]> => {
   const selectMessages = `
     SELECT * FROM messages
@@ -131,10 +109,4 @@ const saveMessages = async (
   return messageGUIDs;
 };
 
-export {
-  deleteMessage,
-  deleteMessages,
-  getMessage,
-  getTodaysMessages,
-  saveMessages,
-};
+export { deleteMessage, deleteMessages, getTodaysMessages, saveMessages };

@@ -1,8 +1,9 @@
 import express from 'express';
 import path from 'path';
+import pool from './config/db-config';
 import logger, { morganMiddleware } from './config/logger-config';
 import router from './routes/router';
-import pool from './config/db-config';
+import scheduleMessageSending from './utilities/scheduler-utility';
 
 const app = express();
 const PORT = 8706;
@@ -17,6 +18,9 @@ app.use(express.static(path.join(__dirname)));
 app.use('/', router);
 
 const appLogger = logger.child({ module: 'app' });
+
+// Start the scheduler for sending messages.
+scheduleMessageSending();
 
 const server = app
   .listen(PORT, () => {
