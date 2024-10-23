@@ -3,6 +3,7 @@ const fetch = (...args) =>
   // @ts-expect-error: type not yet defined
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 import logger from '../config/logger-config';
+import { decrypt } from '../utilities/crypto-utility';
 
 const intercomLogger = logger.child({ module: 'intercom-service' });
 const baseUrl = process.env.INTERCOM_BASE_URL ?? 'https://api.intercom.io';
@@ -85,6 +86,22 @@ const closeConversation = async (message: MessageDTO): Promise<any> => {
 };
 
 const sendMessage = async (message: MessageDTO): Promise<any> => {
+  // Decrypt the message before sending it.
+  let decryptedMessage: string;
+  intercomLogger.info('Decrypting message.');
+  intercomLogger.profile('decrypt');
+  try {
+    decryptedMessage = decrypt(message.message);
+  } catch (err) {
+    intercomLogger.error(`Error decrypting message: ${err}`);
+    throw err;
+  }
+  intercomLogger.profile('decrypt', {
+    level: 'info',
+    message: 'Message decrypted.',
+  });
+
+  // Send the message to Intercom.
   try {
     const response = await fetch(
       `${baseUrl}/conversations/${message.conversationId}/reply`,
@@ -97,7 +114,7 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
         },
         body: JSON.stringify({
           admin_id: message.adminId,
-          body: `<p>${message.message}</p>`,
+          body: `<p>${decryptedMessage}</p>`,
           message_type: 'comment',
           type: 'admin',
         }),

@@ -1,5 +1,6 @@
 import pool from '../config/db-config';
 import logger from '../config/logger-config';
+import { encrypt } from '../utilities/crypto-utility';
 
 const messageLogger = logger.child({ module: 'message-service' });
 
@@ -83,6 +84,21 @@ const saveMessages = async (
   let messageGUIDs: string[] = [];
 
   const promises = messages.map(async (message): Promise<string> => {
+    // Encrypt the message before saving it to the database.
+    let encryptedMessage: string;
+    messageLogger.info('Encrypting message.');
+    messageLogger.profile('encrypt');
+    try {
+      encryptedMessage = encrypt(message.message);
+    } catch (err) {
+      messageLogger.error(`Error encrypting message: ${err}`);
+      throw err;
+    }
+    messageLogger.profile('encrypt', {
+      level: 'info',
+      message: 'Message encrypted.',
+    });
+
     const insertMessage = `
       INSERT INTO messages (admin_id, conversation_id, message, send_date, close_conversation)
       VALUES ($1, $2, $3, $4, $5)
@@ -91,7 +107,7 @@ const saveMessages = async (
     const messageParameters = [
       adminId,
       conversationId,
-      message.message,
+      encryptedMessage,
       message.sendDate,
       message.closeConversation,
     ];
