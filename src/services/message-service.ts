@@ -57,7 +57,14 @@ const getTodaysMessages = async (): Promise<MessageDTO[]> => {
 
   try {
     const response = await pool.query(selectMessages);
-    const messages = response.rows as MessageDTO[];
+    const messages = response.rows.map((row) => ({
+      id: row.id as string,
+      adminId: row.admin_id as number,
+      conversationId: row.conversation_id as number,
+      message: row.message as string,
+      sendDate: new Date(row.send_date),
+      closeConversation: row.close_conversation as boolean,
+    })) as MessageDTO[];
     messageLogger.debug(`Messages retrieved: ${JSON.stringify(messages)}`);
 
     return messages;

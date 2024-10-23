@@ -20,12 +20,19 @@ app.use('/', router);
 
 const appLogger = logger.child({ module: 'app' });
 
+appLogger.info('*** SnoozePlus Intercom Integration ***');
+
 // Start the scheduler for sending messages.
+appLogger.info('Starting scheduler for sending messagess');
+appLogger.profile('scheduleMessageSending');
 scheduleMessageSending();
+appLogger.profile('scheduleMessageSending', {
+  level: 'info',
+  message: 'Message scheduler started.',
+});
 
 const server = app
   .listen(PORT, () => {
-    appLogger.info('*** SnoozePlus Intercom Integration ***');
     appLogger.info('Express server is running');
     const address = server.address();
     const port = typeof address === 'string' ? address : address?.port;

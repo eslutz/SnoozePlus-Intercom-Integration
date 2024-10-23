@@ -22,6 +22,8 @@ const scheduleMessageSending = () => {
         message: `Retrieved ${messages.length} messages to send.`,
       });
 
+      schedulerLogger.info(`Scheduling ${messages.length} messages.`);
+      schedulerLogger.profile('scheduleMessages');
       for (const message of messages) {
         // Send the message at the scheduled time.
         schedulerLogger.info(
@@ -95,6 +97,10 @@ const scheduleMessageSending = () => {
           message: `Message ${message.id} has been scheduled.`,
         });
       }
+      schedulerLogger.profile('scheduleMessages', {
+        level: 'info',
+        message: `All ${messages.length} messages have been scheduled successfully.`,
+      });
     } catch (err) {
       schedulerLogger.error(`Error running scheduled task: ${err}`);
     }
