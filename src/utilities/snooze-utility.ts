@@ -36,7 +36,8 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
     messages.push({
       message: input.input_values[`message${i}`],
       sendDate: sendDate,
-      closeConversation: input.input_values.then === 'close',
+      closeConversation:
+        i === snoozeCount && input.input_values.then === 'close',
     });
   }
   snoozeLogger.info(`Snooze messages: ${JSON.stringify(messages)}`);
@@ -65,8 +66,22 @@ const setCloseNote = (
   reasonClosed: string,
   messagesDeleted: number
 ): string => {
-  const message = messagesDeleted > 1 ? 'messages' : 'message';
-  const note = `<p><strong>Snooze+ has ended.</stronger></p><br /><p>The conversation has been ${reasonClosed}.</p><p>The remaining ${messagesDeleted} ${message} will not be sent.</p>`;
+  const messageLabel = messagesDeleted === 1 ? 'message' : 'messages';
+  const note = `<p><strong>Snooze+ has ended.</stronger></p><br /><p>The conversation has been ${reasonClosed}.</p><p>The remaining ${messagesDeleted} ${messageLabel} will not be sent.</p>`;
+
+  return note;
+};
+
+const setLastMessageCloseNote = (): string => {
+  const note = `<p><strong>Snooze+ has ended.</strong></p><br /><p>The last message has been sent and has closed the conversation.</p>`;
+
+  return note;
+};
+
+const setSendMessageNote = (messageCount: number): string => {
+  const messageLabel = messageCount === 1 ? 'message' : 'messages';
+  const verbForm = messageCount === 1 ? 'is' : 'are';
+  const note = `<p><strong>Snooze+ message sent.</strong></p><br /><p>A message has been sent.</p><p>There ${verbForm} ${messageCount} ${messageLabel} waiting to be sent.</p>`;
 
   return note;
 };
@@ -76,9 +91,9 @@ const setSnoozeNote = (
   snoozeDuration: number,
   snoozeUntil: Date
 ): string => {
-  const day = snoozeDuration > 1 ? 'days' : 'day';
-  const message = snoozeCount > 1 ? 'messages' : 'message';
-  const note = `<p><strong>Snooze+ has been set.</strong></p><br /><p>The conversation will be snoozed for a total of ${snoozeDuration} ${day}, with ${snoozeCount} ${message} being sent.  The snooze will end on ${snoozeUntil.toLocaleDateString()}.</p>`;
+  const dayLabel = snoozeDuration === 1 ? 'day' : 'days';
+  const messageLabel = snoozeCount === 1 ? 'message' : 'messages';
+  const note = `<p><strong>Snooze+ has been set.</strong></p><br /><p>The conversation will be snoozed for a total of ${snoozeDuration} ${dayLabel}, with ${snoozeCount} ${messageLabel} being sent.  The snooze will end on ${snoozeUntil.toLocaleDateString()}.</p>`;
 
   return note;
 };
@@ -87,4 +102,4 @@ const setUnixTimestamp = (date: Date): number =>
   Math.floor(date.getTime() / 1000);
 
 export default createSnoozeRequest;
-export { setCloseNote };
+export { setCloseNote, setLastMessageCloseNote, setSendMessageNote };

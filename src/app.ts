@@ -23,7 +23,7 @@ const appLogger = logger.child({ module: 'app' });
 appLogger.info('*** SnoozePlus Intercom Integration ***');
 
 // Start the scheduler for sending messages.
-appLogger.info('Starting scheduler for sending messagess');
+appLogger.info('Starting scheduler for sending messages.');
 appLogger.profile('scheduleMessageSending');
 scheduleMessageSending();
 appLogger.profile('scheduleMessageSending', {
@@ -33,7 +33,7 @@ appLogger.profile('scheduleMessageSending', {
 
 const server = app
   .listen(PORT, () => {
-    appLogger.info('Express server is running');
+    appLogger.info('Express server is running.');
     const address = server.address();
     const port = typeof address === 'string' ? address : address?.port;
     appLogger.info(`App is ready at port: ${port}`);
@@ -43,14 +43,14 @@ const server = app
   });
 
 process.on('SIGTERM', () => {
-  appLogger.warn('SIGTERM signal received: shutting down application');
+  appLogger.warn('SIGTERM signal received: shutting down application.');
   server.close(async () => {
-    appLogger.warn('Draining DB pool');
+    appLogger.warn('Draining DB pool.');
     await pool.end();
-    appLogger.warn('DB pool drained');
-    appLogger.warn('Canceling scheduled jobs');
+    appLogger.warn('DB pool drained.');
+    appLogger.warn('Canceling scheduled jobs.');
     await schedule.gracefulShutdown();
-    appLogger.warn('Scheduled jobs canceled');
-    appLogger.warn('Application shut down');
+    appLogger.warn('Scheduled jobs canceled.');
+    appLogger.warn('Application shut down.');
   });
 });

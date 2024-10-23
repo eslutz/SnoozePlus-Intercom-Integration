@@ -1,7 +1,16 @@
 import schedule from 'node-schedule';
 import logger from '../config/logger-config';
-import { deleteMessage, getTodaysMessages } from '../services/message-service';
-import { closeConversation, sendMessage } from '../services/intercom-service';
+import {
+  deleteMessage,
+  getRemainingMessageCount,
+  getTodaysMessages,
+} from '../services/message-service';
+import {
+  addNote,
+  closeConversation,
+  sendMessage,
+} from '../services/intercom-service';
+import { setLastMessageCloseNote, setSendMessageNote } from './snooze-utility';
 
 const schedulerLogger = logger.child({ module: 'scheduler-utility' });
 
@@ -19,11 +28,12 @@ const scheduleMessageSending = () => {
       const messages = await getTodaysMessages();
       schedulerLogger.profile('getTodaysMessages', {
         level: 'info',
-        message: `Retrieved ${messages.length} messages to send.`,
+        message: `Retrieved ${messages.length} message(s) to send.`,
       });
 
-      schedulerLogger.info(`Scheduling ${messages.length} messages.`);
+      schedulerLogger.info(`Scheduling ${messages.length} message(s).`);
       schedulerLogger.profile('scheduleMessages');
+      let messagesSent = 0;
       for (const message of messages) {
         // Send the message at the scheduled time.
         schedulerLogger.info(
@@ -31,7 +41,10 @@ const scheduleMessageSending = () => {
         );
         schedulerLogger.profile('scheduleMessage');
         try {
-          schedule.scheduleJob(message.sendDate, async (messageFireDate) => {
+          // Check if the send date has already passed. If so, send the message immediately.
+          const sendDate =
+            message.sendDate <= new Date() ? new Date() : message.sendDate;
+          schedule.scheduleJob(sendDate, async (messageFireDate) => {
             schedulerLogger.debug(
               `This job was supposed to run at ${messageFireDate}, but actually ran at ${new Date()}.`
             );
@@ -46,6 +59,7 @@ const scheduleMessageSending = () => {
               schedulerLogger.debug(
                 `Send Messages response: ${JSON.stringify(messageResponse)}`
               );
+              messagesSent++;
             } catch (err) {
               schedulerLogger.error(
                 `Error sending message ${message.id}: ${err}`
@@ -56,18 +70,60 @@ const scheduleMessageSending = () => {
             try {
               schedulerLogger.info(`Deleting message ${message.id}`);
               schedulerLogger.profile('deleteMessage');
-              const deletedMessages = await deleteMessage(message.id);
+              const deletedMessage = await deleteMessage(message.id);
               schedulerLogger.profile('deleteMessage', {
                 level: 'info',
-                message: `Deleted ${deletedMessages} message with GUID ${message.id}`,
+                message: `Deleted ${deletedMessage} message with GUID ${message.id}`,
               });
             } catch (err) {
               schedulerLogger.error(`Error deleting message: ${err}`);
             }
 
+            // Add note that the message has been sent and how many messages are remaining.
+            try {
+              schedulerLogger.info(
+                `Adding note that message ${message.id} has been sent.`
+              );
+              schedulerLogger.profile('addNote');
+              const remainingMessages = await getRemainingMessageCount(message);
+              const noteResponse = await addNote({
+                adminId: message.adminId,
+                conversationId: message.conversationId,
+                note: setSendMessageNote(remainingMessages),
+              });
+              schedulerLogger.profile('addNote', {
+                level: 'info',
+                message: `Note added to conversation ${message.conversationId} that message ${message.id} has been sent.`,
+              });
+              schedulerLogger.debug(
+                `Add Note response: ${JSON.stringify(noteResponse)}`
+              );
+            } catch (err) {
+              schedulerLogger.error(
+                `Error adding note to conversation ${message.conversationId}: ${err}`
+              );
+            }
+
             // Close the conversation if the last message is set to close.
             if (message.closeConversation) {
               try {
+                schedulerLogger.info(
+                  'Adding note that the conversation has been closed.'
+                );
+                schedulerLogger.profile('addNote');
+                const closeNote: NoteRequest = {
+                  adminId: message.adminId,
+                  conversationId: message.conversationId,
+                  note: setLastMessageCloseNote(),
+                };
+                const noteResponse = await addNote(closeNote);
+                schedulerLogger.profile('addNote', {
+                  level: 'info',
+                  message: `Note added to conversation ${message.conversationId} that the conversation has been closed.`,
+                });
+                schedulerLogger.debug(
+                  `Add Note response: ${JSON.stringify(noteResponse)}`
+                );
                 schedulerLogger.info(
                   `Closing conversation ${message.id}:${message.conversationId}`
                 );
@@ -99,7 +155,7 @@ const scheduleMessageSending = () => {
       }
       schedulerLogger.profile('scheduleMessages', {
         level: 'info',
-        message: `All ${messages.length} messages have been scheduled successfully.`,
+        message: `There were ${messagesSent} of ${messages.length} message(s) successfully scheduled.`,
       });
     } catch (err) {
       schedulerLogger.error(`Error running scheduled task: ${err}`);

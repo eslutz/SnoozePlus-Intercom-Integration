@@ -49,11 +49,32 @@ const deleteMessages = async (
   }
 };
 
+const getRemainingMessageCount = async (
+  message: MessageDTO
+): Promise<number> => {
+  const messageCount = `
+    SELECT COUNT(*) FROM messages
+    WHERE admin_id = $1 AND conversation_id = $2;
+  `;
+  const messageCountParameters = [message.adminId, message.conversationId];
+
+  try {
+    const response = await pool.query(messageCount, messageCountParameters);
+    const remainingMessages = response.rows[0].count as number;
+    messageLogger.debug(`Remaining messages: ${remainingMessages}`);
+
+    return remainingMessages;
+  } catch (err) {
+    messageLogger.error(`Error executing count messages query ${err}`);
+
+    return 0;
+  }
+};
+
 const getTodaysMessages = async (): Promise<MessageDTO[]> => {
   const selectMessages = `
     SELECT * FROM messages
-    WHERE send_date >= CURRENT_DATE
-    AND send_date < CURRENT_DATE + INTERVAL '1 day';
+    WHERE send_date < CURRENT_DATE + INTERVAL '1 day';
   `;
 
   try {
@@ -112,6 +133,7 @@ const saveMessages = async (
       message.closeConversation,
     ];
 
+    // Save the message to the database.
     try {
       const response = await pool.query(insertMessage, messageParameters);
       const messageGUID: string = response.rows[0].id;
@@ -125,6 +147,7 @@ const saveMessages = async (
     }
   });
 
+  // Wait for all messages to be saved before returning the GUIDs.
   try {
     messageGUIDs = await Promise.all(promises);
   } catch (err) {
@@ -134,4 +157,10 @@ const saveMessages = async (
   return messageGUIDs;
 };
 
-export { deleteMessage, deleteMessages, getTodaysMessages, saveMessages };
+export {
+  deleteMessage,
+  deleteMessages,
+  getRemainingMessageCount,
+  getTodaysMessages,
+  saveMessages,
+};
