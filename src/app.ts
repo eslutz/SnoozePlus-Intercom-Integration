@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'path';
 import schedule from 'node-schedule';
 import pool from './config/db-config';
-import logger, { morganMiddleware } from './config/logger-config';
+import logger, { logtail, morganMiddleware } from './config/logger-config';
 import router from './routes/router';
 import scheduleMessageSending from './utilities/scheduler-utility';
 
@@ -43,14 +43,17 @@ const server = app
   });
 
 process.on('SIGTERM', () => {
-  appLogger.warn('SIGTERM signal received: shutting down application.');
+  appLogger.info('SIGTERM signal received: shutting down application.');
   server.close(async () => {
-    appLogger.warn('Draining DB pool.');
+    appLogger.info('Draining DB pool.');
     await pool.end();
-    appLogger.warn('DB pool drained.');
-    appLogger.warn('Canceling scheduled jobs.');
+    appLogger.info('DB pool drained.');
+    appLogger.info('Canceling scheduled jobs.');
     await schedule.gracefulShutdown();
-    appLogger.warn('Scheduled jobs canceled.');
-    appLogger.warn('Application shut down.');
+    appLogger.info('Scheduled jobs canceled.');
+    appLogger.info('Flushing logs.');
+    logtail.flush();
+    appLogger.info('Logs flushed.');
+    appLogger.info('Application shut down.');
   });
 });

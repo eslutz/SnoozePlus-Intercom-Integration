@@ -1,6 +1,11 @@
 import morgan from 'morgan';
 import winston from 'winston';
 import 'winston-daily-rotate-file';
+import { Logtail } from '@logtail/node';
+import { LogtailTransport } from '@logtail/winston';
+
+// Create the Logtail client.
+const logtail = new Logtail(process.env.LOGTAIL_KEY ?? '');
 
 // Set the log level based on environment variable or default options.
 const logLevel = () =>
@@ -43,6 +48,7 @@ const transports: winston.transport[] = [
     // Add color to the console output.
     format: winston.format.colorize({ all: true }),
   }),
+  new LogtailTransport(logtail),
 ];
 // Set exception handler transport option for all environments.
 const exceptionTransports: winston.transport[] = [
@@ -94,6 +100,7 @@ if (process.env.NODE_ENV !== 'production') {
   );
 }
 
+// Create the logger instance.
 const logger = winston.createLogger({
   level: logLevel(),
   levels: levels,
@@ -129,4 +136,4 @@ const morganMiddleware = morgan(
 );
 
 export default logger;
-export { morganMiddleware };
+export { logtail, morganMiddleware };
