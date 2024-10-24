@@ -5,7 +5,7 @@ import { Logtail } from '@logtail/node';
 import { LogtailTransport } from '@logtail/winston';
 
 // Create the Logtail client.
-const logtail = new Logtail(process.env.LOGTAIL_KEY ?? '');
+const logtail = new Logtail(process.env.BETTERSTACK_LOGTAIL_KEY ?? '');
 
 // Set the log level based on environment variable or default options.
 const logLevel = () =>
