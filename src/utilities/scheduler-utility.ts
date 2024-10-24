@@ -163,8 +163,8 @@ const scheduleMessageSending = () => {
       } catch (err) {
         schedulerLogger.error(`Error running scheduled task: ${err}`);
       }
+      sendHeartbeat();
     });
-    sendHeartbeat();
   } catch (err) {
     schedulerLogger.error(`Error running daily task: ${err}`);
     sendHeartbeat(false);

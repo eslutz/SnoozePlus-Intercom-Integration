@@ -1,4 +1,7 @@
-import fetch from 'node-fetch';
+// @ts-expect-error: type not yet defined
+const fetch = (...args) =>
+  // @ts-expect-error: type not yet defined
+  import('node-fetch').then(({ default: fetch }) => fetch(...args));
 import logger from '../config/logger-config';
 
 const heartbeatUrl = process.env.BETTERSTACK_HEARTBEAT_URL ?? '';
