@@ -35,7 +35,7 @@ const scheduleMessageSending = () => {
 
         schedulerLogger.info(`Scheduling ${messages.length} message(s).`);
         schedulerLogger.profile('scheduleMessages');
-        let messagesSent = 0;
+        let messagesScheduled = 0;
         for (const message of messages) {
           // Send the message at the scheduled time.
           schedulerLogger.info(
@@ -61,7 +61,6 @@ const scheduleMessageSending = () => {
                 schedulerLogger.debug(
                   `Send Messages response: ${JSON.stringify(messageResponse)}`
                 );
-                messagesSent++;
               } catch (err) {
                 schedulerLogger.error(
                   `Error sending message ${message.id}: ${err}`
@@ -146,19 +145,21 @@ const scheduleMessageSending = () => {
                 }
               }
             });
+            messagesScheduled++;
+
+            schedulerLogger.profile('scheduleMessage', {
+              level: 'info',
+              message: `Message ${message.id} has been scheduled.`,
+            });
           } catch (err) {
             schedulerLogger.error(
               `Error scheduling message ${message.id}: ${err}`
             );
           }
-          schedulerLogger.profile('scheduleMessage', {
-            level: 'info',
-            message: `Message ${message.id} has been scheduled.`,
-          });
         }
         schedulerLogger.profile('scheduleMessages', {
           level: 'info',
-          message: `There were ${messagesSent} of ${messages.length} message(s) successfully scheduled.`,
+          message: `There were ${messagesScheduled} of ${messages.length} messages successfully scheduled.`,
         });
       } catch (err) {
         schedulerLogger.error(`Error running scheduled task: ${err}`);
