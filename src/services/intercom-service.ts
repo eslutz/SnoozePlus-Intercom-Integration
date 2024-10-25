@@ -7,7 +7,7 @@ import operation from '../config/retry-config';
 import { decrypt } from '../utilities/crypto-utility';
 
 const intercomLogger = logger.child({ module: 'intercom-service' });
-const baseUrl = process.env.INTERCOM_BASE_URL ?? 'https://api.intercom.io';
+const baseUrl = process.env.INTERCOM_URL ?? 'https://api.intercom.io';
 
 const addNote = async (noteRequest: NoteRequest): Promise<any> => {
   return new Promise((resolve, reject) => {
@@ -18,7 +18,7 @@ const addNote = async (noteRequest: NoteRequest): Promise<any> => {
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+              Authorization: `Bearer ${process.env.INTERCOM_KEY}`,
               'Content-Type': 'application/json',
               'Intercom-Version': '2.11',
             },
@@ -64,7 +64,7 @@ const closeConversation = async (message: MessageDTO): Promise<any> => {
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+              Authorization: `Bearer ${process.env.INTERCOM_KEY}`,
               'Content-Type': 'application/json',
               'Intercom-Version': '2.11',
             },
@@ -128,7 +128,7 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+              Authorization: `Bearer ${process.env.INTERCOM_KEY}`,
               'Content-Type': 'application/json',
               'Intercom-Version': '2.11',
             },
@@ -177,7 +177,7 @@ const setSnooze = async (snoozeRequest: SnoozeRequest): Promise<any> => {
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+              Authorization: `Bearer ${process.env.INTERCOM_KEY}`,
               'Content-Type': 'application/json',
               'Intercom-Version': '2.11',
             },

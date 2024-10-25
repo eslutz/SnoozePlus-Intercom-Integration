@@ -1,6 +1,6 @@
 import schedule from 'node-schedule';
 import logger from '../config/logger-config';
-import { sendHeartbeat } from '../services/heartbeat-service';
+import sendHeartbeat from '../services/heartbeat-service';
 import {
   deleteMessage,
   getRemainingMessageCount,
