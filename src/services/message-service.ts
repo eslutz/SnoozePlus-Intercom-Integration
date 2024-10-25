@@ -114,7 +114,9 @@ const getTodaysMessages = async (): Promise<MessageDTO[]> => {
           sendDate: new Date(row.send_date),
           closeConversation: row.close_conversation as boolean,
         })) as MessageDTO[];
-        messageLogger.debug(`Messages retrieved: ${JSON.stringify(messages)}`);
+        messageLogger.debug(
+          `Messages retrieved: ${JSON.stringify(messages.map((message) => message.id))}`
+        );
 
         resolve(messages);
       } catch (err) {
