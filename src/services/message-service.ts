@@ -1,5 +1,6 @@
 import pool from '../config/db-config';
 import logger from '../config/logger-config';
+import operation from '../config/retry-config';
 import { encrypt } from '../utilities/crypto-utility';
 
 const messageLogger = logger.child({ module: 'message-service' });
@@ -11,18 +12,26 @@ const deleteMessage = async (messageId: string): Promise<number> => {
   `;
   const deleteParameters = [messageId];
 
-  try {
-    const response = await pool.query(deleteMessage, deleteParameters);
-    messageLogger.debug(
-      `Messages deleted: ${JSON.stringify(response.rowCount)}`
-    );
+  return new Promise((resolve, reject) => {
+    operation.attempt(async (currentAttempt) => {
+      try {
+        const response = await pool.query(deleteMessage, deleteParameters);
+        messageLogger.debug(
+          `Messages deleted: ${JSON.stringify(response.rowCount)}`
+        );
 
-    return response.rowCount ?? 0;
-  } catch (err) {
-    messageLogger.error(`Error executing delete message query ${err}`);
-
-    return 0;
-  }
+        resolve(response.rowCount ?? 0);
+      } catch (err) {
+        messageLogger.error(
+          `Error executing delete message query on attempt ${currentAttempt}: ${err}`
+        );
+        if (operation.retry(err as Error)) {
+          return;
+        }
+        reject(operation.mainError());
+      }
+    });
+  });
 };
 
 const deleteMessages = async (
@@ -35,18 +44,26 @@ const deleteMessages = async (
   `;
   const deleteParameters = [adminId, conversationId];
 
-  try {
-    const response = await pool.query(deleteMessages, deleteParameters);
-    messageLogger.debug(
-      `Messages deleted: ${JSON.stringify(response.rowCount)}`
-    );
+  return new Promise((resolve, reject) => {
+    operation.attempt(async (currentAttempt) => {
+      try {
+        const response = await pool.query(deleteMessages, deleteParameters);
+        messageLogger.debug(
+          `Messages deleted: ${JSON.stringify(response.rowCount)}`
+        );
 
-    return response.rowCount ?? 0;
-  } catch (err) {
-    messageLogger.error(`Error executing delete messages query ${err}`);
-
-    return 0;
-  }
+        resolve(response.rowCount ?? 0);
+      } catch (err) {
+        messageLogger.error(
+          `Error executing delete messages query on attempt ${currentAttempt}: ${err}`
+        );
+        if (operation.retry(err as Error)) {
+          return;
+        }
+        reject(operation.mainError());
+      }
+    });
+  });
 };
 
 const getRemainingMessageCount = async (
@@ -58,17 +75,25 @@ const getRemainingMessageCount = async (
   `;
   const messageCountParameters = [message.adminId, message.conversationId];
 
-  try {
-    const response = await pool.query(messageCount, messageCountParameters);
-    const remainingMessages = response.rows[0].count as number;
-    messageLogger.debug(`Remaining messages: ${remainingMessages}`);
+  return new Promise((resolve, reject) => {
+    operation.attempt(async (currentAttempt) => {
+      try {
+        const response = await pool.query(messageCount, messageCountParameters);
+        const remainingMessages = response.rows[0].count as number;
+        messageLogger.debug(`Remaining messages: ${remainingMessages}`);
 
-    return remainingMessages;
-  } catch (err) {
-    messageLogger.error(`Error executing count messages query ${err}`);
-
-    return 0;
-  }
+        resolve(remainingMessages);
+      } catch (err) {
+        messageLogger.error(
+          `Error executing count messages query on attempt ${currentAttempt}: ${err}`
+        );
+        if (operation.retry(err as Error)) {
+          return;
+        }
+        reject(operation.mainError());
+      }
+    });
+  });
 };
 
 const getTodaysMessages = async (): Promise<MessageDTO[]> => {
@@ -77,24 +102,32 @@ const getTodaysMessages = async (): Promise<MessageDTO[]> => {
     WHERE send_date < CURRENT_DATE + INTERVAL '1 day';
   `;
 
-  try {
-    const response = await pool.query(selectMessages);
-    const messages = response.rows.map((row) => ({
-      id: row.id as string,
-      adminId: row.admin_id as number,
-      conversationId: row.conversation_id as number,
-      message: row.message as string,
-      sendDate: new Date(row.send_date),
-      closeConversation: row.close_conversation as boolean,
-    })) as MessageDTO[];
-    messageLogger.debug(`Messages retrieved: ${JSON.stringify(messages)}`);
+  return new Promise((resolve, reject) => {
+    operation.attempt(async (currentAttempt) => {
+      try {
+        const response = await pool.query(selectMessages);
+        const messages = response.rows.map((row) => ({
+          id: row.id as string,
+          adminId: row.admin_id as number,
+          conversationId: row.conversation_id as number,
+          message: row.message as string,
+          sendDate: new Date(row.send_date),
+          closeConversation: row.close_conversation as boolean,
+        })) as MessageDTO[];
+        messageLogger.debug(`Messages retrieved: ${JSON.stringify(messages)}`);
 
-    return messages;
-  } catch (err) {
-    messageLogger.error(`Error executing select messages query ${err}`);
-
-    return [];
-  }
+        resolve(messages);
+      } catch (err) {
+        messageLogger.error(
+          `Error executing select messages query on attempt ${currentAttempt}: ${err}`
+        );
+        if (operation.retry(err as Error)) {
+          return;
+        }
+        reject(operation.mainError());
+      }
+    });
+  });
 };
 
 const saveMessages = async (
@@ -134,17 +167,25 @@ const saveMessages = async (
     ];
 
     // Save the message to the database.
-    try {
-      const response = await pool.query(insertMessage, messageParameters);
-      const messageGUID: string = response.rows[0].id;
-      messageLogger.debug(`Message saved with GUID: ${messageGUID}`);
+    return new Promise((resolve, reject) => {
+      operation.attempt(async (currentAttempt) => {
+        try {
+          const response = await pool.query(insertMessage, messageParameters);
+          const messageGUID: string = response.rows[0].id;
+          messageLogger.debug(`Message saved with GUID: ${messageGUID}`);
 
-      return messageGUID;
-    } catch (err) {
-      messageLogger.error(`Error executing insert message query ${err}`);
-
-      return '';
-    }
+          resolve(messageGUID);
+        } catch (err) {
+          messageLogger.error(
+            `Error executing insert message query on attempt ${currentAttempt}: ${err}`
+          );
+          if (operation.retry(err as Error)) {
+            return;
+          }
+          reject(operation.mainError());
+        }
+      });
+    });
   });
 
   // Wait for all messages to be saved before returning the GUIDs.
