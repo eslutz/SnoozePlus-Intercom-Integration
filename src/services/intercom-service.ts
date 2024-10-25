@@ -10,89 +10,96 @@ const intercomLogger = logger.child({ module: 'intercom-service' });
 const baseUrl = process.env.INTERCOM_BASE_URL ?? 'https://api.intercom.io';
 
 const addNote = async (noteRequest: NoteRequest): Promise<any> => {
-  operation.attempt(async (currentAttempt) => {
-    try {
-      const response = await fetch(
-        `${baseUrl}/conversations/${noteRequest.conversationId}/reply`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Intercom-Version': '2.11',
-          },
-          body: JSON.stringify({
-            admin_id: noteRequest.adminId,
-            body: noteRequest.note,
-            message_type: 'note',
-            type: 'admin',
-          }),
-        }
-      );
-      intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
-
-      if (!response.ok) {
-        intercomLogger.error(
-          `Response status ${response.status}: Error during add note request`
+  return new Promise((resolve, reject) => {
+    operation.attempt(async (currentAttempt) => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/conversations/${noteRequest.conversationId}/reply`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+              'Content-Type': 'application/json',
+              'Intercom-Version': '2.11',
+            },
+            body: JSON.stringify({
+              admin_id: noteRequest.adminId,
+              body: noteRequest.note,
+              message_type: 'note',
+              type: 'admin',
+            }),
+          }
         );
+        intercomLogger.debug(`Add note response: ${JSON.stringify(response)}`);
 
-        return null;
+        if (!response.ok) {
+          intercomLogger.error(
+            `Response status ${response.status}: Error during add note request`
+          );
+          resolve(null);
+        }
+
+        const data = await response.json();
+
+        resolve(data);
+      } catch (err) {
+        intercomLogger.error(
+          `Error during POST request on attempt ${currentAttempt}: ${err}`
+        );
+        if (operation.retry(err as Error)) {
+          return null;
+        }
+        reject(operation.mainError());
       }
-
-      const data = await response.json();
-
-      return data;
-    } catch (err) {
-      intercomLogger.error(
-        `Error during POST request on attempt ${currentAttempt}: ${err}`
-      );
-      if (operation.retry(err as Error)) {
-        return null;
-      }
-    }
+    });
   });
 };
 
 const closeConversation = async (message: MessageDTO): Promise<any> => {
-  operation.attempt(async (currentAttempt) => {
-    try {
-      const response = await fetch(
-        `${baseUrl}/conversations/${message.conversationId}/parts`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Intercom-Version': '2.11',
-          },
-          body: JSON.stringify({
-            admin_id: message.adminId,
-            message_type: 'close',
-            type: 'admin',
-          }),
-        }
-      );
-      intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
-
-      if (!response.ok) {
-        intercomLogger.error(
-          `Response status ${response.status}: Error during close conversation request`
+  return new Promise((resolve, reject) => {
+    operation.attempt(async (currentAttempt) => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/conversations/${message.conversationId}/parts`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+              'Content-Type': 'application/json',
+              'Intercom-Version': '2.11',
+            },
+            body: JSON.stringify({
+              admin_id: message.adminId,
+              message_type: 'close',
+              type: 'admin',
+            }),
+          }
+        );
+        intercomLogger.debug(
+          `Close conversation response: ${JSON.stringify(response)}`
         );
 
-        return null;
-      }
+        if (!response.ok) {
+          intercomLogger.error(
+            `Response status ${response.status}: Error during close conversation request`
+          );
 
-      const data = await response.json();
+          resolve(null);
+        }
 
-      return data;
-    } catch (err) {
-      intercomLogger.error(
-        `Error during POST request on attempt ${currentAttempt}: ${err}`
-      );
-      if (operation.retry(err as Error)) {
-        return null;
+        const data = await response.json();
+
+        resolve(data);
+      } catch (err) {
+        intercomLogger.error(
+          `Error during POST request on attempt ${currentAttempt}: ${err}`
+        );
+        if (operation.retry(err as Error)) {
+          return;
+        }
+        reject(operation.mainError());
       }
-    }
+    });
   });
 };
 
@@ -113,89 +120,99 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
   });
 
   // Send the message to Intercom.
-  operation.attempt(async (currentAttempt) => {
-    try {
-      const response = await fetch(
-        `${baseUrl}/conversations/${message.conversationId}/reply`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Intercom-Version': '2.11',
-          },
-          body: JSON.stringify({
-            admin_id: message.adminId,
-            body: `<p>${decryptedMessage}</p>`,
-            message_type: 'comment',
-            type: 'admin',
-          }),
-        }
-      );
-      intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
-
-      if (!response.ok) {
-        intercomLogger.error(
-          `Response status ${response.status}: Error during send reply request`
+  return new Promise((resolve, reject) => {
+    operation.attempt(async (currentAttempt) => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/conversations/${message.conversationId}/reply`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+              'Content-Type': 'application/json',
+              'Intercom-Version': '2.11',
+            },
+            body: JSON.stringify({
+              admin_id: message.adminId,
+              body: `<p>${decryptedMessage}</p>`,
+              message_type: 'comment',
+              type: 'admin',
+            }),
+          }
+        );
+        intercomLogger.debug(
+          `Send message response: ${JSON.stringify(response)}`
         );
 
-        return null;
-      }
+        if (!response.ok) {
+          intercomLogger.error(
+            `Response status ${response.status}: Error during send reply request`
+          );
 
-      const data = await response.json();
+          resolve(null);
+        }
 
-      return data;
-    } catch (err) {
-      intercomLogger.error(
-        `Error during POST request on attempt ${currentAttempt}: ${err}`
-      );
-      if (operation.retry(err as Error)) {
-        return null;
+        const data = await response.json();
+
+        resolve(data);
+      } catch (err) {
+        intercomLogger.error(
+          `Error during POST request on attempt ${currentAttempt}: ${err}`
+        );
+        if (operation.retry(err as Error)) {
+          return;
+        }
+        reject(operation.mainError());
       }
-    }
+    });
   });
 };
 
 const setSnooze = async (snoozeRequest: SnoozeRequest): Promise<any> => {
-  operation.attempt(async (currentAttempt) => {
-    try {
-      const response = await fetch(
-        `${baseUrl}/conversations/${snoozeRequest.conversationId}/parts`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Intercom-Version': '2.11',
-          },
-          body: JSON.stringify({
-            admin_id: snoozeRequest.adminId,
-            message_type: 'snoozed',
-            snoozed_until: snoozeRequest.snoozeUntilUnixTimestamp,
-          }),
-        }
-      );
-      intercomLogger.debug(`Response: ${JSON.stringify(response)}`);
-
-      if (!response.ok) {
-        intercomLogger.error(
-          `Response status ${response.status}: Error during set snooze request`
+  return new Promise((resolve, reject) => {
+    operation.attempt(async (currentAttempt) => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/conversations/${snoozeRequest.conversationId}/parts`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+              'Content-Type': 'application/json',
+              'Intercom-Version': '2.11',
+            },
+            body: JSON.stringify({
+              admin_id: snoozeRequest.adminId,
+              message_type: 'snoozed',
+              snoozed_until: snoozeRequest.snoozeUntilUnixTimestamp,
+            }),
+          }
+        );
+        intercomLogger.debug(
+          `Set snooze response: ${JSON.stringify(response)}`
         );
 
-        return null;
-      }
+        if (!response.ok) {
+          intercomLogger.error(
+            `Response status ${response.status}: Error during set snooze request`
+          );
 
-      const data = await response.json();
+          resolve(null);
+        }
 
-      return data;
-    } catch (err) {
-      intercomLogger.error(
-        `Error during POST request on attempt ${currentAttempt}: ${err}`
-      );
-      if (operation.retry(err as Error)) {
-        return null;
+        const data = await response.json();
+
+        resolve(data);
+      } catch (err) {
+        intercomLogger.error(
+          `Error during POST request on attempt ${currentAttempt}: ${err}`
+        );
+        if (operation.retry(err as Error)) {
+          return;
+        }
+        reject(operation.mainError());
       }
-    }
+    });
   });
 };
 
