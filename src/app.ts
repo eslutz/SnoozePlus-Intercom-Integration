@@ -4,7 +4,7 @@ import schedule from 'node-schedule';
 import pool from './config/db-config';
 import logger, { logtail, morganMiddleware } from './config/logger-config';
 import router from './routes/router';
-import scheduleMessageSending from './utilities/scheduler-utility';
+import scheduleJobs from './utilities/scheduler-utility';
 
 const app = express();
 const PORT = 8706;
@@ -25,7 +25,9 @@ appLogger.info('*** SnoozePlus Intercom Integration ***');
 // Start the scheduler for sending messages.
 appLogger.info('Starting scheduler for sending messages.');
 appLogger.profile('scheduleMessageSending');
-scheduleMessageSending();
+(async () => {
+  await scheduleJobs();
+})();
 appLogger.profile('scheduleMessageSending', {
   level: 'info',
   message: 'Message scheduler started.',
