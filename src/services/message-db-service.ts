@@ -3,7 +3,70 @@ import logger from '../config/logger-config';
 import operation from '../config/retry-config';
 import { encrypt } from '../utilities/crypto-utility';
 
-const messageLogger = logger.child({ module: 'message-service' });
+const messageDbLogger = logger.child({ module: 'message-db-service' });
+
+const archiveMessage = async (messageId: string): Promise<number> => {
+  const archiveMessage = `
+    UPDATE messages
+    SET archived = TRUE
+    WHERE id = $1;
+  `;
+  const archiveParameters = [messageId];
+
+  return new Promise((resolve, reject) => {
+    operation.attempt(async (currentAttempt) => {
+      try {
+        const response = await pool.query(archiveMessage, archiveParameters);
+        messageDbLogger.debug(
+          `Messages archived: ${JSON.stringify(response.rowCount)}`
+        );
+
+        resolve(response.rowCount ?? 0);
+      } catch (err) {
+        messageDbLogger.error(
+          `Error executing archive message query on attempt ${currentAttempt}: ${err}`
+        );
+        if (operation.retry(err as Error)) {
+          return;
+        }
+        reject(operation.mainError());
+      }
+    });
+  });
+};
+
+const archiveMessages = async (
+  adminId: number,
+  conversationId: number
+): Promise<number> => {
+  const archiveMessages = `
+    UPDATE messages
+    SET archived = TRUE
+    WHERE admin_id = $1 AND conversation_id = $2;
+  `;
+  const archiveParameters = [adminId, conversationId];
+
+  return new Promise((resolve, reject) => {
+    operation.attempt(async (currentAttempt) => {
+      try {
+        const response = await pool.query(archiveMessages, archiveParameters);
+        messageDbLogger.debug(
+          `Messages archived: ${JSON.stringify(response.rowCount)}`
+        );
+
+        resolve(response.rowCount ?? 0);
+      } catch (err) {
+        messageDbLogger.error(
+          `Error executing archive messages query on attempt ${currentAttempt}: ${err}`
+        );
+        if (operation.retry(err as Error)) {
+          return;
+        }
+        reject(operation.mainError());
+      }
+    });
+  });
+};
 
 const deleteMessage = async (messageId: string): Promise<number> => {
   const deleteMessage = `
@@ -16,13 +79,13 @@ const deleteMessage = async (messageId: string): Promise<number> => {
     operation.attempt(async (currentAttempt) => {
       try {
         const response = await pool.query(deleteMessage, deleteParameters);
-        messageLogger.debug(
+        messageDbLogger.debug(
           `Messages deleted: ${JSON.stringify(response.rowCount)}`
         );
 
         resolve(response.rowCount ?? 0);
       } catch (err) {
-        messageLogger.error(
+        messageDbLogger.error(
           `Error executing delete message query on attempt ${currentAttempt}: ${err}`
         );
         if (operation.retry(err as Error)) {
@@ -48,13 +111,13 @@ const deleteMessages = async (
     operation.attempt(async (currentAttempt) => {
       try {
         const response = await pool.query(deleteMessages, deleteParameters);
-        messageLogger.debug(
+        messageDbLogger.debug(
           `Messages deleted: ${JSON.stringify(response.rowCount)}`
         );
 
         resolve(response.rowCount ?? 0);
       } catch (err) {
-        messageLogger.error(
+        messageDbLogger.error(
           `Error executing delete messages query on attempt ${currentAttempt}: ${err}`
         );
         if (operation.retry(err as Error)) {
@@ -80,11 +143,11 @@ const getRemainingMessageCount = async (
       try {
         const response = await pool.query(messageCount, messageCountParameters);
         const remainingMessages = response.rows[0].count as number;
-        messageLogger.debug(`Remaining messages: ${remainingMessages}`);
+        messageDbLogger.debug(`Remaining messages: ${remainingMessages}`);
 
         resolve(remainingMessages);
       } catch (err) {
-        messageLogger.error(
+        messageDbLogger.error(
           `Error executing count messages query on attempt ${currentAttempt}: ${err}`
         );
         if (operation.retry(err as Error)) {
@@ -113,14 +176,15 @@ const getTodaysMessages = async (): Promise<MessageDTO[]> => {
           message: row.message as string,
           sendDate: new Date(row.send_date),
           closeConversation: row.close_conversation as boolean,
+          archived: row.archived as boolean,
         })) as MessageDTO[];
-        messageLogger.debug(
+        messageDbLogger.debug(
           `Messages retrieved: ${JSON.stringify(messages.map((message) => message.id))}`
         );
 
         resolve(messages);
       } catch (err) {
-        messageLogger.error(
+        messageDbLogger.error(
           `Error executing select messages query on attempt ${currentAttempt}: ${err}`
         );
         if (operation.retry(err as Error)) {
@@ -142,15 +206,15 @@ const saveMessages = async (
   const promises = messages.map(async (message): Promise<string> => {
     // Encrypt the message before saving it to the database.
     let encryptedMessage: string;
-    messageLogger.info('Encrypting message.');
-    messageLogger.profile('encrypt');
+    messageDbLogger.info('Encrypting message.');
+    messageDbLogger.profile('encrypt');
     try {
       encryptedMessage = encrypt(message.message);
     } catch (err) {
-      messageLogger.error(`Error encrypting message: ${err}`);
+      messageDbLogger.error(`Error encrypting message: ${err}`);
       throw err;
     }
-    messageLogger.profile('encrypt', {
+    messageDbLogger.profile('encrypt', {
       level: 'info',
       message: 'Message encrypted.',
     });
@@ -174,11 +238,11 @@ const saveMessages = async (
         try {
           const response = await pool.query(insertMessage, messageParameters);
           const messageGUID: string = response.rows[0].id;
-          messageLogger.debug(`Message saved with GUID: ${messageGUID}`);
+          messageDbLogger.debug(`Message saved with GUID: ${messageGUID}`);
 
           resolve(messageGUID);
         } catch (err) {
-          messageLogger.error(
+          messageDbLogger.error(
             `Error executing insert message query on attempt ${currentAttempt}: ${err}`
           );
           if (operation.retry(err as Error)) {
@@ -194,13 +258,15 @@ const saveMessages = async (
   try {
     messageGUIDs = await Promise.all(promises);
   } catch (err) {
-    messageLogger.error(`Error saving messages: ${err}`);
+    messageDbLogger.error(`Error saving messages: ${err}`);
   }
 
   return messageGUIDs;
 };
 
 export {
+  archiveMessage,
+  archiveMessages,
   deleteMessage,
   deleteMessages,
   getRemainingMessageCount,

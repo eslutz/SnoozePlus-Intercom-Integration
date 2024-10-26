@@ -1,9 +1,9 @@
 import schedule from 'node-schedule';
 import {
-  deleteMessage,
+  archiveMessage,
   getRemainingMessageCount,
   getTodaysMessages,
-} from './message-service';
+} from './message-db-service';
 import { addNote, closeConversation, sendMessage } from './intercom-service';
 import logger from '../config/logger-config';
 import {
@@ -65,14 +65,14 @@ const scheduleMessages = async (): Promise<void> => {
           );
         }
 
-        // Delete the message from the database after it has been sent.
+        // Archive the message from the database after it has been sent.
         try {
-          scheduleMessageLogger.info(`Deleting message ${message.id}`);
-          scheduleMessageLogger.profile('deleteMessage');
-          const deletedMessage = await deleteMessage(message.id);
-          scheduleMessageLogger.profile('deleteMessage', {
+          scheduleMessageLogger.info(`Archiving message ${message.id}`);
+          scheduleMessageLogger.profile('archiveMessage');
+          const archivedMessage = await archiveMessage(message.id);
+          scheduleMessageLogger.profile('archiveMessage', {
             level: 'info',
-            message: `Deleted ${deletedMessage} message with GUID ${message.id}`,
+            message: `Archived ${archivedMessage} message with GUID ${message.id}`,
           });
         } catch (err) {
           scheduleMessageLogger.error(`Error deleting message: ${err}`);

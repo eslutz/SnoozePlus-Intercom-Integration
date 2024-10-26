@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
 import logger from '../config/logger-config';
 import { addNote } from '../services/intercom-service';
-import * as messageService from '../services/message-service';
+import * as messageService from '../services/message-db-service';
 import { setCloseNote } from '../utilities/snooze-utility';
 
 const webhookLogger = logger.child({
@@ -35,7 +35,7 @@ const receiver: RequestHandler = async (req, res, next) => {
     conversationId: req.body.data.item.id,
     note: '',
   };
-  let messagesDeleted: number = 0;
+  let messagesArchived: number = 0;
   webhookLogger.debug(`Webhook notification topic: ${fullTopic}`);
 
   // Determine if the conversation was unsnoozed, closed, or deleted.
@@ -44,19 +44,19 @@ const receiver: RequestHandler = async (req, res, next) => {
       // Delete messages associated with conversation from database.
       webhookLogger.info(`Conversation has been ${topic}.`);
       webhookLogger.info(
-        'Deleting messages associated with conversation from database.'
+        'Archiving messages associated with conversation from database.'
       );
-      webhookLogger.profile('deleteMessages');
-      messagesDeleted = await messageService.deleteMessages(
+      webhookLogger.profile('archiveMessages');
+      messagesArchived = await messageService.archiveMessages(
         noteRequest.adminId,
         noteRequest.conversationId
       );
-      webhookLogger.profile('deleteMessages', {
+      webhookLogger.profile('archiveMessages', {
         level: 'info',
-        message: `Messages deleted: ${messagesDeleted}`,
+        message: `Messages archived: ${messagesArchived}`,
       });
       webhookLogger.debug(
-        `Messages deleted: ${JSON.stringify(messagesDeleted)}`
+        `Messages archived: ${JSON.stringify(messagesArchived)}`
       );
     } else {
       // Log warning if topic is not recognized.
@@ -73,7 +73,7 @@ const receiver: RequestHandler = async (req, res, next) => {
   // Add close note to conversation.
   webhookLogger.info('Creating closing note for the conversation.');
   webhookLogger.profile('setCloseNote');
-  noteRequest.note = setCloseNote(topic, messagesDeleted);
+  noteRequest.note = setCloseNote(topic, messagesArchived);
   webhookLogger.profile('setCloseNote', {
     level: 'info',
     message: 'Closing note created.',

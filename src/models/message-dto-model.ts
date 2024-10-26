@@ -5,4 +5,5 @@ interface MessageDTO {
   readonly message: string;
   readonly sendDate: Date;
   readonly closeConversation: boolean;
+  readonly archived: boolean;
 }

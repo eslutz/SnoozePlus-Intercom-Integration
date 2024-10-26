@@ -4,7 +4,8 @@ CREATE TABLE messages (
     conversation_id INTEGER NOT NULL,
     message TEXT NOT NULL,
     send_date TIMESTAMP NOT NULL,
-    close_conversation BOOLEAN NOT NULL DEFAULT FALSE
+    close_conversation BOOLEAN NOT NULL DEFAULT FALSE,
+    archived BOOLEAN NOT NULL DEFAULT FALSE,
 );
 
 CREATE INDEX idx_messages_send_date ON messages (send_date);

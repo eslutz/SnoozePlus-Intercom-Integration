@@ -2,7 +2,7 @@ import { RequestHandler } from 'express';
 import logger from '../config/logger-config';
 import * as canvasService from '../services/canvas-service';
 import * as intercomService from '../services/intercom-service';
-import * as messageService from '../services/message-service';
+import * as messageService from '../services/message-db-service';
 import createSnoozeRequest from '../utilities/snooze-utility';
 
 const submitLogger = logger.child({ module: 'submit-controller' });
