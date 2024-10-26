@@ -98,13 +98,13 @@ const getMessageCanvas = (numOfSnoozes: number) => {
             options: [
               {
                 type: 'option',
-                id: 'snooze',
-                text: 'Snooze ',
+                id: 'open',
+                text: 'Open conversation',
               },
               {
                 type: 'option',
                 id: 'close',
-                text: 'Close',
+                text: 'Close conversation',
               },
             ],
           },
