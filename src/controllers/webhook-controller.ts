@@ -30,11 +30,9 @@ const receiver: RequestHandler = async (req, res, next) => {
 
   const fullTopic: string = req.body.topic;
   const topic: string = fullTopic.substring(fullTopic.lastIndexOf('.') + 1);
-  const noteRequest: NoteRequest = {
-    adminId: req.body.data.item.admin_assignee_id,
-    conversationId: req.body.data.item.id,
-    note: '',
-  };
+  const adminId: number = req.body.data.item.admin_assignee_id;
+  const conversationId: number = req.body.data.item.id;
+
   let messagesArchived: number = 0;
   webhookLogger.debug(`Webhook notification topic: ${fullTopic}`);
 
@@ -48,15 +46,15 @@ const receiver: RequestHandler = async (req, res, next) => {
       );
       webhookLogger.profile('archiveMessages');
       messagesArchived = await messageService.archiveMessages(
-        noteRequest.adminId,
-        noteRequest.conversationId
+        adminId,
+        conversationId
       );
       webhookLogger.profile('archiveMessages', {
         level: 'info',
         message: `Messages archived: ${messagesArchived}`,
       });
       webhookLogger.debug(
-        `Messages archived: ${JSON.stringify(messagesArchived)}`
+        `Messages archived response: ${JSON.stringify(messagesArchived)}`
       );
     } else {
       // Log warning if topic is not recognized.
@@ -73,7 +71,6 @@ const receiver: RequestHandler = async (req, res, next) => {
   // Add close note to conversation.
   webhookLogger.info('Creating closing note for the conversation.');
   webhookLogger.profile('setCloseNote');
-  noteRequest.note = setCloseNote(topic, messagesArchived);
   webhookLogger.profile('setCloseNote', {
     level: 'info',
     message: 'Closing note created.',
@@ -81,7 +78,11 @@ const receiver: RequestHandler = async (req, res, next) => {
   try {
     webhookLogger.info('Adding close note to conversation.');
     webhookLogger.profile('addNote');
-    const response = await addNote(noteRequest);
+    const response = await addNote(
+      adminId,
+      conversationId,
+      setCloseNote(topic, messagesArchived)
+    );
     webhookLogger.profile('addNote', {
       level: 'info',
       message: 'Close note added to conversation.',

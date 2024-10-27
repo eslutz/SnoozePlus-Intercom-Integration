@@ -129,6 +129,47 @@ const deleteMessages = async (
   });
 };
 
+const getMessages = async (
+  adminId: number,
+  conversationId: number
+): Promise<MessageDTO[]> => {
+  const selectMessages = `
+    SELECT * FROM messages
+    WHERE admin_id = $1 AND conversation_id = $2;
+  `;
+  const selectParameters = [adminId, conversationId];
+
+  return new Promise((resolve, reject) => {
+    operation.attempt(async (currentAttempt) => {
+      try {
+        const response = await pool.query(selectMessages, selectParameters);
+        const messages = response.rows.map((row) => ({
+          id: row.id as string,
+          adminId: row.admin_id as number,
+          conversationId: row.conversation_id as number,
+          message: row.message as string,
+          sendDate: new Date(row.send_date),
+          closeConversation: row.close_conversation as boolean,
+          archived: row.archived as boolean,
+        })) as MessageDTO[];
+        messageDbLogger.debug(
+          `Messages retrieved: ${JSON.stringify(messages.map((message) => message.id))}`
+        );
+
+        resolve(messages);
+      } catch (err) {
+        messageDbLogger.error(
+          `Error executing select messages query on attempt ${currentAttempt}: ${err}`
+        );
+        if (operation.retry(err as Error)) {
+          return;
+        }
+        reject(operation.mainError());
+      }
+    });
+  });
+};
+
 const getRemainingMessageCount = async (
   message: MessageDTO
 ): Promise<number> => {
@@ -269,6 +310,7 @@ export {
   archiveMessages,
   deleteMessage,
   deleteMessages,
+  getMessages,
   getRemainingMessageCount,
   getTodaysMessages,
   saveMessages,

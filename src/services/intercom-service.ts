@@ -7,14 +7,18 @@ import operation from '../config/retry-config';
 import { decrypt } from '../utilities/crypto-utility';
 
 const intercomLogger = logger.child({ module: 'intercom-service' });
-const baseUrl = process.env.INTERCOM_URL ?? 'https://api.intercom.io';
+const baseUrl = process.env.INTERCOM_URL ?? '';
 
-const addNote = async (noteRequest: NoteRequest): Promise<any> => {
+const addNote = async (
+  adminId: number,
+  conversationId: number,
+  note: string
+): Promise<any> => {
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {
         const response = await fetch(
-          `${baseUrl}/conversations/${noteRequest.conversationId}/reply`,
+          `${baseUrl}/conversations/${conversationId}/reply`,
           {
             method: 'POST',
             headers: {
@@ -23,8 +27,8 @@ const addNote = async (noteRequest: NoteRequest): Promise<any> => {
               'Intercom-Version': '2.11',
             },
             body: JSON.stringify({
-              admin_id: noteRequest.adminId,
-              body: noteRequest.note,
+              admin_id: adminId,
+              body: note,
               message_type: 'note',
               type: 'admin',
             }),
@@ -55,12 +59,15 @@ const addNote = async (noteRequest: NoteRequest): Promise<any> => {
   });
 };
 
-const closeConversation = async (message: MessageDTO): Promise<any> => {
+const closeConversation = async (
+  adminId: number,
+  conversationId: number
+): Promise<any> => {
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {
         const response = await fetch(
-          `${baseUrl}/conversations/${message.conversationId}/parts`,
+          `${baseUrl}/conversations/${conversationId}/parts`,
           {
             method: 'POST',
             headers: {
@@ -69,7 +76,7 @@ const closeConversation = async (message: MessageDTO): Promise<any> => {
               'Intercom-Version': '2.11',
             },
             body: JSON.stringify({
-              admin_id: message.adminId,
+              admin_id: adminId,
               message_type: 'close',
               type: 'admin',
             }),
@@ -168,12 +175,16 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
   });
 };
 
-const setSnooze = async (snoozeRequest: SnoozeRequest): Promise<any> => {
+const setSnooze = async (
+  adminId: number,
+  conversationId: number,
+  unixTimestamp: number
+): Promise<any> => {
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {
         const response = await fetch(
-          `${baseUrl}/conversations/${snoozeRequest.conversationId}/parts`,
+          `${baseUrl}/conversations/${conversationId}/parts`,
           {
             method: 'POST',
             headers: {
@@ -182,9 +193,9 @@ const setSnooze = async (snoozeRequest: SnoozeRequest): Promise<any> => {
               'Intercom-Version': '2.11',
             },
             body: JSON.stringify({
-              admin_id: snoozeRequest.adminId,
+              admin_id: adminId,
               message_type: 'snoozed',
-              snoozed_until: snoozeRequest.snoozeUntilUnixTimestamp,
+              snoozed_until: unixTimestamp,
             }),
           }
         );

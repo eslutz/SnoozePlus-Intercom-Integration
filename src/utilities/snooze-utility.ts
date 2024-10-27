@@ -7,7 +7,7 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
   snoozeLogger.info('Getting admin and conversation ids.');
   const adminId = input.admin.id;
   const conversationId = input.conversation.id;
-  snoozeLogger.info('Workspace, admin, and conversation ids retrieved.');
+  snoozeLogger.info('Admin, and conversation ids retrieved.');
 
   snoozeLogger.info('Getting number of snoozes set.');
   // Get the keys from the inputs object and use array length property to get number of inputs.
@@ -62,6 +62,13 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
   return snoozeRequest;
 };
 
+const setSnoozeCanceledNote = (messagesDeleted: number): string => {
+  const messageLabel = messagesDeleted === 1 ? 'message' : 'messages';
+  const note = `<p><strong>Snooze+ has been canceled.</stronger></p><br /><p>The remaining ${messagesDeleted} ${messageLabel} will not be sent.</p>`;
+
+  return note;
+};
+
 const setCloseNote = (
   reasonClosed: string,
   messagesDeleted: number
@@ -102,4 +109,10 @@ const setUnixTimestamp = (date: Date): number =>
   Math.floor(date.getTime() / 1000);
 
 export default createSnoozeRequest;
-export { setCloseNote, setLastMessageCloseNote, setSendMessageNote };
+export {
+  setCloseNote,
+  setSnoozeCanceledNote,
+  setLastMessageCloseNote,
+  setSendMessageNote,
+  setUnixTimestamp,
+};

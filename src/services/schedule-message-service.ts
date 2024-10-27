@@ -85,11 +85,11 @@ const scheduleMessages = async (): Promise<void> => {
           );
           scheduleMessageLogger.profile('addNote');
           const remainingMessages = await getRemainingMessageCount(message);
-          const noteResponse = await addNote({
-            adminId: message.adminId,
-            conversationId: message.conversationId,
-            note: setSendMessageNote(remainingMessages),
-          });
+          const noteResponse = await addNote(
+            message.adminId,
+            message.conversationId,
+            setSendMessageNote(remainingMessages)
+          );
           scheduleMessageLogger.profile('addNote', {
             level: 'info',
             message: `Note added to conversation ${message.conversationId} that message ${message.id} has been sent.`,
@@ -110,12 +110,11 @@ const scheduleMessages = async (): Promise<void> => {
               'Adding note that the conversation has been closed.'
             );
             scheduleMessageLogger.profile('addNote');
-            const closeNote: NoteRequest = {
-              adminId: message.adminId,
-              conversationId: message.conversationId,
-              note: setLastMessageCloseNote(),
-            };
-            const noteResponse = await addNote(closeNote);
+            const noteResponse = await addNote(
+              message.adminId,
+              message.conversationId,
+              setLastMessageCloseNote()
+            );
             scheduleMessageLogger.profile('addNote', {
               level: 'info',
               message: `Note added to conversation ${message.conversationId} that the conversation has been closed.`,
@@ -127,7 +126,10 @@ const scheduleMessages = async (): Promise<void> => {
               `Closing conversation ${message.id}:${message.conversationId}`
             );
             scheduleMessageLogger.profile('closeConversation');
-            const closeResponse = await closeConversation(message);
+            const closeResponse = await closeConversation(
+              message.adminId,
+              message.conversationId
+            );
             scheduleMessageLogger.profile('closeConversation', {
               level: 'info',
               message: `Closed conversation ${message.id}:${message.conversationId}`,

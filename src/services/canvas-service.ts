@@ -77,8 +77,8 @@ const getInitialCanvas = () => {
   return initialCanvas;
 };
 
-const getMessageCanvas = (numOfSnoozes: number) => {
-  const messageCanvas = {
+const getSetSnoozeCanvas = (numOfSnoozes: number) => {
+  const setSnoozeCanvas = {
     canvas: {
       content: {
         components: [
@@ -128,7 +128,7 @@ const getMessageCanvas = (numOfSnoozes: number) => {
 
   // Build the canvas component array based on the number of snoozes selected.
   for (let i = numOfSnoozes; i >= 1; i--) {
-    messageCanvas.canvas.content.components.splice(2, 0, {
+    setSnoozeCanvas.canvas.content.components.splice(2, 0, {
       type: 'dropdown',
       id: `snoozeLength${i}`,
       label: 'Snooze for:',
@@ -180,7 +180,7 @@ const getMessageCanvas = (numOfSnoozes: number) => {
         },
       ],
     });
-    messageCanvas.canvas.content.components.splice(3, 0, {
+    setSnoozeCanvas.canvas.content.components.splice(3, 0, {
       type: 'textarea',
       id: `message${i}`,
       label: 'With message:',
@@ -189,18 +189,84 @@ const getMessageCanvas = (numOfSnoozes: number) => {
     });
     // Do not insert a divider if only one snooze or last of multiple snoozes.
     if (i < numOfSnoozes) {
-      messageCanvas.canvas.content.components.splice(4, 0, {
+      setSnoozeCanvas.canvas.content.components.splice(4, 0, {
         type: 'spacer',
         size: 'm',
       });
       // @ts-expect-error: type not yet defined
-      messageCanvas.canvas.content.components.splice(5, 0, {
+      setSnoozeCanvas.canvas.content.components.splice(5, 0, {
         type: 'divider',
       });
     }
   }
 
-  return messageCanvas;
+  return setSnoozeCanvas;
+};
+
+const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
+  const updateSnoozeCanvas = {
+    canvas: {
+      content: {
+        components: [
+          {
+            type: 'text',
+            text: 'Current Snooze Messages',
+            style: 'header',
+          },
+          {
+            type: 'spacer',
+            size: 's',
+          },
+          {
+            type: 'spacer',
+            size: 'xl',
+          },
+          {
+            type: 'button',
+            id: 'cancelSnooze',
+            label: 'Cancel Snoozes',
+            style: 'primary',
+            action: {
+              type: 'submit',
+            },
+          },
+        ],
+      },
+    },
+  };
+
+  for (let i = 0; i < messages.length; i++) {
+    const currentDate = new Date();
+    const sendDate = new Date(messages[0].sendDate);
+    // Difference in time between current date and send date in milliseconds.
+    const timeDifference = sendDate.getTime() - currentDate.getTime();
+    // Convert the time difference to days (1000 milliseconds/second * 3600 seconds/hour * 24 hours/day).
+    const daysUntilSending = Math.ceil(timeDifference / (1000 * 3600 * 24));
+    updateSnoozeCanvas.canvas.content.components.splice(2, 0, {
+      type: 'text',
+      text: `Days Until Sending: ${daysUntilSending}}`,
+      style: 'muted',
+    });
+    updateSnoozeCanvas.canvas.content.components.splice(3, 0, {
+      type: 'text',
+      text: messages[i].message,
+      style: 'paragraph',
+    });
+
+    // Do not insert a divider if only one snooze or last of multiple snoozes.
+    if (i < messages.length - 1) {
+      updateSnoozeCanvas.canvas.content.components.splice(4, 0, {
+        type: 'spacer',
+        size: 'm',
+      });
+      // @ts-expect-error: type not yet defined
+      updateSnoozeCanvas.canvas.content.components.splice(5, 0, {
+        type: 'divider',
+      });
+    }
+  }
+
+  return updateSnoozeCanvas;
 };
 
 const getFinalCanvas = (snoozeRequest: SnoozeRequest) => {
@@ -237,4 +303,9 @@ const getFinalCanvas = (snoozeRequest: SnoozeRequest) => {
   return finalCanvas;
 };
 
-export { getInitialCanvas, getMessageCanvas, getFinalCanvas };
+export {
+  getCurrentSnoozesCanvas,
+  getInitialCanvas,
+  getSetSnoozeCanvas,
+  getFinalCanvas,
+};
