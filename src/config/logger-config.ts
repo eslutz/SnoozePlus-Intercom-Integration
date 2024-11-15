@@ -48,7 +48,6 @@ const transports: winston.transport[] = [
     // Add color to the console output.
     format: winston.format.colorize({ all: true }),
   }),
-  new LogtailTransport(logtail),
 ];
 // Set exception handler transport option for all environments.
 const exceptionTransports: winston.transport[] = [
@@ -65,8 +64,8 @@ const rejectionTransports: winston.transport[] = [
   }),
 ];
 
-// Add file transports for non-production environments.
-if (process.env.NODE_ENV !== 'production') {
+// Add file transports for local dev environment.
+if (process.env.NODE_ENV === 'local') {
   transports.push(
     new winston.transports.DailyRotateFile({
       filename: 'logs/combined-%DATE%.log',
@@ -98,6 +97,9 @@ if (process.env.NODE_ENV !== 'production') {
       format: winston.format.simple(),
     })
   );
+} else {
+  // Add Logtail transport for all other environments.
+  transports.push(new LogtailTransport(logtail));
 }
 
 // Create the logger instance.
