@@ -16,8 +16,8 @@ const submit: RequestHandler = async (req, res, next) => {
   submitLogger.profile('submit');
   submitLogger.info(`Request type: ${req.body.component_id}`);
   submitLogger.debug(`POST request body: ${JSON.stringify(req.body)}`);
-  const adminId = req.body.input.admin.id;
-  const conversationId = req.body.input.conversation.id;
+  const adminId = req.body.admin.id;
+  const conversationId = req.body.conversation.id;
 
   if (req.body.component_id === 'submitNumOfSnoozes') {
     let messageCanvas;
