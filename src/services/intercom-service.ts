@@ -22,7 +22,7 @@ const addNote = async (
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${process.env.INTERCOM_KEY}`,
+              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
               'Content-Type': 'application/json',
               'Intercom-Version': '2.11',
             },
@@ -71,7 +71,7 @@ const closeConversation = async (
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${process.env.INTERCOM_KEY}`,
+              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
               'Content-Type': 'application/json',
               'Intercom-Version': '2.11',
             },
@@ -135,7 +135,7 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${process.env.INTERCOM_KEY}`,
+              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
               'Content-Type': 'application/json',
               'Intercom-Version': '2.11',
             },
@@ -188,7 +188,7 @@ const setSnooze = async (
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${process.env.INTERCOM_KEY}`,
+              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
               'Content-Type': 'application/json',
               'Intercom-Version': '2.11',
             },
