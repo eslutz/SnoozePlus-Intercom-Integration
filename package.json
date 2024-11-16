@@ -27,39 +27,44 @@
   ],
   "main": "app.js",
   "scripts": {
-    "dev": "tsx --env-file=.env.local --watch src/app.ts",
-    "dev-build": "tsc --noEmit",
-    "build": "npm outdated && tsc && npm run copy-files",
     "start": "node --env-file=.env app.js",
+    "dev": "tsx --env-file=.env.local --watch src/app.ts",
+    "compile": "tsc --noEmit",
+    "dev-build": "tsc && npm run copy-files && cp .env.dev dist/.env",
+    "prod-build": "npm outdated && npm run lint && npm run test && tsc && npm run copy-files && cp .env.production dist/.env",
+    "copy-files": "cp README.md dist/README.md && cp package.json dist/package.json && cp -rp scripts/ dist/",
     "lint": "prettier ./src --write && eslint ./src --fix",
-    "copy-files": "cp README.md dist/README.md && cp package.json dist/package.json && cp .env.production dist/.env && cp -rp scripts/ dist/",
     "test": "node --env-file=.env.test ./node_modules/.bin/jest --watch"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
-    "@logtail/node": "^0.5.2",
-    "@logtail/winston": "^0.5.2",
     "express": "^4.21.1",
+    "express-session": "^1.18.1",
     "morgan": "^1.10.0",
     "node-fetch": "^3.3.2",
     "node-schedule": "^2.1.1",
+    "passport": "^0.7.0",
+    "passport-intercom": "^0.0.4",
     "pg": "^8.13.0",
     "retry": "^0.13.1",
-    "winston": "^3.15.0",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston": "^3.15.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@jest/globals": "^29.7.0",
+    "@logtail/node": "^0.5.2",
+    "@logtail/winston": "^0.5.2",
     "@types/eslint__js": "^8.42.3",
     "@types/express": "^5.0.0",
+    "@types/express-session": "^1.18.0",
     "@types/jest": "^29.5.14",
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.7.6",
     "@types/node-fetch": "^2.6.11",
     "@types/node-schedule": "^2.1.7",
+    "@types/passport": "^1.0.17",
     "@types/pg": "^8.11.10",
     "@types/retry": "^0.12.5",
     "@types/winston": "^2.4.4",
@@ -71,6 +76,7 @@
     "ts-jest": "^29.2.5",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3",
-    "typescript-eslint": "^8.10.0"
+    "typescript-eslint": "^8.10.0",
+    "winston-daily-rotate-file": "^5.0.0"
   }
 }

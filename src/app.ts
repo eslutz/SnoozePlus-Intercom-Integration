@@ -1,11 +1,14 @@
 import express from 'express';
+import session from 'express-session';
 import schedule from 'node-schedule';
+import passport from 'passport';
 import path from 'path';
 import pool from './config/db-config';
 import logger, { logtail } from './config/logger-config';
 import { morganMiddleware } from './middleware/logger-middleware';
 import router from './routes/router';
 import scheduleJobs from './utilities/scheduler-utility';
+require('./config/auth-config');
 
 const app = express();
 const PORT = 8706;
@@ -16,6 +19,11 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use(express.static('public'));
 app.use(express.static(path.join(__dirname)));
+
+// TODO: figure out session secrets
+app.use(session({ secret: 'cats', resave: false, saveUninitialized: false }));
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use('/', router);
 
