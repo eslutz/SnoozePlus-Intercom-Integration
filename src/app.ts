@@ -1,8 +1,9 @@
 import express from 'express';
-import path from 'path';
 import schedule from 'node-schedule';
+import path from 'path';
 import pool from './config/db-config';
-import logger, { logtail, morganMiddleware } from './config/logger-config';
+import logger, { logtail } from './config/logger-config';
+import { morganMiddleware } from './middleware/logger-middleware';
 import router from './routes/router';
 import scheduleJobs from './utilities/scheduler-utility';
 
