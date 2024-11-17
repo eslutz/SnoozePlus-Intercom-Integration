@@ -7,8 +7,12 @@ import webhookRouter from './webhook-router';
 
 const router = express.Router();
 
-router.use('/', healthcheckRouter);
+router.route('/').get((_req, res) => {
+  res.send('Welcome to Snooze+');
+});
+
 router.use('/auth', authRouter);
+router.use('/healthcheck', healthcheckRouter);
 router.use('/initialize', initializeRouter);
 router.use('/submit', submitRouter);
 router.use('/webhook', webhookRouter);
