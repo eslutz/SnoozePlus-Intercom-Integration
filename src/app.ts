@@ -20,8 +20,15 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
 app.use(express.static(path.join(__dirname)));
 
-// TODO: figure out session secrets
-app.use(session({ secret: 'cats', resave: false, saveUninitialized: false }));
+// Load session secret from environment variables.
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret) {
+  throw new Error('SESSION_SECRET cannot be found!');
+}
+
+app.use(
+  session({ secret: sessionSecret, resave: false, saveUninitialized: false })
+);
 app.use(passport.initialize());
 app.use(passport.session());
 

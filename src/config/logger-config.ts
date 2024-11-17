@@ -4,13 +4,19 @@ import 'winston-daily-rotate-file';
 import { Logtail } from '@logtail/node';
 import { LogtailTransport } from '@logtail/winston';
 
+// Load the Logtail key from environment variables.
+const betterstackLogtailKey = process.env.BETTERSTACK_LOGTAIL_KEY;
+if (!betterstackLogtailKey) {
+  throw new Error('BETTERSTACK_LOGTAIL_KEY cannot be found!');
+}
 // Create the Logtail client.
-const logtail = new Logtail(process.env.BETTERSTACK_LOGTAIL_KEY ?? '');
+const logtail = new Logtail(betterstackLogtailKey);
 
+// Load the current environment from environment variables.
+const environment = process.env.NODE_ENV ?? 'development';
 // Set the log level based on environment variable or default options.
 const logLevel = () =>
-  process.env.LOG_LEVEL ??
-  (process.env.NODE_ENV === 'production' ? 'http' : 'debug');
+  process.env.LOG_LEVEL ?? (environment === 'production' ? 'http' : 'debug');
 
 // Define severity levels.
 const levels = {
@@ -65,7 +71,7 @@ const rejectionTransports: winston.transport[] = [
 ];
 
 // Add file transports for local dev environment.
-if (process.env.NODE_ENV === 'local') {
+if (environment === 'local') {
   transports.push(
     new winston.transports.DailyRotateFile({
       filename: 'logs/combined-%DATE%.log',

@@ -5,10 +5,14 @@ const fetch = (...args) =>
 import logger from '../config/logger-config';
 import operation from '../config/retry-config';
 
-const heartbeatUrl = process.env.BETTERSTACK_HEARTBEAT_URL ?? '';
+// Load the heartbeat URL from environment variables.
+const baseUrl = process.env.BETTERSTACK_HEARTBEAT_URL;
+if (!baseUrl) {
+  throw new Error('BETTERSTACK_HEARTBEAT_URL cannot be found!');
+}
 
 const sendHeartbeat = async (success: boolean = true): Promise<void> => {
-  const url = success ? heartbeatUrl : `${heartbeatUrl}/fail`;
+  const url = success ? baseUrl : `${baseUrl}/fail`;
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {

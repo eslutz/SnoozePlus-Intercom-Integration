@@ -7,7 +7,7 @@ import operation from '../config/retry-config';
 import { decrypt } from '../utilities/crypto-utility';
 
 const intercomLogger = logger.child({ module: 'intercom-service' });
-const baseUrl = process.env.INTERCOM_URL ?? '';
+const baseUrl = process.env.INTERCOM_URL ?? 'https://api.intercom.io';
 
 const addNote = async (
   adminId: number,
