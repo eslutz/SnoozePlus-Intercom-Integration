@@ -1,6 +1,7 @@
 interface MessageDTO {
   readonly id: string;
   readonly adminId: number;
+  readonly adminAccessToken: string;
   readonly conversationId: number;
   readonly message: string;
   readonly sendDate: Date;

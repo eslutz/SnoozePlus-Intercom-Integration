@@ -1,3 +1,8 @@
+import logger from '../config/logger-config';
+import { decrypt } from '../utilities/crypto-utility';
+
+const canvasLogger = logger.child({ module: 'canvas-service' });
+
 const getInitialCanvas = () => {
   /*
   This object defines the canvas that will display when your app initializes.
@@ -236,6 +241,21 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
   };
 
   for (let i = 0; i < messages.length; i++) {
+    // Decrypt the message before sending.
+    let decryptedMessage: string;
+    canvasLogger.info('Decrypting message.');
+    canvasLogger.profile('decrypt');
+    try {
+      decryptedMessage = decrypt(messages[i].message);
+    } catch (err) {
+      canvasLogger.error(`Error decrypting message: ${err}`);
+      throw err;
+    }
+    canvasLogger.profile('decrypt', {
+      level: 'info',
+      message: 'Message decrypted.',
+    });
+
     const currentDate = new Date();
     const sendDate = new Date(messages[0].sendDate);
     // Difference in time between current date and send date in milliseconds.
@@ -249,7 +269,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     });
     updateSnoozeCanvas.canvas.content.components.splice(3, 0, {
       type: 'text',
-      text: messages[i].message,
+      text: decryptedMessage,
       style: 'paragraph',
     });
 

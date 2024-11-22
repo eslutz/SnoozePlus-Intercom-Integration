@@ -20,12 +20,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
 app.use(express.static(path.join(__dirname)));
 
-// Load session secret from environment variables.
+// Configure session and add passport.
 const sessionSecret = process.env.SESSION_SECRET;
 if (!sessionSecret) {
   throw new Error('SESSION_SECRET cannot be found!');
 }
-
 app.use(
   session({ secret: sessionSecret, resave: false, saveUninitialized: false })
 );
@@ -35,7 +34,6 @@ app.use(passport.session());
 app.use('/', router);
 
 const appLogger = logger.child({ module: 'app' });
-
 appLogger.info('*** SnoozePlus Intercom Integration ***');
 
 // Start the scheduler for sending messages.

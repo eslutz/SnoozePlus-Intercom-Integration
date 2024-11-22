@@ -134,8 +134,10 @@ const getMessages = async (
   conversationId: number
 ): Promise<MessageDTO[]> => {
   const selectMessages = `
-    SELECT * FROM messages
-    WHERE admin_id = $1 AND conversation_id = $2;
+    SELECT message, send_date
+    FROM messages
+    WHERE NOT messages.archived
+    AND admin_id = $1 AND conversation_id = $2;
   `;
   const selectParameters = [adminId, conversationId];
 
@@ -144,13 +146,8 @@ const getMessages = async (
       try {
         const response = await pool.query(selectMessages, selectParameters);
         const messages = response.rows.map((row) => ({
-          id: row.id as string,
-          adminId: row.admin_id as number,
-          conversationId: row.conversation_id as number,
           message: row.message as string,
           sendDate: new Date(row.send_date),
-          closeConversation: row.close_conversation as boolean,
-          archived: row.archived as boolean,
         })) as MessageDTO[];
         messageDbLogger.debug(
           `Messages retrieved: ${JSON.stringify(messages.map((message) => message.id))}`
@@ -174,8 +171,10 @@ const getRemainingMessageCount = async (
   message: MessageDTO
 ): Promise<number> => {
   const messageCount = `
-    SELECT COUNT(*) FROM messages
-    WHERE admin_id = $1 AND conversation_id = $2;
+    SELECT COUNT(*)
+    FROM messages
+    WHERE NOT archived
+    AND admin_id = $1 AND conversation_id = $2;
   `;
   const messageCountParameters = [message.adminId, message.conversationId];
 
@@ -202,8 +201,11 @@ const getRemainingMessageCount = async (
 
 const getTodaysMessages = async (): Promise<MessageDTO[]> => {
   const selectMessages = `
-    SELECT * FROM messages
-    WHERE send_date < CURRENT_DATE + INTERVAL '1 day';
+    SELECT messages.*, users.access_token
+    FROM messages
+    INNER JOIN users ON messages.admin_id = users.id
+    WHERE NOT messages.archived
+    AND messages.send_date < CURRENT_DATE + INTERVAL '1 day';
   `;
 
   return new Promise((resolve, reject) => {
@@ -213,6 +215,7 @@ const getTodaysMessages = async (): Promise<MessageDTO[]> => {
         const messages = response.rows.map((row) => ({
           id: row.id as string,
           adminId: row.admin_id as number,
+          adminAccessToken: row.access_token as string,
           conversationId: row.conversation_id as number,
           message: row.message as string,
           sendDate: new Date(row.send_date),
@@ -245,21 +248,6 @@ const saveMessages = async (
   let messageGUIDs: string[] = [];
 
   const promises = messages.map(async (message): Promise<string> => {
-    // Encrypt the message before saving it to the database.
-    let encryptedMessage: string;
-    messageDbLogger.info('Encrypting message.');
-    messageDbLogger.profile('encrypt');
-    try {
-      encryptedMessage = encrypt(message.message);
-    } catch (err) {
-      messageDbLogger.error(`Error encrypting message: ${err}`);
-      throw err;
-    }
-    messageDbLogger.profile('encrypt', {
-      level: 'info',
-      message: 'Message encrypted.',
-    });
-
     const insertMessage = `
       INSERT INTO messages (admin_id, conversation_id, message, send_date, close_conversation)
       VALUES ($1, $2, $3, $4, $5)
@@ -268,7 +256,7 @@ const saveMessages = async (
     const messageParameters = [
       adminId,
       conversationId,
-      encryptedMessage,
+      message.message,
       message.sendDate,
       message.closeConversation,
     ];

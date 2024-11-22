@@ -1,14 +1,10 @@
+import { encrypt } from './crypto-utility';
 import logger from '../config/logger-config';
 
 const snoozeLogger = logger.child({ module: 'snooze-utility' });
 
-// Take the input value object and determine how many snoozes were set.
+// Take the request and determine how many snoozes were set.
 const createSnoozeRequest = (input: any): SnoozeRequest => {
-  snoozeLogger.info('Getting admin and conversation ids.');
-  const adminId = input.admin.id;
-  const conversationId = input.conversation.id;
-  snoozeLogger.info('Admin, and conversation ids retrieved.');
-
   snoozeLogger.info('Getting number of snoozes set.');
   // Get the keys from the inputs object and use array length property to get number of inputs.
   const keysArray = Object.keys(input.input_values);
@@ -21,12 +17,26 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
   let snoozeDurationTotal = 0;
   const messages: Array<Message> = [];
   for (let i = 1; i <= snoozeCount; i++) {
+    // Encrypt the message before storing it.
+    let encryptedMessage: string;
+    snoozeLogger.info('Encrypting message.');
+    snoozeLogger.profile('encrypt');
+    try {
+      encryptedMessage = encrypt(input.input_values[`message${i}`]);
+    } catch (err) {
+      snoozeLogger.error(`Error encrypting message: ${err}`);
+      throw err;
+    }
+    snoozeLogger.profile('encrypt', {
+      level: 'info',
+      message: 'Message encrypted.',
+    });
+
     snoozeLogger.debug(
       `Snooze duration: ${input.input_values[`snoozeDuration${i}`]}`
     );
     snoozeDurationTotal += Number(input.input_values[`snoozeDuration${i}`]);
     snoozeLogger.debug(`Current snooze duration total: ${snoozeDurationTotal}`);
-    snoozeLogger.debug(`Message: ${input.input_values[`message${i}`]}`);
     // Determine the send date as the current date and time plus the snooze duration.
     const sendDate = new Date();
     sendDate.setDate(
@@ -34,7 +44,7 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
     );
     snoozeLogger.debug(`Message send date: ${sendDate}`);
     messages.push({
-      message: input.input_values[`message${i}`],
+      message: encryptedMessage,
       sendDate: sendDate,
       closeConversation:
         i === snoozeCount && input.input_values.then === 'close',
@@ -51,13 +61,15 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
   snoozeUntil.setDate(snoozeUntil.getDate() + snoozeDurationTotal);
   snoozeLogger.info(`Snooze until date: ${snoozeUntil}`);
 
+  snoozeLogger.debug('Creating snooze request object.');
   const snoozeRequest: SnoozeRequest = {
-    adminId: adminId,
-    conversationId: conversationId,
     messages: messages,
     note: setSnoozeNote(snoozeCount, snoozeDurationTotal, snoozeUntil),
     snoozeUntilUnixTimestamp: setUnixTimestamp(snoozeUntil),
   };
+  snoozeLogger.debug(
+    `Snooze request object created: ${JSON.stringify(snoozeRequest)}`
+  );
 
   return snoozeRequest;
 };

@@ -1,5 +1,4 @@
 interface Profile {
-  accessToken: string;
   readonly provider: string;
   readonly id: string;
   readonly displayName: string;
@@ -28,10 +27,5 @@ interface Profile {
     };
     has_inbox_seat: boolean;
   };
-}
-
-declare namespace Express {
-  export interface Request {
-    user?: Profile;
-  }
+  accessToken: string;
 }
