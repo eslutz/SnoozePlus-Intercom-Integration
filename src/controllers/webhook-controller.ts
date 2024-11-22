@@ -2,6 +2,7 @@ import { RequestHandler } from 'express';
 import logger from '../config/logger-config';
 import { addNote } from '../services/intercom-service';
 import * as messageService from '../services/message-db-service';
+import * as userDbService from '../services/user-db-service';
 import { setCloseNote } from '../utilities/snooze-utility';
 
 const webhookLogger = logger.child({
@@ -30,7 +31,13 @@ const receiver: RequestHandler = async (req, res, next) => {
 
   const fullTopic: string = req.body.topic;
   const topic: string = fullTopic.substring(fullTopic.lastIndexOf('.') + 1);
-  const adminId: number = req.body.data.item.admin_assignee_id;
+  const adminId = Number(req.body.data.item.admin_assignee_id);
+  const user = await userDbService.getUser(adminId);
+  if (!user) {
+    webhookLogger.error(`User not found. ID: ${adminId}`);
+    res.status(500).send('User not found.');
+    return;
+  }
   const conversationId: number = req.body.data.item.id;
 
   let messagesArchived: number = 0;
@@ -39,14 +46,14 @@ const receiver: RequestHandler = async (req, res, next) => {
   // Determine if the conversation was unsnoozed, closed, or deleted.
   try {
     if (topic === 'unsnoozed' || topic === 'closed' || topic === 'deleted') {
-      // Delete messages associated with conversation from database.
+      // Archive messages associated with conversation from database.
       webhookLogger.info(`Conversation has been ${topic}.`);
       webhookLogger.info(
         'Archiving messages associated with conversation from database.'
       );
       webhookLogger.profile('archiveMessages');
       messagesArchived = await messageService.archiveMessages(
-        adminId,
+        user.id,
         conversationId
       );
       webhookLogger.profile('archiveMessages', {
@@ -79,7 +86,8 @@ const receiver: RequestHandler = async (req, res, next) => {
     webhookLogger.info('Adding close note to conversation.');
     webhookLogger.profile('addNote');
     const response = await addNote(
-      adminId,
+      user.id,
+      user.accessToken,
       conversationId,
       setCloseNote(topic, messagesArchived)
     );

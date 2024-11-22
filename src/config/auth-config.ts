@@ -1,4 +1,8 @@
 import passport from 'passport';
+import logger from './logger-config';
+import * as userDbService from '../services/user-db-service';
+import { encrypt } from '../utilities/crypto-utility';
+
 const IntercomStrategy = require('passport-intercom').Strategy;
 
 // Load Intercom client ID and secret from environment variables.
@@ -11,23 +15,74 @@ if (!intercomClientSecret) {
   throw new Error('INTERCOM_CLIENT_SECRET cannot be found!');
 }
 
+const authLogger = logger.child({ module: 'auth-config' });
+
 passport.use(
   new IntercomStrategy(
     {
       clientID: intercomClientId,
       clientSecret: intercomClientSecret,
       callbackURL: 'https://localhost:8706/auth/intercom/callback',
+      passReqToCallback: true,
     },
-    (
+    async (
+      req: any,
       accessToken: any,
       refreshToken: any,
       profile: Profile,
       done: (arg0: null, arg1: any) => any
     ) => {
-      profile.accessToken = accessToken;
-      console.log('accessToken', accessToken);
-      console.log('refreshToken', refreshToken);
-      console.log('profile', profile);
+      // Encrypt the access token before storing it.
+      let encryptedAccessToken: string;
+      authLogger.info('Encrypting access token.');
+      authLogger.profile('encrypt');
+      try {
+        encryptedAccessToken = encrypt(accessToken);
+      } catch (err) {
+        authLogger.error(`Error encrypting access token: ${err}`);
+        throw err;
+      }
+      authLogger.profile('encrypt', {
+        level: 'info',
+        message: 'Access token encrypted.',
+      });
+
+      // Encrypt the authorization code before storing it.
+      let encryptedAuthorizationCode: string;
+      authLogger.info('Encrypting authorization code.');
+      authLogger.profile('encrypt');
+      try {
+        encryptedAuthorizationCode = encrypt(req.query.code);
+      } catch (err) {
+        authLogger.error(`Error encrypting authorization code: ${err}`);
+        throw err;
+      }
+      authLogger.profile('encrypt', {
+        level: 'info',
+        message: 'Authorization code encrypted.',
+      });
+
+      // Add accessToken to the profile object.
+      profile.accessToken = encryptedAccessToken;
+
+      // Create a user to save to the database.
+      const user: User = {
+        id: Number(profile.id),
+        accountType: profile._json.type,
+        accessToken: encryptedAccessToken,
+        authorizationCode: encryptedAuthorizationCode,
+      };
+
+      authLogger.debug('Saving user to database');
+      authLogger.profile('saveUser');
+      const userResponse = await userDbService.saveUser(user);
+      authLogger.profile('saveUser', {
+        level: 'debug',
+        message: 'User saved to database.',
+      });
+      authLogger.debug(`Save user response: ${JSON.stringify(userResponse)}`);
+      authLogger.debug(`User profile: ${profile}`);
+
       return done(null, profile);
     }
   )

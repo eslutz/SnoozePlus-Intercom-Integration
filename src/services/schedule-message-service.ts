@@ -87,6 +87,7 @@ const scheduleMessages = async (): Promise<void> => {
           const remainingMessages = await getRemainingMessageCount(message);
           const noteResponse = await addNote(
             message.adminId,
+            message.adminAccessToken,
             message.conversationId,
             setSendMessageNote(remainingMessages)
           );
@@ -112,6 +113,7 @@ const scheduleMessages = async (): Promise<void> => {
             scheduleMessageLogger.profile('addNote');
             const noteResponse = await addNote(
               message.adminId,
+              message.adminAccessToken,
               message.conversationId,
               setLastMessageCloseNote()
             );
@@ -128,6 +130,7 @@ const scheduleMessages = async (): Promise<void> => {
             scheduleMessageLogger.profile('closeConversation');
             const closeResponse = await closeConversation(
               message.adminId,
+              message.adminAccessToken,
               message.conversationId
             );
             scheduleMessageLogger.profile('closeConversation', {

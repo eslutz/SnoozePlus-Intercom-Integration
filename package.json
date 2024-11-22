@@ -29,7 +29,7 @@
   "scripts": {
     "start": "node --env-file=.env app.js",
     "dev": "tsx --env-file=.env.local --watch src/app.ts",
-    "compile": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
     "dev-build": "tsc && npm run copy-files && cp .env.dev dist/.env",
     "prod-build": "npm outdated && npm run lint && npm run test && tsc && npm run copy-files && cp .env.production dist/.env",
     "copy-files": "cp README.md dist/README.md && cp package.json dist/package.json && cp -rp scripts/ dist/",
@@ -56,7 +56,6 @@
     "@jest/globals": "^29.7.0",
     "@logtail/node": "^0.5.2",
     "@logtail/winston": "^0.5.2",
-    "@types/eslint__js": "^8.42.3",
     "@types/express": "^5.0.0",
     "@types/express-session": "^1.18.0",
     "@types/jest": "^29.5.14",

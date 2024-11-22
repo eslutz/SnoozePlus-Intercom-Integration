@@ -10,16 +10,15 @@ const initialize: RequestHandler = async (req, res, next) => {
   initializeLogger.info('Initialize request received.');
   initializeLogger.profile('initialize');
   initializeLogger.debug(`Request body: ${JSON.stringify(req.body)}`);
-  const adminId: number = req.body.input.admin.id;
+  // const adminId: number = req.body.input.admin.id;
+  const adminId: number = Number(req.user?.id);
   const conversationId: number = req.body.input.conversation.id;
 
   // Get all messages for the conversation that are not archived.
   // Then sort messages by send date, from latest to soonest.
-  const messages = (await getMessages(adminId, conversationId))
-    .filter((message) => !message.archived)
-    .sort(
-      (a, b) => new Date(b.sendDate).getTime() - new Date(a.sendDate).getTime()
-    );
+  const messages = (await getMessages(adminId, conversationId)).sort(
+    (a, b) => new Date(b.sendDate).getTime() - new Date(a.sendDate).getTime()
+  );
   if (messages.length === 0) {
     try {
       initializeLogger.info('No messages found. Building initial canvas.');

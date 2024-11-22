@@ -11,9 +11,25 @@ const baseUrl = process.env.INTERCOM_URL ?? 'https://api.intercom.io';
 
 const addNote = async (
   adminId: number,
+  adminAccessToken: string,
   conversationId: number,
   note: string
 ): Promise<any> => {
+  // Decrypt the access token before sending.
+  let decryptedAccessToken: string;
+  intercomLogger.info('Decrypting access token.');
+  intercomLogger.profile('decrypt');
+  try {
+    decryptedAccessToken = decrypt(adminAccessToken);
+  } catch (err) {
+    intercomLogger.error(`Error decrypting access token: ${err}`);
+    throw err;
+  }
+  intercomLogger.profile('decrypt', {
+    level: 'info',
+    message: 'Access token decrypted.',
+  });
+
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {
@@ -22,7 +38,7 @@ const addNote = async (
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+              Authorization: `Bearer ${decryptedAccessToken}`,
               'Content-Type': 'application/json',
               'Intercom-Version': '2.11',
             },
@@ -61,8 +77,24 @@ const addNote = async (
 
 const closeConversation = async (
   adminId: number,
+  adminAccessToken: string,
   conversationId: number
 ): Promise<any> => {
+  // Decrypt the access token before sending.
+  let decryptedAccessToken: string;
+  intercomLogger.info('Decrypting access token.');
+  intercomLogger.profile('decrypt');
+  try {
+    decryptedAccessToken = decrypt(adminAccessToken);
+  } catch (err) {
+    intercomLogger.error(`Error decrypting access token: ${err}`);
+    throw err;
+  }
+  intercomLogger.profile('decrypt', {
+    level: 'info',
+    message: 'Access token decrypted.',
+  });
+
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {
@@ -71,7 +103,7 @@ const closeConversation = async (
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+              Authorization: `Bearer ${decryptedAccessToken}`,
               'Content-Type': 'application/json',
               'Intercom-Version': '2.11',
             },
@@ -111,7 +143,7 @@ const closeConversation = async (
 };
 
 const sendMessage = async (message: MessageDTO): Promise<any> => {
-  // Decrypt the message before sending it.
+  // Decrypt the message before sending.
   let decryptedMessage: string;
   intercomLogger.info('Decrypting message.');
   intercomLogger.profile('decrypt');
@@ -126,6 +158,21 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
     message: 'Message decrypted.',
   });
 
+  // Decrypt the access token before sending.
+  let decryptedAccessToken: string;
+  intercomLogger.info('Decrypting access token.');
+  intercomLogger.profile('decrypt');
+  try {
+    decryptedAccessToken = decrypt(message.adminAccessToken);
+  } catch (err) {
+    intercomLogger.error(`Error decrypting access token: ${err}`);
+    throw err;
+  }
+  intercomLogger.profile('decrypt', {
+    level: 'info',
+    message: 'Access token decrypted.',
+  });
+
   // Send the message to Intercom.
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
@@ -135,7 +182,7 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+              Authorization: `Bearer ${decryptedAccessToken}`,
               'Content-Type': 'application/json',
               'Intercom-Version': '2.11',
             },
@@ -177,9 +224,25 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
 
 const setSnooze = async (
   adminId: number,
+  adminAccessToken: string,
   conversationId: number,
   unixTimestamp: number
 ): Promise<any> => {
+  // Decrypt the access token before sending.
+  let decryptedAccessToken: string;
+  intercomLogger.info('Decrypting access token.');
+  intercomLogger.profile('decrypt');
+  try {
+    decryptedAccessToken = decrypt(adminAccessToken);
+  } catch (err) {
+    intercomLogger.error(`Error decrypting access token: ${err}`);
+    throw err;
+  }
+  intercomLogger.profile('decrypt', {
+    level: 'info',
+    message: 'Access token decrypted.',
+  });
+
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {
@@ -188,7 +251,7 @@ const setSnooze = async (
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${process.env.INTERCOM_API_KEY}`,
+              Authorization: `Bearer ${decryptedAccessToken}`,
               'Content-Type': 'application/json',
               'Intercom-Version': '2.11',
             },
