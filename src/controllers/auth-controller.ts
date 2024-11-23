@@ -11,7 +11,7 @@ const callback: RequestHandler = (req, res, next) => {
 };
 
 const failure: RequestHandler = (req, res) => {
-  res.send('Failed to authenticate.');
+  res.status(401).send('Failed to authenticate.');
 };
 
 const login: RequestHandler = (req, res, next) => {
@@ -30,7 +30,7 @@ const logout: RequestHandler = (req, res, next) => {
       if (err) {
         return next(err);
       }
-      res.send('Goodbye!');
+      res.status(200).send('Logout successful');
     });
   });
 };
