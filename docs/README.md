@@ -41,6 +41,8 @@ Snooze+ is an inbox app for Intercom used to automate sending delayed responses 
 
 ### Code Quality
 
+The following tools are used to maintain code quality:
+
 - [ESLint](https://eslint.org) for code linting
 - [Prettier](https://prettier.io) for code formatting
 - [TypeScript](https://www.typescriptlang.org) for static type checking
@@ -173,7 +175,7 @@ The application uses OAuth 2.0 for authentication with Intercom utilizing [Passp
 
 ## Required Environment Variables
 
-The environment variables for this application can be found in the **[.env.sample](docs/.env.sample)** file.
+The environment variables for this application can be found in the **[.env.sample](.env.sample)** file.
 
 All of the environment variables are required for the application to run correctly. Note that _NODE_ENV_ must be set to _production_ in the **.env.production** file.
 
