@@ -17,11 +17,15 @@ const scheduleJobs = async () => {
       } catch (err) {
         schedulerLogger.error(`Error running scheduled task: ${err}`);
       }
-      await sendHeartbeat();
+      if (process.env.NODE_ENV == 'local') {
+        await sendHeartbeat();
+      }
     });
   } catch (err) {
     schedulerLogger.error(`Error running daily task: ${err}`);
-    await sendHeartbeat(false);
+    if (process.env.NODE_ENV !== 'local') {
+      await sendHeartbeat(false);
+    }
   }
 };
 
