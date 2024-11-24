@@ -1,6 +1,6 @@
 databaseType = "PostgreSql"
-id = "9f2a6227-536d-4d28-90b3-0854706f446a"
-name = "snoozeplus"
+id = "4d6f3af4-0504-44c8-890d-4edb992bf872"
+name = "database"
 
 [flyway]
 locations = [ "filesystem:migrations" ]
@@ -23,7 +23,17 @@ filterFile = "filter.rgf"
 [redgateCompare.postgresql.options.ignores]
 ignoreNewlinesInTextObjects = "off"
 
-[environments.snoozeplus]
-url = "jdbc:postgresql://localhost/snoozeplus"
+[environments.snoozeplus-local]
+url = "jdbc:postgresql://localhost:5432/postgres"
 schemas = [ "public" ]
-displayName = "SnoozePlus"
+displayName = "local"
+
+[environments.snoozeplus-dev]
+url = "jdbc:postgresql://localhost:5432/snoozeplus-dev"
+schemas = [ "public" ]
+displayName = "dev"
+
+[environments.snoozeplus-prod]
+url = "jdbc:postgresql://localhost:5432/snoozeplus"
+schemas = [ "public" ]
+displayName = "prod"
