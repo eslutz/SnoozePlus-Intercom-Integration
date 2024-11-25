@@ -1,0 +1,53 @@
+name: Deploy Database Changes
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deploy to environment (dev/prod)'
+        required: true
+        type: choice
+        options:
+          - Development
+          - Production
+
+jobs:
+  migrate:
+    name: Run Migration
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    container:
+      image: flyway/flyway
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install SSH
+        run: apt install openssh-client
+
+      - name: Create SSH key
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Open SSH Tunnel
+        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER }} -L 5432:${{ vars.DATABASE_HOST }} -N
+
+      - name: Run Flyway Migrate
+        run: |
+          flyway -url=jdbc:postgresql://${{ vars.DATABASE_HOST }}/${{ secrets.DATABASE_NAME }} \
+                 -user=${{ secrets.DATABASE_USERNAME }} \
+                 -password=${{ secrets.DATABASE_PASSWORD }} \
+                 -locations=filesystem:database/migrations migrate
+        env:
+          FLYWAY_VALIDATE_ON_MIGRATE: true
+
+      - name: Report Migration Status
+        if: always()
+        run: |
+          flyway -url=jdbc:postgresql://${{ vars.DATABASE_HOST }}/${{ secrets.DATABASE_NAME }} \
+                 -user=${{ secrets.DATABASE_USERNAME }} \
+                 -password=${{ secrets.DATABASE_PASSWORD }} \
+                 info
