@@ -146,12 +146,14 @@ Database server: `opal7.opalstack.com`
 
 ## Controlling the app
 
+The app can be controlled using the start and stop scripts. Each script takes a single argument for the app name (e.g. `snoozeplus_dev`, `snoozeplus`). If no argument is passed the default app name is `snoozeplus`.
+
 ### Starting the app
 
-Start the app by running:
+To start the app, run:
 
 ```sh
-/home/activelabs/apps/snoozeplus/start
+/home/activelabs/apps/snoozeplus/start [app_name]
 ```
 
 ### Stopping the app
@@ -159,7 +161,7 @@ Start the app by running:
 Stop the app by running:
 
 ```sh
-/home/activelabs/apps/snoozeplus/stop
+/home/activelabs/apps/snoozeplus/stop [app_name]
 ```
 
 ## Authentication

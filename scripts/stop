@@ -1,6 +1,7 @@
 #!/bin/bash
 
-APPNAME=snoozeplus
+APPNAME=${1:-snoozeplus}
+
 
 PIDFILE="$HOME/apps/$APPNAME/tmp/node.pid"
 

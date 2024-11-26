@@ -1,6 +1,6 @@
 #!/bin/bash
 
-APPNAME=snoozeplus
+APPNAME=${1:-snoozeplus}
 
 # set node version via scl
 source scl_source enable nodejs20
