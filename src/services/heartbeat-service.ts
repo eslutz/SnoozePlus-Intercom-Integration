@@ -11,7 +11,7 @@ if (!baseUrl) {
   throw new Error('BETTERSTACK_HEARTBEAT_URL cannot be found!');
 }
 
-const sendHeartbeat = async (success: boolean = true): Promise<void> => {
+const sendHeartbeat = async (success = true): Promise<void> => {
   const url = success ? baseUrl : `${baseUrl}/fail`;
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {

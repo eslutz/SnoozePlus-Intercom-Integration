@@ -29,7 +29,7 @@ const submit: RequestHandler = async (req, res, next) => {
     res.status(401).send('No access token found.');
     return;
   }
-  const conversationId: number = Number(req.body.conversation.id);
+  const conversationId = Number(req.body.conversation.id);
 
   if (req.body.component_id === 'submitNumOfSnoozes') {
     let messageCanvas;
@@ -153,7 +153,7 @@ const submit: RequestHandler = async (req, res, next) => {
     submitLogger.profile('cancelSnooze');
 
     // Archive messages in the database.
-    let messagesArchived: number = 0;
+    let messagesArchived = 0;
     try {
       submitLogger.info('Archiving messages.');
       submitLogger.profile('archiveMessages');

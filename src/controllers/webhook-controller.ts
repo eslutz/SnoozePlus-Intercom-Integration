@@ -40,7 +40,7 @@ const receiver: RequestHandler = async (req, res, next) => {
   }
   const conversationId: number = req.body.data.item.id;
 
-  let messagesArchived: number = 0;
+  let messagesArchived = 0;
   webhookLogger.debug(`Webhook notification topic: ${fullTopic}`);
 
   // Determine if the conversation was unsnoozed, closed, or deleted.

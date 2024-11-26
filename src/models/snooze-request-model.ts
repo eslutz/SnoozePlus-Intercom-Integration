@@ -1,5 +1,5 @@
 interface SnoozeRequest {
-  readonly messages: Array<Message>;
+  readonly messages: Message[];
   readonly note: string;
   readonly snoozeUntilUnixTimestamp: number;
 }

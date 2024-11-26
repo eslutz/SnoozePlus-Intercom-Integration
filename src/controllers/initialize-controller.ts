@@ -11,7 +11,7 @@ const initialize: RequestHandler = async (req, res, next) => {
   initializeLogger.profile('initialize');
   initializeLogger.debug(`Request body: ${JSON.stringify(req.body)}`);
   // const adminId: number = req.body.input.admin.id;
-  const adminId: number = Number(req.user?.id);
+  const adminId = Number(req.user?.id);
   const conversationId: number = req.body.input.conversation.id;
 
   // Get all messages for the conversation that are not archived.

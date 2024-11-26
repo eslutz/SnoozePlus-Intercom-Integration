@@ -11,7 +11,11 @@ import scheduleJobs from './utilities/scheduler-utility';
 require('./config/auth-config');
 
 const app = express();
-const PORT = 8706;
+
+const port = process.env.PORT;
+if (!port) {
+  throw new Error('PORT cannot be found!');
+}
 
 app.use(morganMiddleware);
 app.use(express.json());
@@ -34,7 +38,7 @@ app.use(passport.session());
 app.use('/', router);
 
 const appLogger = logger.child({ module: 'app' });
-appLogger.info('*** SnoozePlus Intercom Integration ***');
+appLogger.info('*** Starting SnoozePlus Intercom Integration ***');
 
 // Start the scheduler for sending messages.
 appLogger.info('Starting scheduler for sending messages.');
@@ -48,11 +52,9 @@ appLogger.profile('scheduleMessageSending', {
 });
 
 const server = app
-  .listen(PORT, () => {
+  .listen(port, () => {
     appLogger.info('Express server is running.');
-    const address = server.address();
-    const port = typeof address === 'string' ? address : address?.port;
-    appLogger.info(`App is ready at port: ${port}`);
+    appLogger.info(`Application is ready at port: ${port}`);
   })
   .on('error', (err) => {
     appLogger.error(`Error occurred, server can't start: ${err}`);

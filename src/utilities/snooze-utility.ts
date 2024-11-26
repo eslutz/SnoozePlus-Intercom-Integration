@@ -15,7 +15,7 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
   snoozeLogger.info('Getting messages and duration of each snooze.');
   // Get messages and send date for each snooze.
   let snoozeDurationTotal = 0;
-  const messages: Array<Message> = [];
+  const messages: Message[] = [];
   for (let i = 1; i <= snoozeCount; i++) {
     // Encrypt the message before storing it.
     let encryptedMessage: string;
