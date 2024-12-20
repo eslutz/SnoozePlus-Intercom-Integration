@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
-import crypto from 'crypto';
 import logger from '../config/logger-config';
+import { signatureValidator } from '../utilities/crypto-utility';
 
 const validateSignatureLogger = logger.child({
   module: 'validate-signature-middleware',
@@ -15,19 +15,9 @@ const validateSignature: RequestHandler = (req, res, next) => {
     return;
   }
 
-  // Retrieve the client secret.
-  const clientSecret = process.env.INTERCOM_CLIENT_SECRET;
-  if (!clientSecret) {
-    throw new Error('INTERCOM_CLIENT_SECRET cannot be found!');
-  }
-
-  // Create a digest from the request body.
-  const body = JSON.stringify(req.body);
-  const hmac = crypto.createHmac('sha256', clientSecret);
-  const digest = hmac.update(body).digest('hex');
-
-  // Compare the digest with the signature.
-  if (digest !== signature) {
+  // Check if the signature is valid.
+  const signatureValid = signatureValidator(req.body, signature);
+  if (!signatureValid) {
     validateSignatureLogger.error('Invalid signature');
     res.status(401).send('Invalid signature');
     return;
