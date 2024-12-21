@@ -10,7 +10,6 @@ const initialize: RequestHandler = async (req, res, next) => {
   initializeLogger.info('Initialize request received.');
   initializeLogger.profile('initialize');
   initializeLogger.debug(`Request body: ${JSON.stringify(req.body)}`);
-  // const adminId: number = req.body.input.admin.id;
   const adminId = Number(req.user?.id);
   const conversationId: number = req.body.input.conversation.id;
 
