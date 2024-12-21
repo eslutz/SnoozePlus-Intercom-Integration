@@ -5,7 +5,7 @@ const validateIpLogger = logger.child({
   module: 'validate-ip-middleware',
 });
 
-const allowedIps = process.env.ALLOWED_IPS?.split(',');
+const allowedIps = process.env.IP_ALLOWLIST?.split(',');
 if (!allowedIps) {
   throw new Error('IP_ALLOWLIST cannot be found!');
 }
