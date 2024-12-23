@@ -4,7 +4,7 @@ import SignatureHmacAlgorithm from '../enums/signature-hmac-algorithm-enum';
 import { signatureValidator } from '../utilities/crypto-utility';
 
 const validateWebhookSignatureLogger = logger.child({
-  module: 'validate-webhook-signature-middleware',
+  module: 'validate-signature-webhook-middleware',
 });
 
 const validateSignature: RequestHandler = (req, res, next) => {

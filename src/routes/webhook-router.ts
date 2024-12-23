@@ -1,7 +1,7 @@
 import express from 'express';
 import * as webhookController from '../controllers/webhook-controller';
 import validateIp from '../middleware/validate-ip-middleware';
-import validateSignature from '../middleware/validate-webhook-signature-middleware';
+import validateSignature from '../middleware/validate-signature-webhook-middleware';
 
 const webhookRouter = express.Router();
 
