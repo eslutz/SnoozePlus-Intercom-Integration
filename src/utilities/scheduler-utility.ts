@@ -10,7 +10,7 @@ const scheduleJobs = async () => {
   try {
     schedule.scheduleJob('0 0 * * *', async (dailyFireDate) => {
       schedulerLogger.debug(
-        `This job was supposed to run at ${dailyFireDate}, but actually ran at ${new Date()}.`
+        `Scheduled run: ${dailyFireDate}, Actual run: ${new Date()}.`
       );
       try {
         await scheduleMessages();

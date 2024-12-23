@@ -46,7 +46,7 @@ const scheduleMessages = async (): Promise<void> => {
         message.sendDate <= new Date() ? new Date() : message.sendDate;
       schedule.scheduleJob(sendDate, async (messageFireDate) => {
         scheduleMessageLogger.debug(
-          `This job was supposed to run at ${messageFireDate}, but actually ran at ${new Date()}.`
+          `Scheduled run: ${messageFireDate}, Actual run: ${new Date()}.`
         );
         try {
           scheduleMessageLogger.info(`Sending message ${message.id}`);
