@@ -17,4 +17,10 @@ router.use('/initialize', initializeRouter);
 router.use('/submit', submitRouter);
 router.use('/webhook', webhookRouter);
 
+// Catch all undefined routes and respond with 404
+router.use((req, res) => {
+  routerLogger.warn(`Undefined route accessed: ${req.originalUrl}`);
+  res.status(404).send('Not Found');
+});
+
 export default router;
