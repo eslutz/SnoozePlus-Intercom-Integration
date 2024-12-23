@@ -175,6 +175,14 @@ The application uses OAuth 2.0 for authentication with Intercom utilizing [Passp
 1. **Session Management:** The access token is encrypted and stored in the user's session, with the session being managed using [express-session](https://expressjs.com/en/resources/middleware/session.html)
 1. **Authenticated Requests:** The access token is used to make authenticated requests to the Intercom API on behalf of the user
 
+### IP Validation
+
+The application validates incoming requests to ensure they originate from allowed [Intercom Canvas Kit IP addresses](https://developers.intercom.com/docs/canvas-kit#what-ip-addresses-does-intercom-send-canvas-kit-requests-from) or [Intercom Webhook Notification IP addresses](https://developers.intercom.com/docs/webhooks/webhook-notifications#ensuring-delivery-behind-a-firewall). The allowed IP addresses are specified in the `IP_ALLOWLIST` environment variable, which should be a comma-separated list of IP addresses.
+
+### Signature Validation
+
+The application validates the signatures of incoming requests to ensure they are sent by Intercom. This is done using the `X-Body-Signature` header for [Canvas Kit requests](https://developers.intercom.com/docs/canvas-kit#signing-notifications) and the `X-Hub-Signature` header for [Webhook Notification requests](https://developers.intercom.com/docs/references/webhooks/webhook-models#signed-notifications).
+
 ## Required Environment Variables
 
 The environment variables for this application can be found in the **[.env.sample](.env.sample)** file.
