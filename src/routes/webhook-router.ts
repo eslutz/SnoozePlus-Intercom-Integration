@@ -1,13 +1,13 @@
 import express from 'express';
 import * as webhookController from '../controllers/webhook-controller';
-import validateIp from '../middleware/validate-ip-middleware';
 import validateSignature from '../middleware/validate-signature-webhook-middleware';
 
 const webhookRouter = express.Router();
 
+webhookRouter.use(validateSignature);
 webhookRouter
   .route('/')
-  .head(validateIp, validateSignature, webhookController.validate)
-  .post(validateIp, validateSignature, webhookController.receiver);
+  .head(webhookController.validate)
+  .post(webhookController.receiver);
 
 export default webhookRouter;
