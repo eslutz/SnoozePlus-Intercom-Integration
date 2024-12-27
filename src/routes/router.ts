@@ -4,7 +4,9 @@ import healthcheckRouter from './healthcheck-router';
 import initializeRouter from './initialize-router';
 import submitRouter from './submit-router';
 import webhookRouter from './webhook-router';
+import logger from '../config/logger-config';
 
+const routerLogger = logger.child({ module: 'router' });
 const router = express.Router();
 
 router.route('/').get((_req, res) => {
