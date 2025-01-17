@@ -131,24 +131,35 @@ const deleteMessages = async (
 };
 
 const getMessages = async (
-  adminId: number,
+  workspaceId: string,
   conversationId: number
 ): Promise<MessageDTO[]> => {
   const selectMessages = `
-    SELECT message, send_date
+    SELECT id,
+      workspace_id,
+      conversation_id,
+      message,
+      send_date,
+      close_conversation,
+      archived
     FROM messages
-    WHERE NOT messages.archived
-    AND admin_id = $1 AND conversation_id = $2;
+    WHERE NOT archived
+      AND workspace_id = $1 AND conversation_id = $2;
   `;
-  const selectParameters = [adminId, conversationId];
+  const selectParameters = [workspaceId, conversationId];
 
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {
         const response = await pool.query(selectMessages, selectParameters);
         const messages = response.rows.map((row) => ({
-          message: row.message as string,
+          id: row.id,
+          workspaceId: row.workspace_id,
+          conversationId: row.conversation_id,
+          message: row.message,
           sendDate: new Date(row.send_date),
+          closeConversation: row.close_conversation,
+          archived: row.archived,
         })) as MessageDTO[];
         messageDbLogger.debug(
           `Messages retrieved: ${JSON.stringify(messages.map((message) => message.id))}`
@@ -202,11 +213,19 @@ const getRemainingMessageCount = async (
 
 const getTodaysMessages = async (): Promise<MessageDTO[]> => {
   const selectMessages = `
-    SELECT messages.*, users.access_token
-    FROM messages
-    INNER JOIN users ON messages.admin_id = users.id
-    WHERE NOT messages.archived
-    AND messages.send_date < CURRENT_DATE + INTERVAL '1 day';
+    SELECT m.id,
+      m.workspace_id,
+      m.conversation_id,
+      m.message,
+      m.send_date,
+      m.close_conversation,
+      m.archived,
+      u.admin_id,
+      u.access_token
+    FROM messages m
+    INNER JOIN users u ON m.workspace_id = u.workspace_id
+    WHERE NOT m.archived
+      AND m.send_date < CURRENT_DATE + INTERVAL '1 day';
   `;
 
   return new Promise((resolve, reject) => {
@@ -215,6 +234,7 @@ const getTodaysMessages = async (): Promise<MessageDTO[]> => {
         const response = await pool.query(selectMessages);
         const messages = response.rows.map((row) => ({
           id: row.id as string,
+          workspaceId: row.workspace_id,
           adminId: row.admin_id as number,
           adminAccessToken: row.access_token as string,
           conversationId: row.conversation_id as number,
@@ -242,7 +262,7 @@ const getTodaysMessages = async (): Promise<MessageDTO[]> => {
 };
 
 const saveMessages = async (
-  adminId: number,
+  workspaceId: string,
   conversationId: number,
   messages: Message[]
 ): Promise<string[]> => {
@@ -250,7 +270,7 @@ const saveMessages = async (
 
   const promises = messages.map(async (message): Promise<string> => {
     const insertMessage = `
-      INSERT INTO messages (admin_id, conversation_id, message, send_date, close_conversation)
+      INSERT INTO messages (workspace_id, conversation_id, message, send_date, close_conversation)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id;
       `;

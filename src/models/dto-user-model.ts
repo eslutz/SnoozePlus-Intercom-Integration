@@ -1,4 +1,5 @@
 export interface UserDTO {
-  readonly id: number;
+  readonly workspaceId: string;
+  readonly adminId: number;
   readonly accessToken: string;
 }

@@ -1,5 +1,5 @@
 CREATE TABLE users (
-  PRIMARY KEY (workspace_id, admin_id),
+  PRIMARY KEY (workspace_id),
   workspace_id TEXT NOT NULL,
   admin_id INTEGER NOT NULL,
   access_token TEXT NOT NULL,
@@ -14,8 +14,8 @@ CREATE TABLE messages (
   send_date TIMESTAMP NOT NULL,
   close_conversation BOOLEAN NOT NULL DEFAULT FALSE,
   archived BOOLEAN NOT NULL DEFAULT FALSE,
-  CONSTRAINT fk_admin_id FOREIGN KEY (admin_id)
-  REFERENCES users (id) ON DELETE CASCADE
+  CONSTRAINT fk_workspace_id FOREIGN KEY (workspace_id)
+    REFERENCES users (workspace_id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_messages_send_date ON messages (send_date);

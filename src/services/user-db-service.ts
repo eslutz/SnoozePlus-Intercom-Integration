@@ -6,13 +6,13 @@ import { User } from '../models/user-model';
 
 const userDbLogger = logger.child({ module: 'user-db-service' });
 
-const getUser = async (userId: number): Promise<UserDTO | null> => {
+const getUser = async (workspaceId: string): Promise<UserDTO | null> => {
   const getUser = `
-    SELECT id, access_token
+    SELECT workspace_id, access_token
     FROM users
-    WHERE id = $1;
+    WHERE workspace_id = $1;
   `;
-  const getParameters = [userId];
+  const getParameters = [workspaceId];
 
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
@@ -24,7 +24,7 @@ const getUser = async (userId: number): Promise<UserDTO | null> => {
         }
 
         const user: UserDTO = {
-          id: response.rows[0].id,
+          workspaceId: response.rows[0].workspace_id,
           accessToken: response.rows[0].access_token,
         };
         userDbLogger.debug(`User found: ${JSON.stringify(user)}`);
@@ -43,14 +43,14 @@ const getUser = async (userId: number): Promise<UserDTO | null> => {
   });
 };
 
-const saveUser = async (user: User): Promise<number> => {
+const saveUser = async (user: User): Promise<string> => {
   const saveUser = `
     INSERT INTO users (workspace_id, admin_id, access_token, authorization_code)
     VALUES ($1, $2, $3, $4)
-    ON CONFLICT (workspace_id, admin_id) DO UPDATE SET
+    ON CONFLICT (workspace_id) DO UPDATE SET
       access_token = EXCLUDED.access_token,
       authorization_code = EXCLUDED.authorization_code
-    RETURNING admin_id;
+    RETURNING workspace_id;
   `;
   const saveParameters = [
     user.workspaceId,
@@ -63,11 +63,10 @@ const saveUser = async (user: User): Promise<number> => {
     operation.attempt(async (currentAttempt) => {
       try {
         const response = await pool.query(saveUser, saveParameters);
-        userDbLogger.debug(
-          `User saved Workspace ID: ${response.rows[0].workspace_id} Admin ID: ${response.rows[0].admin_id}`
-        );
+        const workspaceId: string = response.rows[0].workspace_id;
+        userDbLogger.debug(`User saved with Workspace ID: ${workspaceId}`);
 
-        resolve(adminId);
+        resolve(workspaceId);
       } catch (err) {
         userDbLogger.error(
           `Error executing save user query on attempt ${currentAttempt}: ${err}`

@@ -10,13 +10,15 @@ const initializeLogger = logger.child({ module: 'initialize-controller' });
 const initialize: RequestHandler = async (req, res, next) => {
   initializeLogger.info('Initialize request received.');
   initializeLogger.profile('initialize');
-  const adminId = Number((req.user as Profile)?.id);
-  const conversationId: number | undefined = req.body?.input?.conversation?.id;
+  // TODO: Validate that worskpaceId ais present in the request.
+  const workspaceId = req.body?.input?.workspace_id;
+  const conversationId = req.body?.input?.conversation?.id;
 
   if (conversationId !== undefined) {
     // Get all messages for the conversation that are not archived.
     // Then sort messages by send date, from latest to soonest.
-    const messages = (await getMessages(adminId, conversationId)).sort(
+    // TODO: Validate that messages are returned with all the needed information.
+    const messages = (await getMessages(workspaceId, conversationId)).sort(
       (a, b) => new Date(b.sendDate).getTime() - new Date(a.sendDate).getTime()
     );
     if (messages.length > 0) {
