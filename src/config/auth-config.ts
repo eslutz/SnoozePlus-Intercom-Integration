@@ -69,8 +69,8 @@ passport.use(
 
       // Create a user to save to the database.
       const user: User = {
-        id: Number(profile.id),
-        accountType: profile._json.type,
+        workspaceId: profile._json.app.id_code,
+        adminId: Number(profile.id),
         accessToken: encryptedAccessToken,
         authorizationCode: encryptedAuthorizationCode,
       };

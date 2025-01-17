@@ -45,16 +45,16 @@ const getUser = async (userId: number): Promise<UserDTO | null> => {
 
 const saveUser = async (user: User): Promise<number> => {
   const saveUser = `
-    INSERT INTO users (id, account_type, access_token, authorization_code)
+    INSERT INTO users (workspace_id, admin_id, access_token, authorization_code)
     VALUES ($1, $2, $3, $4)
-    ON CONFLICT (id) DO UPDATE SET
+    ON CONFLICT (workspace_id, admin_id) DO UPDATE SET
       access_token = EXCLUDED.access_token,
       authorization_code = EXCLUDED.authorization_code
-    RETURNING id;
+    RETURNING admin_id;
   `;
   const saveParameters = [
-    user.id,
-    user.accountType,
+    user.workspaceId,
+    user.adminId,
     user.accessToken,
     user.authorizationCode,
   ];
@@ -63,10 +63,11 @@ const saveUser = async (user: User): Promise<number> => {
     operation.attempt(async (currentAttempt) => {
       try {
         const response = await pool.query(saveUser, saveParameters);
-        const userId: number = response.rows[0].id;
-        userDbLogger.debug(`User saved with ID: ${userId}`);
+        userDbLogger.debug(
+          `User saved Workspace ID: ${response.rows[0].workspace_id} Admin ID: ${response.rows[0].admin_id}`
+        );
 
-        resolve(userId);
+        resolve(adminId);
       } catch (err) {
         userDbLogger.error(
           `Error executing save user query on attempt ${currentAttempt}: ${err}`

@@ -1,6 +1,6 @@
 export interface User {
-  readonly id: number;
-  readonly accountType: string;
+  readonly workspaceId: string;
+  readonly adminId: number;
   readonly accessToken: string;
   readonly authorizationCode: string;
 }

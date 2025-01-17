@@ -1,13 +1,14 @@
 CREATE TABLE users (
-  id INTEGER PRIMARY KEY NOT NULL,
-  account_type TEXT NOT NULL,
+  PRIMARY KEY (workspace_id, admin_id),
+  workspace_id TEXT NOT NULL,
+  admin_id INTEGER NOT NULL,
   access_token TEXT NOT NULL,
   authorization_code TEXT NOT NULL
 );
 
 CREATE TABLE messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_id INTEGER NOT NULL,
+  workspace_id TEXT NOT NULL,
   conversation_id INTEGER NOT NULL,
   message TEXT NOT NULL,
   send_date TIMESTAMP NOT NULL,
