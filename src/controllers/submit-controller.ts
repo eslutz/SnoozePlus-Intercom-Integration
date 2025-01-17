@@ -8,6 +8,7 @@ import createSnoozeRequest, {
   setSnoozeCanceledNote,
   setUnixTimestamp,
 } from '../utilities/snooze-utility';
+import { Profile } from '../models/profile-model';
 
 const submitLogger = logger.child({ module: 'submit-controller' });
 
@@ -17,13 +18,13 @@ const submit: RequestHandler = async (req, res, next) => {
   submitLogger.profile('submit');
   submitLogger.info(`Request type: ${req.body.component_id}`);
   submitLogger.debug(`POST request body: ${JSON.stringify(req.body)}`);
-  const adminId = Number(req.user?.id);
+  const adminId = Number((req.user as Profile)?.id);
   if (isNaN(adminId)) {
     submitLogger.error('Invalid admin ID.');
     res.status(400).send('Invalid admin ID.');
     return;
   }
-  const adminAccessToken = req.user?.accessToken;
+  const adminAccessToken = (req.user as Profile)?.accessToken;
   if (!adminAccessToken) {
     submitLogger.error('No access token found.');
     res.status(401).send('No access token found.');

@@ -1,7 +1,8 @@
-import { RequestHandler } from 'express';
+import { RequestHandler, Request } from 'express';
 import logger from '../config/logger-config';
 import * as canvasService from '../services/canvas-service';
 import { getMessages } from '../services/message-db-service';
+import { Profile } from '../models/profile-model';
 
 const initializeLogger = logger.child({ module: 'initialize-controller' });
 
@@ -9,7 +10,7 @@ const initializeLogger = logger.child({ module: 'initialize-controller' });
 const initialize: RequestHandler = async (req, res, next) => {
   initializeLogger.info('Initialize request received.');
   initializeLogger.profile('initialize');
-  const adminId = Number(req.user?.id);
+  const adminId = Number((req.user as Profile)?.id);
   const conversationId: number | undefined = req.body?.input?.conversation?.id;
 
   if (conversationId !== undefined) {

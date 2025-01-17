@@ -191,6 +191,7 @@ const getSetSnoozeCanvas = (numOfSnoozes: number) => {
       type: 'textarea',
       id: `message${i}`,
       label: 'With message:',
+      // @ts-expect-error: type not yet defined
       placeholder: 'Enter message to send at end of snooze...',
     });
     // Do not insert a divider if only one snooze or last of multiple snoozes.
@@ -199,6 +200,7 @@ const getSetSnoozeCanvas = (numOfSnoozes: number) => {
         type: 'spacer',
         size: 'm',
       });
+      // @ts-expect-error: type not yet defined
       setSnoozeCanvas.canvas.content.components.splice(5, 0, {
         type: 'divider',
       });
@@ -279,6 +281,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
         type: 'spacer',
         size: 'm',
       });
+      // @ts-expect-error: type not yet defined
       updateSnoozeCanvas.canvas.content.components.splice(5, 0, {
         type: 'divider',
       });

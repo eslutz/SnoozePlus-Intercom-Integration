@@ -2,6 +2,8 @@ import passport from 'passport';
 import logger from './logger-config';
 import * as userDbService from '../services/user-db-service';
 import { encrypt } from '../utilities/crypto-utility';
+import { Profile } from '../models/profile-model';
+import { User } from '../models/user-model';
 
 const IntercomStrategy = require('passport-intercom').Strategy;
 

@@ -5,6 +5,7 @@ const fetch = (...args) =>
 import logger from '../config/logger-config';
 import operation from '../config/retry-config';
 import { decrypt } from '../utilities/crypto-utility';
+import { MessageDTO } from '../models/dto-message-model';
 
 const intercomLogger = logger.child({ module: 'intercom-service' });
 const baseUrl = process.env.INTERCOM_URL ?? 'https://api.intercom.io';
