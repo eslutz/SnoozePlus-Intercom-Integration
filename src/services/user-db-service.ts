@@ -1,6 +1,8 @@
 import pool from '../config/db-config';
 import logger from '../config/logger-config';
 import operation from '../config/retry-config';
+import { UserDTO } from '../models/dto-user-model';
+import { User } from '../models/user-model';
 
 const userDbLogger = logger.child({ module: 'user-db-service' });
 

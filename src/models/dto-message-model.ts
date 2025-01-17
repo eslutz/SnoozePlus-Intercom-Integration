@@ -1,4 +1,4 @@
-interface MessageDTO {
+export interface MessageDTO {
   readonly id: string;
   readonly adminId: number;
   readonly adminAccessToken: string;

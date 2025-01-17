@@ -8,7 +8,7 @@ import logger, { logtail } from './config/logger-config';
 import { morganMiddleware } from './middleware/logger-middleware';
 import router from './routes/router';
 import scheduleJobs from './utilities/scheduler-utility';
-require('./config/auth-config');
+import './config/auth-config';
 
 const app = express();
 
@@ -43,9 +43,9 @@ appLogger.info('*** Starting SnoozePlus Intercom Integration ***');
 // Start the scheduler for sending messages.
 appLogger.info('Starting scheduler for sending messages.');
 appLogger.profile('scheduleMessageSending');
-(async () => {
+async () => {
   await scheduleJobs();
-})();
+};
 appLogger.profile('scheduleMessageSending', {
   level: 'info',
   message: 'Message scheduler started.',
@@ -62,16 +62,25 @@ const server = app
 
 process.on('SIGTERM', () => {
   appLogger.info('SIGTERM signal received: shutting down application.');
-  server.close(async () => {
-    appLogger.info('Draining DB pool.');
-    await pool.end();
-    appLogger.info('DB pool drained.');
-    appLogger.info('Canceling scheduled jobs.');
-    await schedule.gracefulShutdown();
-    appLogger.info('Scheduled jobs canceled.');
-    appLogger.info('Flushing logs.');
-    logtail.flush();
-    appLogger.info('Logs flushed.');
-    appLogger.info('Application shut down.');
+  server.close(async (err) => {
+    if (err) {
+      appLogger.error(`Error closing server: ${String(err)}`);
+      process.exit(1);
+    }
+    try {
+      appLogger.info('Draining DB pool.');
+      await pool.end();
+      appLogger.info('DB pool drained.');
+      appLogger.info('Canceling scheduled jobs.');
+      await schedule.gracefulShutdown();
+      appLogger.info('Scheduled jobs canceled.');
+      appLogger.info('Flushing logs.');
+      await logtail.flush();
+      appLogger.info('Logs flushed.');
+      appLogger.info('Application shut down.');
+    } catch (err) {
+      appLogger.error(`Error shutting down application: ${String(err)}`);
+      process.exit(1);
+    }
   });
 });

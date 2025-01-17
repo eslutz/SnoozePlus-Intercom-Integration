@@ -10,6 +10,7 @@ import {
   setLastMessageCloseNote,
   setSendMessageNote,
 } from '../utilities/snooze-utility';
+import { MessageDTO } from '../models/dto-message-model';
 
 const scheduleMessageLogger = logger.child({
   module: 'schedule-message-service',

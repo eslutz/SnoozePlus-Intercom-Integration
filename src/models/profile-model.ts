@@ -1,4 +1,4 @@
-interface Profile {
+export interface Profile {
   readonly provider: string;
   readonly id: string;
   readonly displayName: string;

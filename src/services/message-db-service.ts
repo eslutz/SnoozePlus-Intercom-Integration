@@ -1,7 +1,8 @@
 import pool from '../config/db-config';
 import logger from '../config/logger-config';
 import operation from '../config/retry-config';
-import { encrypt } from '../utilities/crypto-utility';
+import { MessageDTO } from '../models/dto-message-model';
+import { Message } from '../models/message-model';
 
 const messageDbLogger = logger.child({ module: 'message-db-service' });
 

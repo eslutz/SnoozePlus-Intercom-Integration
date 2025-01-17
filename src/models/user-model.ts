@@ -1,4 +1,4 @@
-interface User {
+export interface User {
   readonly id: number;
   readonly accountType: string;
   readonly accessToken: string;

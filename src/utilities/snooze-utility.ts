@@ -1,5 +1,7 @@
 import { encrypt } from './crypto-utility';
 import logger from '../config/logger-config';
+import { Message } from '../models/message-model';
+import { SnoozeRequest } from '../models/snooze-request-model';
 
 const snoozeLogger = logger.child({ module: 'snooze-utility' });
 

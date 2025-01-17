@@ -1,5 +1,7 @@
 import logger from '../config/logger-config';
 import { decrypt } from '../utilities/crypto-utility';
+import { MessageDTO } from '../models/dto-message-model';
+import { SnoozeRequest } from '../models/snooze-request-model';
 
 const canvasLogger = logger.child({ module: 'canvas-service' });
 
@@ -189,7 +191,6 @@ const getSetSnoozeCanvas = (numOfSnoozes: number) => {
       type: 'textarea',
       id: `message${i}`,
       label: 'With message:',
-      // @ts-expect-error: type not yet defined
       placeholder: 'Enter message to send at end of snooze...',
     });
     // Do not insert a divider if only one snooze or last of multiple snoozes.
@@ -198,7 +199,6 @@ const getSetSnoozeCanvas = (numOfSnoozes: number) => {
         type: 'spacer',
         size: 'm',
       });
-      // @ts-expect-error: type not yet defined
       setSnoozeCanvas.canvas.content.components.splice(5, 0, {
         type: 'divider',
       });
@@ -279,7 +279,6 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
         type: 'spacer',
         size: 'm',
       });
-      // @ts-expect-error: type not yet defined
       updateSnoozeCanvas.canvas.content.components.splice(5, 0, {
         type: 'divider',
       });
