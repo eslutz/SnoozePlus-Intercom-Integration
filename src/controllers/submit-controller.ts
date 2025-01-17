@@ -8,7 +8,6 @@ import createSnoozeRequest, {
   setSnoozeCanceledNote,
   setUnixTimestamp,
 } from '../utilities/snooze-utility';
-import { Profile } from '../models/profile-model';
 
 const submitLogger = logger.child({ module: 'submit-controller' });
 
@@ -18,19 +17,16 @@ const submit: RequestHandler = async (req, res, next) => {
   submitLogger.profile('submit');
   submitLogger.info(`Request type: ${req.body.component_id}`);
   submitLogger.debug(`POST request body: ${JSON.stringify(req.body)}`);
-  const adminId = Number((req.user as Profile)?.id);
-  if (isNaN(adminId)) {
-    submitLogger.error('Invalid admin ID.');
-    res.status(400).send('Invalid admin ID.');
-    return;
-  }
-  const adminAccessToken = (req.user as Profile)?.accessToken;
-  if (!adminAccessToken) {
-    submitLogger.error('No access token found.');
-    res.status(401).send('No access token found.');
-    return;
-  }
+  const workspaceId = req.body?.input?.workspace_id;
   const conversationId = Number(req.body.conversation.id);
+
+  // Retrieve user based on workspaceId
+  const user = await userDbService.getUser(workspaceId);
+  if (!user) {
+    submitLogger.error(`User not found. Workspace ID: ${workspaceId}`);
+    res.status(500).send('User not found.');
+    return;
+  }
 
   if (req.body.component_id === 'submitNumOfSnoozes') {
     let messageCanvas;
@@ -96,8 +92,8 @@ const submit: RequestHandler = async (req, res, next) => {
       submitLogger.info('Adding snooze summary note to conversation.');
       submitLogger.profile('addNote');
       const noteResponse = await intercomService.addNote(
-        adminId,
-        adminAccessToken,
+        user.adminId,
+        user.accessToken,
         conversationId,
         snoozeRequest.note
       );
@@ -111,8 +107,8 @@ const submit: RequestHandler = async (req, res, next) => {
       submitLogger.info('Setting conversation snooze.');
       submitLogger.profile('setSnooze');
       const snoozeResponse = await intercomService.setSnooze(
-        adminId,
-        adminAccessToken,
+        user.adminId,
+        user.accessToken,
         conversationId,
         snoozeRequest.snoozeUntilUnixTimestamp
       );
@@ -128,7 +124,7 @@ const submit: RequestHandler = async (req, res, next) => {
       submitLogger.info('Saving messages to the database.');
       submitLogger.profile('saveMessages');
       const messageResponse = await messageDbService.saveMessages(
-        adminId,
+        workspaceId,
         conversationId,
         snoozeRequest.messages
       );
@@ -159,7 +155,7 @@ const submit: RequestHandler = async (req, res, next) => {
       submitLogger.info('Archiving messages.');
       submitLogger.profile('archiveMessages');
       messagesArchived = await messageDbService.archiveMessages(
-        adminId,
+        workspaceId,
         conversationId
       );
       submitLogger.profile('archiveMessages', {
@@ -180,8 +176,8 @@ const submit: RequestHandler = async (req, res, next) => {
       submitLogger.info('Adding cancelling snooze note.');
       submitLogger.profile('addNote');
       const cancelSnoozeResponse = await intercomService.addNote(
-        adminId,
-        adminAccessToken,
+        user.adminId,
+        user.accessToken,
         conversationId,
         setSnoozeCanceledNote(messagesArchived)
       );
@@ -207,8 +203,8 @@ const submit: RequestHandler = async (req, res, next) => {
       submitLogger.info('Unsnoozing conversation.');
       submitLogger.profile('unsnooze');
       const unsnoozeResponse = await intercomService.setSnooze(
-        adminId,
-        adminAccessToken,
+        user.adminId,
+        user.accessToken,
         conversationId,
         setUnixTimestamp(new Date(Date.now()))
       );

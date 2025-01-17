@@ -13,7 +13,7 @@ const webhookLogger = logger.child({
 const validate: RequestHandler = async (req, res, next) => {
   try {
     webhookLogger.debug(
-      `HEAD request headers: ${JSON.stringify(req.headers)}}`
+      `HEAD request headers: ${JSON.stringify(req.headers)}`
     );
     res.status(200).send();
   } catch (err) {
@@ -31,14 +31,14 @@ const receiver: RequestHandler = async (req, res, next) => {
 
   const fullTopic: string = req.body.topic;
   const topic: string = fullTopic.substring(fullTopic.lastIndexOf('.') + 1);
-  const adminId = Number(req.body.data.item.admin_assignee_id);
-  const user = await userDbService.getUser(adminId);
+  const workspaceId: string = req.body.data.workspace_id;
+  const conversationId: number = req.body.data.item.id;
+  const user = await userDbService.getUser(workspaceId);
   if (!user) {
-    webhookLogger.error(`User not found. ID: ${adminId}`);
+    webhookLogger.error(`User not found. Workspace ID: ${workspaceId}`);
     res.status(500).send('User not found.');
     return;
   }
-  const conversationId: number = req.body.data.item.id;
 
   let messagesArchived = 0;
   webhookLogger.debug(`Webhook notification topic: ${fullTopic}`);
@@ -53,7 +53,7 @@ const receiver: RequestHandler = async (req, res, next) => {
       );
       webhookLogger.profile('archiveMessages');
       messagesArchived = await messageService.archiveMessages(
-        user.id,
+        workspaceId,
         conversationId
       );
       webhookLogger.profile('archiveMessages', {
@@ -86,7 +86,7 @@ const receiver: RequestHandler = async (req, res, next) => {
     webhookLogger.info('Adding close note to conversation.');
     webhookLogger.profile('addNote');
     const response = await addNote(
-      user.id,
+      user.adminId,
       user.accessToken,
       conversationId,
       setCloseNote(topic, messagesArchived)

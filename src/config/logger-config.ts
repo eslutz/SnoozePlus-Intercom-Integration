@@ -1,4 +1,3 @@
-import morgan from 'morgan';
 import winston from 'winston';
 import 'winston-daily-rotate-file';
 import { Logtail } from '@logtail/node';

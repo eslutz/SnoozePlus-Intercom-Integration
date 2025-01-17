@@ -1,8 +1,7 @@
-import { RequestHandler, Request } from 'express';
+import { RequestHandler } from 'express';
 import logger from '../config/logger-config';
 import * as canvasService from '../services/canvas-service';
 import { getMessages } from '../services/message-db-service';
-import { Profile } from '../models/profile-model';
 
 const initializeLogger = logger.child({ module: 'initialize-controller' });
 
@@ -10,7 +9,7 @@ const initializeLogger = logger.child({ module: 'initialize-controller' });
 const initialize: RequestHandler = async (req, res, next) => {
   initializeLogger.info('Initialize request received.');
   initializeLogger.profile('initialize');
-  // TODO: Validate that worskpaceId ais present in the request.
+  // TODO: Validate that workspaceId ais present in the request.
   const workspaceId = req.body?.input?.workspace_id;
   const conversationId = req.body?.input?.conversation?.id;
 

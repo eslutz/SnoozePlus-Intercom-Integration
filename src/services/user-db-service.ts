@@ -25,6 +25,7 @@ const getUser = async (workspaceId: string): Promise<UserDTO | null> => {
 
         const user: UserDTO = {
           workspaceId: response.rows[0].workspace_id,
+          adminId: response.rows[0].admin_id,
           accessToken: response.rows[0].access_token,
         };
         userDbLogger.debug(`User found: ${JSON.stringify(user)}`);

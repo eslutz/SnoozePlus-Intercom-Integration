@@ -37,15 +37,15 @@ const archiveMessage = async (messageId: string): Promise<number> => {
 };
 
 const archiveMessages = async (
-  adminId: number,
+  workspaceId: string,
   conversationId: number
 ): Promise<number> => {
   const archiveMessages = `
     UPDATE messages
     SET archived = TRUE
-    WHERE admin_id = $1 AND conversation_id = $2;
+    WHERE workspace_id = $1 AND conversation_id = $2;
   `;
-  const archiveParameters = [adminId, conversationId];
+  const archiveParameters = [workspaceId, conversationId];
 
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
@@ -275,7 +275,7 @@ const saveMessages = async (
       RETURNING id;
       `;
     const messageParameters = [
-      adminId,
+      workspaceId,
       conversationId,
       message.message,
       message.sendDate,
