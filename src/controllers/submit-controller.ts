@@ -17,13 +17,12 @@ const submit: RequestHandler = async (req, res, next) => {
   submitLogger.profile('submit');
   submitLogger.info(`Request type: ${req.body.component_id}`);
   submitLogger.debug(`POST request body: ${JSON.stringify(req.body)}`);
-  // TODO: Failed to get workspace_id from request body.
   const workspaceId = req.body?.workspace_id;
   submitLogger.debug(`workspace_id: ${workspaceId}`);
   const conversationId = Number(req.body.conversation.id);
   submitLogger.debug(`conversation:id: ${conversationId}`);
 
-  // Retrieve user based on workspaceId
+  // Retrieve user based on workspace_id
   const user = await userDbService.getUser(workspaceId);
   if (!user) {
     submitLogger.error(`User not found. Workspace ID: ${workspaceId}`);

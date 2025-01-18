@@ -137,7 +137,7 @@ const getSetSnoozeCanvas = (numOfSnoozes: number) => {
   for (let i = numOfSnoozes; i >= 1; i--) {
     setSnoozeCanvas.canvas.content.components.splice(2, 0, {
       type: 'dropdown',
-      id: `snoozeLength${i}`,
+      id: `snoozeDuration${i}`,
       label: 'Snooze for:',
       options: [
         {
