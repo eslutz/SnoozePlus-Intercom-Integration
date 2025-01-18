@@ -10,10 +10,9 @@ const initialize: RequestHandler = async (req, res, next) => {
   initializeLogger.info('Initialize request received.');
   initializeLogger.profile('initialize');
   initializeLogger.debug(`POST request body: ${JSON.stringify(req.body)}`);
-  // TODO: Validate that workspaceId is present in the request.
-  const workspaceId = req.body?.input?.workspace_id;
+  const workspaceId = req.body?.workspace_id;
   initializeLogger.debug(`workspace_id: ${workspaceId}`);
-  const conversationId = req.body?.input?.conversation?.id;
+  const conversationId = req.body?.conversation?.id;
   initializeLogger.debug(`conversation_id: ${conversationId}`);
 
   if (conversationId !== undefined) {
