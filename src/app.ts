@@ -8,6 +8,7 @@ import logger, { logtail } from './config/logger-config';
 import { morganMiddleware } from './middleware/logger-middleware';
 import router from './routes/router';
 import scheduleJobs from './utilities/scheduler-utility';
+import { getFetch } from './utilities/fetch-utility';
 import './config/auth-config';
 
 const app = express();
@@ -40,16 +41,27 @@ app.use('/', router);
 const appLogger = logger.child({ module: 'app' });
 appLogger.info('*** Starting SnoozePlus Intercom Integration ***');
 
+// Initialize fetch instance
+(async () => {
+  try {
+    await getFetch();
+    appLogger.debug('Fetch instance initialized.');
+  } catch (err) {
+    appLogger.error(`Failed to initialize fetch: ${err}`);
+    process.exit(1);
+  }
+})();
+
 // Start the scheduler for sending messages.
-appLogger.info('Starting scheduler for sending messages.');
-appLogger.profile('scheduleMessageSending');
-async () => {
-  await scheduleJobs();
-};
-appLogger.profile('scheduleMessageSending', {
-  level: 'info',
-  message: 'Message scheduler started.',
-});
+(async () => {
+  try {
+    await scheduleJobs();
+    appLogger.debug('Message scheduler started.');
+  } catch (err) {
+    appLogger.error(`Failed to start scheduler: ${err}`);
+    process.exit(1);
+  }
+})();
 
 const server = app
   .listen(port, () => {

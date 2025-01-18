@@ -1,11 +1,8 @@
-// @ts-expect-error: type not yet defined
-const fetch = (...args) =>
-  // @ts-expect-error: type not yet defined
-  import('node-fetch').then(({ default: fetch }) => fetch(...args));
 import logger from '../config/logger-config';
 import operation from '../config/retry-config';
 import { decrypt } from '../utilities/crypto-utility';
 import { MessageDTO } from '../models/dto-message-model';
+import { getFetch } from '../utilities/fetch-utility';
 
 const intercomLogger = logger.child({ module: 'intercom-service' });
 const baseUrl = process.env.INTERCOM_URL ?? 'https://api.intercom.io';
@@ -31,6 +28,10 @@ const addNote = async (
     message: 'Access token decrypted.',
   });
 
+  // Get the fetch instance.
+  const fetch = await getFetch();
+
+  // Add a note to the conversation.
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {
@@ -96,6 +97,10 @@ const closeConversation = async (
     message: 'Access token decrypted.',
   });
 
+  // Get the fetch instance.
+  const fetch = await getFetch();
+
+  // Close the conversation in Intercom.
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {
@@ -173,6 +178,9 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
     level: 'info',
     message: 'Access token decrypted.',
   });
+
+  // Get the fetch instance.
+  const fetch = await getFetch();
 
   // Send the message to Intercom.
   return new Promise((resolve, reject) => {

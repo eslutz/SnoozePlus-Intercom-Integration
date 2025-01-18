@@ -1,9 +1,6 @@
-// @ts-expect-error: type not yet defined
-const fetch = (...args) =>
-  // @ts-expect-error: type not yet defined
-  import('node-fetch').then(({ default: fetch }) => fetch(...args));
 import logger from '../config/logger-config';
 import operation from '../config/retry-config';
+import { getFetch } from '../utilities/fetch-utility';
 
 // Load the heartbeat URL from environment variables.
 const baseUrl = process.env.BETTERSTACK_HEARTBEAT_URL;
@@ -13,6 +10,10 @@ if (!baseUrl) {
 
 const sendHeartbeat = async (success = true): Promise<void> => {
   const url = success ? baseUrl : `${baseUrl}/fail`;
+
+  // Get the fetch instance.
+  const fetch = await getFetch();
+
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {
