@@ -12,9 +12,7 @@ const webhookLogger = logger.child({
 // HEAD: /webhook - Receive webhook request to validate endpoint.
 const validate: RequestHandler = async (req, res, next) => {
   try {
-    webhookLogger.debug(
-      `HEAD request headers: ${JSON.stringify(req.headers)}`
-    );
+    webhookLogger.debug(`HEAD request headers: ${JSON.stringify(req.headers)}`);
     res.status(200).send();
   } catch (err) {
     webhookLogger.error(`An error occurred: ${err}`);
@@ -30,9 +28,16 @@ const receiver: RequestHandler = async (req, res, next) => {
   res.status(200).send('Webhook notification received.');
 
   const fullTopic: string = req.body.topic;
+  webhookLogger.debug(`Webhook notification full topic: ${fullTopic}`);
   const topic: string = fullTopic.substring(fullTopic.lastIndexOf('.') + 1);
+  webhookLogger.debug(`Webhook notification topic: ${topic}`);
+  // TODO: Validate that workspaceId is present in the request.
   const workspaceId: string = req.body.data.workspace_id;
+  webhookLogger.debug(`Webhook notification workspace_id: ${workspaceId}`);
   const conversationId: number = req.body.data.item.id;
+  webhookLogger.debug(
+    `Webhook notification conversation_id: ${conversationId}`
+  );
   const user = await userDbService.getUser(workspaceId);
   if (!user) {
     webhookLogger.error(`User not found. Workspace ID: ${workspaceId}`);
@@ -41,7 +46,6 @@ const receiver: RequestHandler = async (req, res, next) => {
   }
 
   let messagesArchived = 0;
-  webhookLogger.debug(`Webhook notification topic: ${fullTopic}`);
 
   // Determine if the conversation was unsnoozed, closed, or deleted.
   try {

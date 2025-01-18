@@ -9,9 +9,12 @@ const initializeLogger = logger.child({ module: 'initialize-controller' });
 const initialize: RequestHandler = async (req, res, next) => {
   initializeLogger.info('Initialize request received.');
   initializeLogger.profile('initialize');
-  // TODO: Validate that workspaceId ais present in the request.
+  initializeLogger.debug(`POST request body: ${JSON.stringify(req.body)}`);
+  // TODO: Validate that workspaceId is present in the request.
   const workspaceId = req.body?.input?.workspace_id;
+  initializeLogger.debug(`workspace_id: ${workspaceId}`);
   const conversationId = req.body?.input?.conversation?.id;
+  initializeLogger.debug(`conversation_id: ${conversationId}`);
 
   if (conversationId !== undefined) {
     // Get all messages for the conversation that are not archived.
