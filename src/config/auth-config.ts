@@ -32,58 +32,65 @@ passport.use(
       profile: any,
       done: (error: any, user?: any) => void
     ) => {
-      // Encrypt the access token before storing it.
-      let encryptedAccessToken: string;
-      authLogger.info('Encrypting access token.');
-      authLogger.profile('encrypt');
       try {
-        encryptedAccessToken = encrypt(accessToken);
+        // Encrypt the access token before storing it.
+        let encryptedAccessToken: string;
+        authLogger.info('Encrypting access token.');
+        authLogger.profile('encrypt');
+        try {
+          encryptedAccessToken = encrypt(accessToken);
+        } catch (err) {
+          authLogger.error(`Error encrypting access token: ${err}`);
+          throw err;
+        }
+        authLogger.profile('encrypt', {
+          level: 'info',
+          message: 'Access token encrypted.',
+        });
+
+        // Encrypt the authorization code before storing it.
+        let encryptedAuthorizationCode: string;
+        authLogger.info('Encrypting authorization code.');
+        authLogger.profile('encrypt');
+        try {
+          encryptedAuthorizationCode = encrypt(req.query.code);
+        } catch (err) {
+          authLogger.error(`Error encrypting authorization code: ${err}`);
+          throw err;
+        }
+        authLogger.profile('encrypt', {
+          level: 'info',
+          message: 'Authorization code encrypted.',
+        });
+
+        // Add accessToken to the profile object.
+        profile.accessToken = encryptedAccessToken;
+
+        // Create a user to save to the database.
+        const user: User = {
+          workspaceId: profile._json.app.id_code,
+          adminId: Number(profile.id),
+          accessToken: encryptedAccessToken,
+          authorizationCode: encryptedAuthorizationCode,
+        };
+
+        authLogger.debug('Saving user to database');
+        authLogger.profile('saveUser');
+        const userResponse = await userDbService.saveUser(user);
+        authLogger.profile('saveUser', {
+          level: 'debug',
+          message: 'User saved to database.',
+        });
+        authLogger.debug(`Save user response: ${JSON.stringify(userResponse)}`);
+        authLogger.debug(`User profile: ${JSON.stringify(profile)}`);
+
+        // Redirect the user after successful authentication
+        req.res.redirect('https://app.intercom.com/appstore/redirect?install_success=true');
+        return done(null, profile);
       } catch (err) {
-        authLogger.error(`Error encrypting access token: ${err}`);
-        throw err;
+        // Redirect the user after authentication failure
+        req.res.redirect(`https://app.intercom.com/appstore/redirect?install_success=false&error_message=${encodeURIComponent(err as string)}`);
       }
-      authLogger.profile('encrypt', {
-        level: 'info',
-        message: 'Access token encrypted.',
-      });
-
-      // Encrypt the authorization code before storing it.
-      let encryptedAuthorizationCode: string;
-      authLogger.info('Encrypting authorization code.');
-      authLogger.profile('encrypt');
-      try {
-        encryptedAuthorizationCode = encrypt(req.query.code);
-      } catch (err) {
-        authLogger.error(`Error encrypting authorization code: ${err}`);
-        throw err;
-      }
-      authLogger.profile('encrypt', {
-        level: 'info',
-        message: 'Authorization code encrypted.',
-      });
-
-      // Add accessToken to the profile object.
-      profile.accessToken = encryptedAccessToken;
-
-      // Create a user to save to the database.
-      const user: User = {
-        workspaceId: profile._json.app.id_code,
-        adminId: Number(profile.id),
-        accessToken: encryptedAccessToken,
-        authorizationCode: encryptedAuthorizationCode,
-      };
-
-      authLogger.debug('Saving user to database');
-      authLogger.profile('saveUser');
-      const userResponse = await userDbService.saveUser(user);
-      authLogger.profile('saveUser', {
-        level: 'debug',
-        message: 'User saved to database.',
-      });
-      authLogger.debug(`Save user response: ${JSON.stringify(userResponse)}`);
-      authLogger.debug(`User profile: ${JSON.stringify(profile)}`);
-
-      return done(null, profile);
     }
   )
 );
