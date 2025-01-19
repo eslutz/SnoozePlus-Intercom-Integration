@@ -266,18 +266,18 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     const daysUntilSending = Math.ceil(timeDifference / (1000 * 3600 * 24));
     updateSnoozeCanvas.canvas.content.components.splice(2, 0, {
       type: 'text',
-      text: `Message ${messages.length - i}`,
+      text: `Message ${messages.length - i}:`,
       style: 'header',
     });
     updateSnoozeCanvas.canvas.content.components.splice(3, 0, {
       type: 'text',
-      text: `Days until sending: ${daysUntilSending}`,
-      style: 'muted',
+      text: decryptedMessage,
+      style: 'paragraph',
     });
     updateSnoozeCanvas.canvas.content.components.splice(4, 0, {
       type: 'text',
-      text: decryptedMessage,
-      style: 'paragraph',
+      text: `Sending in ${daysUntilSending} day(s).`,
+      style: 'muted',
     });
 
     // Insert a spacer between messages.
