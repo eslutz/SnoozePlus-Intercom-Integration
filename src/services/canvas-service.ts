@@ -276,7 +276,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     });
     updateSnoozeCanvas.canvas.content.components.splice(4, 0, {
       type: 'text',
-      text: `Sending in ${daysUntilSending} day(s).`,
+      text: `Sending in ${daysUntilSending} day${daysUntilSending === 1 ? '' : 's'}.`,
       style: 'muted',
     });
 
