@@ -83,7 +83,7 @@ const submit: RequestHandler = async (req, res, next) => {
       // Fill the finalCanvas with a summary of the set snoozes.
       submitLogger.info('Building final canvas.');
       submitLogger.profile('finalCanvas');
-      const finalCanvas = canvasService.getFinalCanvas(snoozeRequest);
+      const finalCanvas = canvasService.getFinalCanvas();
       submitLogger.profile('finalCanvas', {
         level: 'info',
         message: 'Completed final canvas.',

@@ -259,17 +259,22 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     });
 
     const currentDate = new Date();
-    const sendDate = new Date(messages[0].sendDate);
+    const sendDate = new Date(messages[i].sendDate);
     // Difference in time between current date and send date in milliseconds.
     const timeDifference = sendDate.getTime() - currentDate.getTime();
     // Convert the time difference to days (1000 milliseconds/second * 3600 seconds/hour * 24 hours/day).
     const daysUntilSending = Math.ceil(timeDifference / (1000 * 3600 * 24));
     updateSnoozeCanvas.canvas.content.components.splice(2, 0, {
       type: 'text',
-      text: `Days Until Sending: ${daysUntilSending}}`,
-      style: 'muted',
+      text: `Message ${i + 1}`,
+      style: 'header',
     });
     updateSnoozeCanvas.canvas.content.components.splice(3, 0, {
+      type: 'text',
+      text: `Days until sending: ${daysUntilSending}`,
+      style: 'muted',
+    });
+    updateSnoozeCanvas.canvas.content.components.splice(4, 0, {
       type: 'text',
       text: decryptedMessage,
       style: 'paragraph',
@@ -277,12 +282,12 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
 
     // Do not insert a divider if only one snooze or last of multiple snoozes.
     if (i < messages.length - 1) {
-      updateSnoozeCanvas.canvas.content.components.splice(4, 0, {
+      updateSnoozeCanvas.canvas.content.components.splice(5, 0, {
         type: 'spacer',
         size: 'm',
       });
       // @ts-expect-error: type not yet defined
-      updateSnoozeCanvas.canvas.content.components.splice(5, 0, {
+      updateSnoozeCanvas.canvas.content.components.splice(6, 0, {
         type: 'divider',
       });
     }
@@ -291,7 +296,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
   return updateSnoozeCanvas;
 };
 
-const getFinalCanvas = (snoozeRequest: SnoozeRequest) => {
+const getFinalCanvas = () => {
   const finalCanvas = {
     canvas: {
       content: {
@@ -300,12 +305,11 @@ const getFinalCanvas = (snoozeRequest: SnoozeRequest) => {
             type: 'text',
             id: 'thanks',
             text: 'Snooze Submitted!',
-            align: 'center',
             style: 'header',
           },
           {
             type: 'text',
-            text: snoozeRequest.note,
+            text: 'The snooze request has been submitted. See note for details.',
             style: 'paragraph',
           },
           {
