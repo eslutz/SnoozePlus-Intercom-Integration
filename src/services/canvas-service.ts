@@ -242,7 +242,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     },
   };
 
-  for (let i = 0; i < messages.length; i++) {
+  for (let i = messages.length - 1; i >= 0; i--) {
     // Decrypt the message before sending.
     let decryptedMessage: string;
     canvasLogger.info('Decrypting message.');
@@ -280,15 +280,11 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
       style: 'paragraph',
     });
 
-    // Do not insert a divider if only one snooze or last of multiple snoozes.
-    if (i < messages.length - 1) {
+    // Insert a spacer between messages.
+    if (i > 0) {
       updateSnoozeCanvas.canvas.content.components.splice(5, 0, {
         type: 'spacer',
         size: 'm',
-      });
-      // @ts-expect-error: type not yet defined
-      updateSnoozeCanvas.canvas.content.components.splice(6, 0, {
-        type: 'divider',
       });
     }
   }

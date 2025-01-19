@@ -18,7 +18,6 @@ const initialize: RequestHandler = async (req, res, next) => {
   if (conversationId !== undefined) {
     // Get all messages for the conversation that are not archived.
     // Then sort messages by send date, from latest to soonest.
-    // TODO: Validate that messages are returned with all the needed information.
     const messages = (await getMessages(workspaceId, conversationId)).sort(
       (a, b) => new Date(b.sendDate).getTime() - new Date(a.sendDate).getTime()
     );
