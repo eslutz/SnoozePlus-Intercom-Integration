@@ -1,6 +1,7 @@
 import { RequestHandler } from 'express';
 import pool from '../config/db-config.js';
 import logger from '../config/logger-config.js';
+import { getUser } from '../services/user-db-service.js';
 
 const healthcheckLogger = logger.child({ module: 'healthcheck-controller' });
 
@@ -37,4 +38,37 @@ const dbHealthcheck: RequestHandler = async (_req, res, next) => {
   });
 };
 
-export { healthcheck, dbHealthcheck };
+// POST: /installation-healthcheck - Handle installation health check requests.
+const installationHealthcheck: RequestHandler = async (req, res, next) => {
+  const { workspace_id } = req.body;
+
+  if (!workspace_id) {
+    healthcheckLogger.error('workspace_id is missing in the request.');
+    res.status(400).json({ state: 'UNKNOWN', message: 'Missing workspace_id.' });
+    return;
+  }
+
+  try {
+    const user = await getUser(workspace_id);
+    if (user) {
+      res.status(200).json({ state: 'OK' });
+      return;
+    } else {
+      res.status(200).json({
+        state: 'UNHEALTHY',
+        message:
+          'Workspace ID not found. The app is not properly installed for this workspace.',
+        cta_type: 'REINSTALL_CTA',
+        cta_label: 'Reinstall App',
+        cta_url: 'https://www.intercom.com/app-store?capability=inbox', // TODO: Replace with link to app listing.
+      });
+      return;
+    }
+  } catch (error) {
+    healthcheckLogger.error(`Error determining health state: ${error}`);
+    res.status(500).json({ state: 'UNKNOWN', message: 'Server error.' });
+    return;
+  }
+};
+
+export { healthcheck, dbHealthcheck, installationHealthcheck };

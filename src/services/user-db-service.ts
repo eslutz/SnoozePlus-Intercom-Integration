@@ -21,16 +21,15 @@ const getUser = async (workspaceId: string): Promise<UserDTO | null> => {
         if (response.rowCount === 0) {
           userDbLogger.debug('User not found.');
           resolve(null);
+        } else {
+          const user: UserDTO = {
+            workspaceId: response.rows[0].workspace_id,
+            adminId: response.rows[0].admin_id,
+            accessToken: response.rows[0].access_token,
+          };
+          userDbLogger.debug(`User found: ${JSON.stringify(user)}`);
+          resolve(user);
         }
-
-        const user: UserDTO = {
-          workspaceId: response.rows[0].workspace_id,
-          adminId: response.rows[0].admin_id,
-          accessToken: response.rows[0].access_token,
-        };
-        userDbLogger.debug(`User found: ${JSON.stringify(user)}`);
-
-        resolve(user);
       } catch (err) {
         userDbLogger.error(
           `Error executing get user query on attempt ${currentAttempt}: ${err}`
