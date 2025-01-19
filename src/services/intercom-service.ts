@@ -32,23 +32,29 @@ const addNote = async (
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {
-        const response = await fetch(
-          `${baseUrl}/conversations/${conversationId}/reply`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${decryptedAccessToken}`,
-              'Content-Type': 'application/json',
-              'Intercom-Version': '2.11',
-            },
-            body: JSON.stringify({
-              admin_id: adminId,
-              body: note,
-              message_type: 'note',
-              type: 'admin',
-            }),
-          }
-        );
+        const requestUrl = `${baseUrl}/conversations/${conversationId}/reply`;
+        const requestBody = {
+          admin_id: adminId,
+          body: note,
+          message_type: 'note',
+          type: 'admin',
+        };
+        const requestHeaders = {
+          Authorization: `Bearer ${decryptedAccessToken}`,
+          'Content-Type': 'application/json',
+          'Intercom-Version': '2.11',
+        };
+
+        intercomLogger.debug('Sending add note request', {
+          url: requestUrl,
+          headers: requestHeaders,
+          body: JSON.stringify(requestBody),
+        });
+        const response = await fetch(requestUrl, {
+          method: 'POST',
+          headers: requestHeaders,
+          body: JSON.stringify(requestBody),
+        });
         intercomLogger.debug(`Add note response: ${JSON.stringify(response)}`);
 
         if (!response.ok) {
@@ -98,22 +104,28 @@ const closeConversation = async (
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {
-        const response = await fetch(
-          `${baseUrl}/conversations/${conversationId}/parts`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${decryptedAccessToken}`,
-              'Content-Type': 'application/json',
-              'Intercom-Version': '2.11',
-            },
-            body: JSON.stringify({
-              admin_id: adminId,
-              message_type: 'close',
-              type: 'admin',
-            }),
-          }
-        );
+        const requestUrl = `${baseUrl}/conversations/${conversationId}/parts`;
+        const requestBody = {
+          admin_id: adminId,
+          message_type: 'close',
+          type: 'admin',
+        };
+        const requestHeaders = {
+          Authorization: `Bearer ${decryptedAccessToken}`,
+          'Content-Type': 'application/json',
+          'Intercom-Version': '2.11',
+        };
+
+        intercomLogger.debug('Sending close conversation request', {
+          url: requestUrl,
+          headers: requestHeaders,
+          body: JSON.stringify(requestBody),
+        });
+        const response = await fetch(requestUrl, {
+          method: 'POST',
+          headers: requestHeaders,
+          body: JSON.stringify(requestBody),
+        });
         intercomLogger.debug(
           `Close conversation response: ${JSON.stringify(response)}`
         );
@@ -177,23 +189,29 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
       try {
-        const response = await fetch(
-          `${baseUrl}/conversations/${message.conversationId}/reply`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${decryptedAccessToken}`,
-              'Content-Type': 'application/json',
-              'Intercom-Version': '2.11',
-            },
-            body: JSON.stringify({
-              admin_id: message.adminId,
-              body: `<p>${decryptedMessage}</p>`,
-              message_type: 'comment',
-              type: 'admin',
-            }),
-          }
-        );
+        const requestUrl = `${baseUrl}/conversations/${message.conversationId}/reply`;
+        const requestBody = {
+          admin_id: message.adminId,
+          body: `<p>${decryptedMessage}</p>`,
+          message_type: 'comment',
+          type: 'admin',
+        };
+        const requestHeaders = {
+          Authorization: `Bearer ${decryptedAccessToken}`,
+          'Content-Type': 'application/json',
+          'Intercom-Version': '2.11',
+        };
+
+        intercomLogger.debug('Sending message request', {
+          url: requestUrl,
+          headers: requestHeaders,
+          body: JSON.stringify(requestBody),
+        });
+        const response = await fetch(requestUrl, {
+          method: 'POST',
+          headers: requestHeaders,
+          body: JSON.stringify(requestBody),
+        });
         intercomLogger.debug(
           `Send message response: ${JSON.stringify(response)}`
         );

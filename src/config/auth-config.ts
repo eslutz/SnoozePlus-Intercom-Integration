@@ -81,7 +81,7 @@ passport.use(
         message: 'User saved to database.',
       });
       authLogger.debug(`Save user response: ${JSON.stringify(userResponse)}`);
-      authLogger.debug(`User profile: ${profile}`);
+      authLogger.debug(`User profile: ${JSON.stringify(profile)}`);
 
       return done(null, profile);
     }
