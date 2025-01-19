@@ -242,7 +242,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     },
   };
 
-  for (let i = messages.length - 1; i >= 0; i--) {
+  for (let i = 0; i < messages.length; i++) {
     // Decrypt the message before sending.
     let decryptedMessage: string;
     canvasLogger.info('Decrypting message.');
@@ -266,7 +266,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     const daysUntilSending = Math.ceil(timeDifference / (1000 * 3600 * 24));
     updateSnoozeCanvas.canvas.content.components.splice(2, 0, {
       type: 'text',
-      text: `Message ${i + 1}`,
+      text: `Message ${messages.length - i}`,
       style: 'header',
     });
     updateSnoozeCanvas.canvas.content.components.splice(3, 0, {
@@ -285,6 +285,10 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
       updateSnoozeCanvas.canvas.content.components.splice(5, 0, {
         type: 'spacer',
         size: 'm',
+      });
+      // @ts-expect-error: type not yet defined
+      updateSnoozeCanvas.canvas.content.components.splice(6, 0, {
+        type: 'divider',
       });
     }
   }
