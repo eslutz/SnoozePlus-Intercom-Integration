@@ -1,5 +1,5 @@
 import morgan from 'morgan';
-import logger from '../config/logger-config';
+import logger from '../config/logger-config.js';
 
 // Configure Morgan to use the winston logger.
 const morganMiddleware = morgan(

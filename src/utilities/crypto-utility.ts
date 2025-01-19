@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import SignatureHmacAlgorithm from '../enums/signature-hmac-algorithm-enum';
+import SignatureHmacAlgorithm from '../enums/signature-hmac-algorithm-enum.js';
 
 const algorithm = process.env.ENCRYPTION_ALGORITHM;
 if (!algorithm) {

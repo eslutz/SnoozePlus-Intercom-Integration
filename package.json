@@ -4,6 +4,7 @@
   "description": "Inbox integration for Intercom to automate delayed responses to customers.",
   "homepage": "https://github.com/eslutz/SnoozePlus-Intercom-Integration#readme",
   "license": "",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/eslutz/SnoozePlus-Intercom-Integration.git"

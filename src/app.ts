@@ -2,16 +2,20 @@ import express from 'express';
 import session from 'express-session';
 import schedule from 'node-schedule';
 import passport from 'passport';
-import path from 'path';
-import pool from './config/db-config';
-import logger, { logtail } from './config/logger-config';
-import { morganMiddleware } from './middleware/logger-middleware';
-import router from './routes/router';
-import scheduleJobs from './utilities/scheduler-utility';
-import { getFetch } from './utilities/fetch-utility';
-import './config/auth-config';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import pool from './config/db-config.js';
+import logger, { logtail } from './config/logger-config.js';
+import { morganMiddleware } from './middleware/logger-middleware.js';
+import router from './routes/router.js';
+import scheduleJobs from './utilities/scheduler-utility.js';
+import './config/auth-config.js';
 
 const app = express();
+
+// Define __filename and __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const port = process.env.PORT;
 if (!port) {
@@ -40,17 +44,6 @@ app.use('/', router);
 
 const appLogger = logger.child({ module: 'app' });
 appLogger.info('*** Starting SnoozePlus Intercom Integration ***');
-
-// Initialize fetch instance
-(async () => {
-  try {
-    await getFetch();
-    appLogger.debug('Fetch instance initialized.');
-  } catch (err) {
-    appLogger.error(`Failed to initialize fetch: ${err}`);
-    process.exit(1);
-  }
-})();
 
 // Start the scheduler for sending messages.
 (async () => {

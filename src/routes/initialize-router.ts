@@ -1,6 +1,6 @@
 import express from 'express';
-import * as initializeController from '../controllers/initialize-controller';
-import validateSignature from '../middleware/validate-signature-canvas-middleware';
+import * as initializeController from '../controllers/initialize-controller.js';
+import validateSignature from '../middleware/validate-signature-canvas-middleware.js';
 
 const initializeRouter = express.Router();
 

@@ -1,13 +1,13 @@
 import { RequestHandler } from 'express';
-import logger from '../config/logger-config';
-import * as canvasService from '../services/canvas-service';
-import * as intercomService from '../services/intercom-service';
-import * as messageDbService from '../services/message-db-service';
-import * as userDbService from '../services/user-db-service';
+import logger from '../config/logger-config.js';
+import * as canvasService from '../services/canvas-service.js';
+import * as intercomService from '../services/intercom-service.js';
+import * as messageDbService from '../services/message-db-service.js';
+import * as userDbService from '../services/user-db-service.js';
 import createSnoozeRequest, {
   setSnoozeCanceledNote,
   setUnixTimestamp,
-} from '../utilities/snooze-utility';
+} from '../utilities/snooze-utility.js';
 
 const submitLogger = logger.child({ module: 'submit-controller' });
 

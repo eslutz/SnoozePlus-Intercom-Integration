@@ -1,7 +1,7 @@
 import schedule from 'node-schedule';
-import logger from '../config/logger-config';
-import sendHeartbeat from '../services/heartbeat-service';
-import scheduleMessages from '../services/schedule-message-service';
+import logger from '../config/logger-config.js';
+import sendHeartbeat from '../services/heartbeat-service.js';
+import scheduleMessages from '../services/schedule-message-service.js';
 
 const schedulerLogger = logger.child({ module: 'scheduler-utility' });
 

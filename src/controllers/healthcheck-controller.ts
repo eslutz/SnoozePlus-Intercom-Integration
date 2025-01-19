@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
-import pool from '../config/db-config';
-import logger from '../config/logger-config';
+import pool from '../config/db-config.js';
+import logger from '../config/logger-config.js';
 
 const healthcheckLogger = logger.child({ module: 'healthcheck-controller' });
 

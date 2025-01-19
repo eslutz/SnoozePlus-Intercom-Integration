@@ -1,6 +1,6 @@
 import express from 'express';
-import * as submitController from '../controllers/submit-controller';
-import validateSignature from '../middleware/validate-signature-canvas-middleware';
+import * as submitController from '../controllers/submit-controller.js';
+import validateSignature from '../middleware/validate-signature-canvas-middleware.js';
 
 const submitRouter = express.Router();
 

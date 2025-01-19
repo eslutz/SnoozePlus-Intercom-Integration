@@ -1,6 +1,6 @@
-import logger from '../config/logger-config';
-import operation from '../config/retry-config';
-import { getFetch } from '../utilities/fetch-utility';
+import fetch from 'node-fetch';
+import logger from '../config/logger-config.js';
+import operation from '../config/retry-config.js';
 
 // Load the heartbeat URL from environment variables.
 const baseUrl = process.env.BETTERSTACK_HEARTBEAT_URL;
@@ -10,9 +10,6 @@ if (!baseUrl) {
 
 const sendHeartbeat = async (success = true): Promise<void> => {
   const url = success ? baseUrl : `${baseUrl}/fail`;
-
-  // Get the fetch instance.
-  const fetch = await getFetch();
 
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {

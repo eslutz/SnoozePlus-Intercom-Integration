@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
-import logger from '../config/logger-config';
-import * as canvasService from '../services/canvas-service';
-import { getMessages } from '../services/message-db-service';
+import logger from '../config/logger-config.js';
+import * as canvasService from '../services/canvas-service.js';
+import { getMessages } from '../services/message-db-service.js';
 
 const initializeLogger = logger.child({ module: 'initialize-controller' });
 

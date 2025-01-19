@@ -1,7 +1,7 @@
-import logger from '../config/logger-config';
-import { decrypt } from '../utilities/crypto-utility';
-import { MessageDTO } from '../models/dto-message-model';
-import { SnoozeRequest } from '../models/snooze-request-model';
+import logger from '../config/logger-config.js';
+import { decrypt } from '../utilities/crypto-utility.js';
+import { MessageDTO } from '../models/dto-message-model.js';
+import { SnoozeRequest } from '../models/snooze-request-model.js';
 
 const canvasLogger = logger.child({ module: 'canvas-service' });
 

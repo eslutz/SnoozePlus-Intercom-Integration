@@ -1,11 +1,11 @@
 import express from 'express';
-import authRouter from './auth-router';
-import healthcheckRouter from './healthcheck-router';
-import initializeRouter from './initialize-router';
-import submitRouter from './submit-router';
-import webhookRouter from './webhook-router';
-import logger from '../config/logger-config';
-// import validateIp from '../middleware/validate-ip-middleware';
+import authRouter from './auth-router.js';
+import healthcheckRouter from './healthcheck-router.js';
+import initializeRouter from './initialize-router.js';
+import submitRouter from './submit-router.js';
+import webhookRouter from './webhook-router.js';
+import logger from '../config/logger-config.js';
+// import validateIp from '../middleware/validate-ip-middleware.js';
 
 const routerLogger = logger.child({ module: 'router' });
 const router = express.Router();

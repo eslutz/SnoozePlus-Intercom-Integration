@@ -1,11 +1,9 @@
 import passport from 'passport';
-import logger from './logger-config';
-import * as userDbService from '../services/user-db-service';
-import { encrypt } from '../utilities/crypto-utility';
-import { Profile } from '../models/profile-model';
-import { User } from '../models/user-model';
-
-const IntercomStrategy = require('passport-intercom').Strategy;
+import { Strategy as IntercomStrategy } from 'passport-intercom';
+import logger from './logger-config.js';
+import * as userDbService from '../services/user-db-service.js';
+import { encrypt } from '../utilities/crypto-utility.js';
+import { User } from '../models/user-model.js';
 
 // Load Intercom client ID and secret from environment variables.
 const intercomClientId = process.env.INTERCOM_CLIENT_ID;
@@ -31,8 +29,8 @@ passport.use(
       req: any,
       accessToken: any,
       refreshToken: any,
-      profile: Profile,
-      done: (arg0: null, arg1: any) => any
+      profile: any,
+      done: (error: any, user?: any) => void
     ) => {
       // Encrypt the access token before storing it.
       let encryptedAccessToken: string;

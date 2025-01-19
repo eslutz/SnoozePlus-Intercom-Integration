@@ -3,14 +3,14 @@ import {
   archiveMessage,
   getRemainingMessageCount,
   getTodaysMessages,
-} from './message-db-service';
-import { addNote, closeConversation, sendMessage } from './intercom-service';
-import logger from '../config/logger-config';
+} from './message-db-service.js';
+import { addNote, closeConversation, sendMessage } from './intercom-service.js';
+import logger from '../config/logger-config.js';
 import {
   setLastMessageCloseNote,
   setSendMessageNote,
-} from '../utilities/snooze-utility';
-import { MessageDTO } from '../models/dto-message-model';
+} from '../utilities/snooze-utility.js';
+import { MessageDTO } from '../models/dto-message-model.js';
 
 const scheduleMessageLogger = logger.child({
   module: 'schedule-message-service',

@@ -1,8 +1,8 @@
-import logger from '../config/logger-config';
-import operation from '../config/retry-config';
-import { decrypt } from '../utilities/crypto-utility';
-import { MessageDTO } from '../models/dto-message-model';
-import { getFetch } from '../utilities/fetch-utility';
+import fetch from 'node-fetch';
+import logger from '../config/logger-config.js';
+import operation from '../config/retry-config.js';
+import { decrypt } from '../utilities/crypto-utility.js';
+import { MessageDTO } from '../models/dto-message-model.js';
 
 const intercomLogger = logger.child({ module: 'intercom-service' });
 const baseUrl = process.env.INTERCOM_URL ?? 'https://api.intercom.io';
@@ -27,9 +27,6 @@ const addNote = async (
     level: 'info',
     message: 'Access token decrypted.',
   });
-
-  // Get the fetch instance.
-  const fetch = await getFetch();
 
   // Add a note to the conversation.
   return new Promise((resolve, reject) => {
@@ -96,9 +93,6 @@ const closeConversation = async (
     level: 'info',
     message: 'Access token decrypted.',
   });
-
-  // Get the fetch instance.
-  const fetch = await getFetch();
 
   // Close the conversation in Intercom.
   return new Promise((resolve, reject) => {
@@ -178,9 +172,6 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
     level: 'info',
     message: 'Access token decrypted.',
   });
-
-  // Get the fetch instance.
-  const fetch = await getFetch();
 
   // Send the message to Intercom.
   return new Promise((resolve, reject) => {

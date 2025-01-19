@@ -1,9 +1,9 @@
 import { RequestHandler } from 'express';
-import logger from '../config/logger-config';
-import { addNote } from '../services/intercom-service';
-import * as messageService from '../services/message-db-service';
-import * as userDbService from '../services/user-db-service';
-import { setCloseNote } from '../utilities/snooze-utility';
+import logger from '../config/logger-config.js';
+import { addNote } from '../services/intercom-service.js';
+import * as messageService from '../services/message-db-service.js';
+import * as userDbService from '../services/user-db-service.js';
+import { setCloseNote } from '../utilities/snooze-utility.js';
 
 const webhookLogger = logger.child({
   module: 'webhook-controller',

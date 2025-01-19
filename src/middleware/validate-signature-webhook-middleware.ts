@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
-import logger from '../config/logger-config';
-import SignatureHmacAlgorithm from '../enums/signature-hmac-algorithm-enum';
-import { signatureValidator } from '../utilities/crypto-utility';
+import logger from '../config/logger-config.js';
+import SignatureHmacAlgorithm from '../enums/signature-hmac-algorithm-enum.js';
+import { signatureValidator } from '../utilities/crypto-utility.js';
 
 const validateWebhookSignatureLogger = logger.child({
   module: 'validate-signature-webhook-middleware',

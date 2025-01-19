@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import logger from '../config/logger-config';
+import logger from '../config/logger-config.js';
 
 const validateIpLogger = logger.child({
   module: 'validate-ip-middleware',
