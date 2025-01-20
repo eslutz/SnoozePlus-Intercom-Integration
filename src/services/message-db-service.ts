@@ -144,7 +144,8 @@ const getMessages = async (
       archived
     FROM messages
     WHERE NOT archived
-      AND workspace_id = $1 AND conversation_id = $2;
+      AND workspace_id = $1 AND conversation_id = $2
+    ORDER BY send_date ASC;
   `;
   const selectParameters = [workspaceId, conversationId];
 

@@ -80,6 +80,22 @@ const submit: RequestHandler = async (req, res, next) => {
         message: 'Snooze request created.',
       });
 
+      // Save messages to the database.
+      submitLogger.info('Saving messages to the database.');
+      submitLogger.profile('saveMessages');
+      const messageResponse = await messageDbService.saveMessages(
+        workspaceId,
+        conversationId,
+        snoozeRequest.messages
+      );
+      submitLogger.profile('saveMessages', {
+        level: 'info',
+        message: 'Messages saved to the database.',
+      });
+      submitLogger.debug(
+        `Save Messages response: ${JSON.stringify(messageResponse)}`
+      );
+
       // Fill the finalCanvas with a summary of the set snoozes.
       submitLogger.info('Building final canvas.');
       submitLogger.profile('finalCanvas');
@@ -120,22 +136,6 @@ const submit: RequestHandler = async (req, res, next) => {
       });
       submitLogger.debug(
         `Set Snooze response: ${JSON.stringify(snoozeResponse)}`
-      );
-
-      // Save messages to the database.
-      submitLogger.info('Saving messages to the database.');
-      submitLogger.profile('saveMessages');
-      const messageResponse = await messageDbService.saveMessages(
-        workspaceId,
-        conversationId,
-        snoozeRequest.messages
-      );
-      submitLogger.profile('saveMessages', {
-        level: 'info',
-        message: 'Messages saved to the database.',
-      });
-      submitLogger.debug(
-        `Save Messages response: ${JSON.stringify(messageResponse)}`
       );
 
       // Send the final canvas.

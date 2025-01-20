@@ -222,7 +222,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
           },
           {
             type: 'spacer',
-            size: 's',
+            size: 'l',
           },
           {
             type: 'spacer',
@@ -242,10 +242,11 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     },
   };
 
-  for (let i = 0; i < messages.length; i++) {
+  // Process messages in reverse order so newest are shown first
+  for (let i = messages.length - 1; i >= 0; i--) {
     // Decrypt the message before sending.
     let decryptedMessage: string;
-    canvasLogger.info('Decrypting message.');
+    canvasLogger.debug('Decrypting message.');
     canvasLogger.profile('decrypt');
     try {
       decryptedMessage = decrypt(messages[i].message);
@@ -254,19 +255,14 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
       throw err;
     }
     canvasLogger.profile('decrypt', {
-      level: 'info',
+      level: 'debug',
       message: 'Message decrypted.',
     });
 
-    const currentDate = new Date();
     const sendDate = new Date(messages[i].sendDate);
-    // Difference in time between current date and send date in milliseconds.
-    const timeDifference = sendDate.getTime() - currentDate.getTime();
-    // Convert the time difference to days (1000 milliseconds/second * 3600 seconds/hour * 24 hours/day).
-    const daysUntilSending = Math.ceil(timeDifference / (1000 * 3600 * 24));
     updateSnoozeCanvas.canvas.content.components.splice(2, 0, {
       type: 'text',
-      text: `Message ${messages.length - i}:`,
+      text: `Message ${i + 1}:`,
       style: 'header',
     });
     updateSnoozeCanvas.canvas.content.components.splice(3, 0, {
@@ -276,12 +272,12 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     });
     updateSnoozeCanvas.canvas.content.components.splice(4, 0, {
       type: 'text',
-      text: `Sending in ${daysUntilSending} day${daysUntilSending === 1 ? '' : 's'}.`,
+      text: `Sending on ${sendDate.toLocaleDateString()} at ${sendDate.toLocaleTimeString()}.`,
       style: 'muted',
     });
 
     // Insert a spacer between messages.
-    if (i > 0) {
+    if (i < messages.length - 1) {
       updateSnoozeCanvas.canvas.content.components.splice(5, 0, {
         type: 'spacer',
         size: 'm',

@@ -16,19 +16,15 @@ const initialize: RequestHandler = async (req, res, next) => {
   initializeLogger.debug(`conversation_id: ${conversationId}`);
 
   if (conversationId !== undefined) {
-    // Get all messages for the conversation that are not archived.
-    // Then sort messages by send date, from latest to soonest.
-    const messages = (await getMessages(workspaceId, conversationId)).sort(
-      (a, b) => new Date(b.sendDate).getTime() - new Date(a.sendDate).getTime()
-    );
+    // Get all messages for the conversation that are not archived, sorted by send_date.
+    const messages = await getMessages(workspaceId, conversationId);
     if (messages.length > 0) {
       try {
         initializeLogger.info(
           'Messages found. Building current snoozes canvas.'
         );
         initializeLogger.profile('currentSnoozesCanvas');
-        const currentSnoozesCanvas =
-          canvasService.getCurrentSnoozesCanvas(messages);
+        const currentSnoozesCanvas = canvasService.getCurrentSnoozesCanvas(messages);
         initializeLogger.profile('currentSnoozesCanvas', {
           level: 'info',
           message: 'Completed current snoozes canvas.',
