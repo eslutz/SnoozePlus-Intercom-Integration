@@ -8,7 +8,7 @@ const userDbLogger = logger.child({ module: 'user-db-service' });
 
 const getUser = async (workspaceId: string): Promise<UserDTO | null> => {
   const getUser = `
-    SELECT workspace_id, access_token
+    SELECT workspace_id, admin_id, access_token
     FROM users
     WHERE workspace_id = $1;
   `;
