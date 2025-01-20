@@ -2,7 +2,7 @@ import winston from 'winston';
 import 'winston-daily-rotate-file';
 import { Logtail } from '@logtail/node';
 import { LogtailTransport } from '@logtail/winston';
-import config from './config';
+import config from './config.js';
 
 // Create the Logtail client.
 const betterstackLogtailKey = config.betterstackLogtailKey;
