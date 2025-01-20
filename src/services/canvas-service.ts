@@ -1,7 +1,7 @@
 import logger from '../config/logger-config.js';
-import { decrypt } from '../utilities/crypto-utility.js';
 import { MessageDTO } from '../models/dto-message-model.js';
-import { SnoozeRequest } from '../models/snooze-request-model.js';
+import { decrypt } from '../utilities/crypto-utility.js';
+import { calculateDaysUntilSending } from '../utilities/snooze-utility.js';
 
 const canvasLogger = logger.child({ module: 'canvas-service' });
 
@@ -260,6 +260,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     });
 
     const sendDate = new Date(messages[i].sendDate);
+    const daysUntilSending = calculateDaysUntilSending(sendDate);
     currentSnoozeCanvas.canvas.content.components.splice(2, 0, {
       type: 'text',
       text: `Message ${i + 1}:`,
@@ -272,7 +273,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     });
     currentSnoozeCanvas.canvas.content.components.splice(4, 0, {
       type: 'text',
-      text: `Sending on ${sendDate.toLocaleDateString()} at ${sendDate.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})}.`,
+      text: `Sending in ${daysUntilSending} day${daysUntilSending === 1 ? '' : 's'}.`,
       style: 'muted',
     });
 
@@ -348,6 +349,7 @@ const getFinalCanvas = (messages: MessageDTO[]) => {
     });
 
     const sendDate = new Date(messages[i].sendDate);
+    const daysUntilSending = calculateDaysUntilSending(sendDate);
     finalCanvas.canvas.content.components.splice(3, 0, {
       type: 'text',
       text: `Message ${i + 1}:`,
@@ -360,7 +362,7 @@ const getFinalCanvas = (messages: MessageDTO[]) => {
     });
     finalCanvas.canvas.content.components.splice(5, 0, {
       type: 'text',
-      text: `Sending on ${sendDate.toLocaleDateString()} at ${sendDate.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})}.`,
+      text: `Sending in ${daysUntilSending} day${daysUntilSending === 1 ? '' : 's'}.`,
       style: 'muted',
     });
 

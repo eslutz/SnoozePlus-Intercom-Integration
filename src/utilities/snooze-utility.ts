@@ -5,6 +5,16 @@ import { SnoozeRequest } from '../models/snooze-request-model.js';
 
 const snoozeLogger = logger.child({ module: 'snooze-utility' });
 
+const calculateDaysUntilSending = (sendDate: Date): number => {
+  const currentDate = new Date();
+  // Difference in time between current date and send date in milliseconds
+  const timeDifference = sendDate.getTime() - currentDate.getTime();
+  // Convert the time difference to days (1000 milliseconds/second * 3600 seconds/hour * 24 hours/day)
+  const daysUntilSending = Math.ceil(timeDifference / (1000 * 3600 * 24));
+
+  return daysUntilSending;
+};
+
 // Take the request and determine how many snoozes were set.
 const createSnoozeRequest = (input: any): SnoozeRequest => {
   snoozeLogger.info('Getting number of snoozes set.');
@@ -34,10 +44,6 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
       message: 'Message encrypted.',
     });
 
-    /* TODO: All times based on server time in UTC. No way to determine users timezone.
-     * Remove all references to displaying time in local time, as that just displays it in the server's timezone.
-     * Just display the send date.
-     */
     snoozeLogger.debug(
       `Snooze duration: ${input.input_values[`snoozeDuration${i}`]}`
     );
@@ -115,7 +121,7 @@ const setSnoozeNote = (
 ): string => {
   const dayLabel = snoozeDuration === 1 ? 'day' : 'days';
   const messageLabel = snoozeCount === 1 ? 'message' : 'messages';
-  const note = `<p><strong>Snooze+ has been set.</strong></p><br /><p>The conversation will be snoozed for a total of ${snoozeDuration} ${dayLabel}, with ${snoozeCount} ${messageLabel} being sent.  The last message will send on ${snoozeUntil.toLocaleDateString()} at ${snoozeUntil.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})}.</p>`;
+  const note = `<p><strong>Snooze+ has been set.</strong></p><br /><p>The conversation will be snoozed for a total of ${snoozeDuration} ${dayLabel}, with ${snoozeCount} ${messageLabel} being sent.  The last message will send on ${snoozeUntil.toLocaleDateString()}.</p>`;
 
   return note;
 };
@@ -123,8 +129,9 @@ const setSnoozeNote = (
 const setUnixTimestamp = (date: Date): number =>
   Math.floor(date.getTime() / 1000);
 
-export default createSnoozeRequest;
 export {
+  calculateDaysUntilSending,
+  createSnoozeRequest,
   setCloseNote,
   setSnoozeCanceledNote,
   setLastMessageCloseNote,

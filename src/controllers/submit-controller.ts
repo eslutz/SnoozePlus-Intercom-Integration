@@ -4,7 +4,8 @@ import * as canvasService from '../services/canvas-service.js';
 import * as intercomService from '../services/intercom-service.js';
 import * as messageDbService from '../services/message-db-service.js';
 import * as userDbService from '../services/user-db-service.js';
-import createSnoozeRequest, {
+import {
+  createSnoozeRequest,
   setSnoozeCanceledNote,
   setUnixTimestamp,
 } from '../utilities/snooze-utility.js';
