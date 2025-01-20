@@ -1,4 +1,5 @@
 import schedule from 'node-schedule';
+import config from '../config/config.js';
 import logger from '../config/logger-config.js';
 import sendHeartbeat from '../services/heartbeat-service.js';
 import scheduleMessages from '../services/schedule-message-service.js';
@@ -17,13 +18,13 @@ const scheduleJobs = async () => {
       } catch (err) {
         schedulerLogger.error(`Error running scheduled task: ${err}`);
       }
-      if (process.env.NODE_ENV === 'production') {
+      if (config.isProduction) {
         await sendHeartbeat();
       }
     });
   } catch (err) {
     schedulerLogger.error(`Error running scheduled task: ${err}`);
-    if (process.env.NODE_ENV === 'production') {
+    if (config.isProduction) {
       await sendHeartbeat(false);
     }
   }

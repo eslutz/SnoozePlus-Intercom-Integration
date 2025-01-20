@@ -1,11 +1,13 @@
 import fetch from 'node-fetch';
+import config from '../config/config.js';
 import logger from '../config/logger-config.js';
 import operation from '../config/retry-config.js';
 import { decrypt } from '../utilities/crypto-utility.js';
 import { MessageDTO } from '../models/dto-message-model.js';
 
 const intercomLogger = logger.child({ module: 'intercom-service' });
-const baseUrl = process.env.INTERCOM_URL ?? 'https://api.intercom.io';
+
+const baseUrl = config.intercomUrl;
 
 const addNote = async (
   adminId: number,

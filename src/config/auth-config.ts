@@ -1,28 +1,19 @@
 import passport from 'passport';
 import { Strategy as IntercomStrategy } from 'passport-intercom';
+import config from './config.js';
 import logger from './logger-config.js';
 import * as userDbService from '../services/user-db-service.js';
 import { encrypt } from '../utilities/crypto-utility.js';
 import { User } from '../models/user-model.js';
-
-// Load Intercom client ID and secret from environment variables.
-const intercomClientId = process.env.INTERCOM_CLIENT_ID;
-if (!intercomClientId) {
-  throw new Error('INTERCOM_CLIENT_ID cannot be found!');
-}
-const intercomClientSecret = process.env.INTERCOM_CLIENT_SECRET;
-if (!intercomClientSecret) {
-  throw new Error('INTERCOM_CLIENT_SECRET cannot be found!');
-}
 
 const authLogger = logger.child({ module: 'auth-config' });
 
 passport.use(
   new IntercomStrategy(
     {
-      clientID: intercomClientId,
-      clientSecret: intercomClientSecret,
-      callbackURL: 'https://localhost:8706/auth/intercom/callback',
+      clientID: config.intercomClientId,
+      clientSecret: config.intercomClientSecret,
+      callbackURL: config.intercomCallbackUrl,
       passReqToCallback: true,
     },
     async (
@@ -85,11 +76,15 @@ passport.use(
         authLogger.debug(`User profile: ${JSON.stringify(profile)}`);
 
         // Redirect the user after successful authentication
-        req.res.redirect('https://app.intercom.com/appstore/redirect?install_success=true');
+        req.res.redirect(
+          'https://app.intercom.com/appstore/redirect?install_success=true'
+        );
         return done(null, profile);
       } catch (err) {
         // Redirect the user after authentication failure
-        req.res.redirect(`https://app.intercom.com/appstore/redirect?install_success=false&error_message=${encodeURIComponent(err as string)}`);
+        req.res.redirect(
+          `https://app.intercom.com/appstore/redirect?install_success=false&error_message=${encodeURIComponent(err as string)}`
+        );
       }
     }
   )

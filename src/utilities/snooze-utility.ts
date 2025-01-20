@@ -34,6 +34,10 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
       message: 'Message encrypted.',
     });
 
+    /* TODO: All times based on server time in UTC. No way to determine users timezone.
+     * Remove all references to displaying time in local time, as that just displays it in the server's timezone.
+     * Just display the send date.
+     */
     snoozeLogger.debug(
       `Snooze duration: ${input.input_values[`snoozeDuration${i}`]}`
     );

@@ -1,14 +1,12 @@
 import { RequestHandler } from 'express';
+import config from '../config/config.js';
 import logger from '../config/logger-config.js';
 
 const validateIpLogger = logger.child({
   module: 'validate-ip-middleware',
 });
 
-const allowedIps = process.env.IP_ALLOWLIST?.split(',');
-if (!allowedIps) {
-  throw new Error('IP_ALLOWLIST cannot be found!');
-}
+const allowedIps = config.ipAllowlist.split(',');
 
 const validateIp: RequestHandler = (req, res, next) => {
   const requestIp = req.ip ?? '';

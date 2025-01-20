@@ -1,3 +1,4 @@
+import config from './config/config.js';
 import express from 'express';
 import session from 'express-session';
 import schedule from 'node-schedule';
@@ -17,11 +18,6 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const port = process.env.PORT;
-if (!port) {
-  throw new Error('PORT cannot be found!');
-}
-
 app.use(morganMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -30,10 +26,7 @@ app.use(express.static('public'));
 app.use(express.static(path.join(__dirname)));
 
 // Configure session and add passport.
-const sessionSecret = process.env.SESSION_SECRET;
-if (!sessionSecret) {
-  throw new Error('SESSION_SECRET cannot be found!');
-}
+const sessionSecret = config.sessionSecret;
 app.use(
   session({ secret: sessionSecret, resave: false, saveUninitialized: false })
 );
@@ -57,9 +50,9 @@ appLogger.info('*** Starting SnoozePlus Intercom Integration ***');
 })();
 
 const server = app
-  .listen(port, () => {
+  .listen(config.port, () => {
     appLogger.info('Express server is running.');
-    appLogger.info(`Application is ready at port: ${port}`);
+    appLogger.info(`Application is ready at port: ${config.port}`);
   })
   .on('error', (err) => {
     appLogger.error(`Error occurred, server can't start: ${err}`);

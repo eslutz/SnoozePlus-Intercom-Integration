@@ -201,7 +201,11 @@ const submit: RequestHandler = async (req, res, next) => {
       next(err);
     }
 
-    // Unsnooze the conversation.
+    /* TODO: Figure out how to cancel the snooze in Intercom.
+     * Get a 422 response when trying to cancel the snooze.
+     * Potentially set conversation to open instead.
+     */
+    // Cancel the conversation snooze.
     try {
       submitLogger.info('Unsnoozing conversation.');
       submitLogger.profile('unsnooze');

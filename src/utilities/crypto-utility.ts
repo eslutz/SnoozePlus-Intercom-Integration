@@ -1,18 +1,6 @@
 import crypto from 'crypto';
+import config from '../config/config.js';
 import SignatureHmacAlgorithm from '../enums/signature-hmac-algorithm-enum.js';
-
-const algorithm = process.env.ENCRYPTION_ALGORITHM;
-if (!algorithm) {
-  throw new Error('ENCRYPTION_ALGORITHM cannot be found!');
-}
-const key = process.env.ENCRYPTION_KEY;
-if (!key) {
-  throw new Error('ENCRYPTION_KEY cannot be found!');
-}
-const clientSecret = process.env.INTERCOM_CLIENT_SECRET;
-if (!clientSecret) {
-  throw new Error('INTERCOM_CLIENT_SECRET cannot be found!');
-}
 
 /**
  * Decrypts an encrypted text using a specified algorithm and key.
@@ -26,8 +14,8 @@ if (!clientSecret) {
 const decrypt = (encryptedText: string): string => {
   const [ivHex, encrypted] = encryptedText.split(':');
   const cipher = crypto.createDecipheriv(
-    algorithm,
-    Buffer.from(key, 'hex'),
+    config.encryptionAlgorithm,
+    Buffer.from(config.encryptionKey, 'hex'),
     Buffer.from(ivHex, 'hex')
   );
   let decrypted = cipher.update(encrypted, 'hex', 'utf8');
@@ -47,7 +35,11 @@ const decrypt = (encryptedText: string): string => {
  */
 const encrypt = (text: string): string => {
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv(algorithm, Buffer.from(key, 'hex'), iv);
+  const cipher = crypto.createCipheriv(
+    config.encryptionAlgorithm,
+    Buffer.from(config.encryptionKey, 'hex'),
+    iv
+  );
   let encrypted = cipher.update(text, 'utf8', 'hex');
   encrypted += cipher.final('hex');
   return `${iv.toString('hex')}:${encrypted}`;
@@ -69,7 +61,7 @@ const signatureValidator = (
   const stringifiedBody = JSON.stringify(requestBody);
 
   // Create a digest from the request body using the specified algorithm.
-  const hmac = crypto.createHmac(algorithm, clientSecret);
+  const hmac = crypto.createHmac(algorithm, config.intercomClientSecret);
   const digest = hmac.update(stringifiedBody).digest('hex');
 
   return digest === signature;
