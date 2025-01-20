@@ -60,8 +60,8 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
   snoozeLogger.info('Getting snooze until date.');
   // Get the date the snooze will end.
   const snoozeUntil = new Date();
-  snoozeUntil.setDate(snoozeUntil.getDate() + snoozeDurationTotal);
-  snoozeLogger.info(`Snooze until date: ${snoozeUntil}`);
+  snoozeUntil.setUTCDate(snoozeUntil.getUTCDate() + snoozeDurationTotal);
+  snoozeLogger.info(`Snooze until date: ${snoozeUntil.toISOString()}`);
 
   snoozeLogger.debug('Creating snooze request object.');
   const snoozeRequest: SnoozeRequest = {

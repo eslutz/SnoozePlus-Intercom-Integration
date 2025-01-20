@@ -242,7 +242,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     },
   };
 
-  // Process messages in reverse order so newest are shown first
+  // Process messages in reverse order so newest are shown first.
   for (let i = messages.length - 1; i >= 0; i--) {
     // Decrypt the message before sending.
     let decryptedMessage: string;
