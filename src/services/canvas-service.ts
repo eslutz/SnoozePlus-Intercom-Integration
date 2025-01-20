@@ -211,7 +211,7 @@ const getSetSnoozeCanvas = (numOfSnoozes: number) => {
 };
 
 const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
-  const updateSnoozeCanvas = {
+  const currentSnoozeCanvas = {
     canvas: {
       content: {
         components: [
@@ -260,17 +260,17 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     });
 
     const sendDate = new Date(messages[i].sendDate);
-    updateSnoozeCanvas.canvas.content.components.splice(2, 0, {
+    currentSnoozeCanvas.canvas.content.components.splice(2, 0, {
       type: 'text',
       text: `Message ${i + 1}:`,
       style: 'header',
     });
-    updateSnoozeCanvas.canvas.content.components.splice(3, 0, {
+    currentSnoozeCanvas.canvas.content.components.splice(3, 0, {
       type: 'text',
       text: decryptedMessage,
       style: 'paragraph',
     });
-    updateSnoozeCanvas.canvas.content.components.splice(4, 0, {
+    currentSnoozeCanvas.canvas.content.components.splice(4, 0, {
       type: 'text',
       text: `Sending on ${sendDate.toLocaleDateString()} at ${sendDate.toLocaleTimeString()}.`,
       style: 'muted',
@@ -278,21 +278,21 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
 
     // Insert a spacer between messages.
     if (i < messages.length - 1) {
-      updateSnoozeCanvas.canvas.content.components.splice(5, 0, {
+      currentSnoozeCanvas.canvas.content.components.splice(5, 0, {
         type: 'spacer',
         size: 'm',
       });
       // @ts-expect-error: type not yet defined
-      updateSnoozeCanvas.canvas.content.components.splice(6, 0, {
+      currentSnoozeCanvas.canvas.content.components.splice(6, 0, {
         type: 'divider',
       });
     }
   }
 
-  return updateSnoozeCanvas;
+  return currentSnoozeCanvas;
 };
 
-const getFinalCanvas = () => {
+const getFinalCanvas = (messages: MessageDTO[]) => {
   const finalCanvas = {
     canvas: {
       content: {
@@ -305,14 +305,22 @@ const getFinalCanvas = () => {
           },
           {
             type: 'text',
-            text: 'The snooze request has been submitted. See note for details.',
+            text: 'The snooze request has been submitted.',
             style: 'paragraph',
           },
           {
+            type: 'spacer',
+            size: 'l',
+          },
+          {
+            type: 'spacer',
+            size: 'xl',
+          },
+          {
             type: 'button',
-            label: 'Try another?',
+            id: 'cancelSnooze',
+            label: 'Cancel Snoozes',
             style: 'primary',
-            id: 'refresh_button',
             action: {
               type: 'submit',
             },
@@ -321,6 +329,53 @@ const getFinalCanvas = () => {
       },
     },
   };
+
+  // Process messages in reverse order so newest are shown first
+  for (let i = messages.length - 1; i >= 0; i--) {
+    // Decrypt the message before sending.
+    let decryptedMessage: string;
+    canvasLogger.debug('Decrypting message.');
+    canvasLogger.profile('decrypt');
+    try {
+      decryptedMessage = decrypt(messages[i].message);
+    } catch (err) {
+      canvasLogger.error(`Error decrypting message: ${err}`);
+      throw err;
+    }
+    canvasLogger.profile('decrypt', {
+      level: 'debug',
+      message: 'Message decrypted.',
+    });
+
+    const sendDate = new Date(messages[i].sendDate);
+    finalCanvas.canvas.content.components.splice(3, 0, {
+      type: 'text',
+      text: `Message ${i + 1}:`,
+      style: 'header',
+    });
+    finalCanvas.canvas.content.components.splice(4, 0, {
+      type: 'text',
+      text: decryptedMessage,
+      style: 'paragraph',
+    });
+    finalCanvas.canvas.content.components.splice(5, 0, {
+      type: 'text',
+      text: `Sending on ${sendDate.toLocaleDateString()} at ${sendDate.toLocaleTimeString()}.`,
+      style: 'muted',
+    });
+
+    // Insert a spacer between messages.
+    if (i < messages.length - 1) {
+      finalCanvas.canvas.content.components.splice(6, 0, {
+        type: 'spacer',
+        size: 'm',
+      });
+      // @ts-expect-error: type not yet defined
+      finalCanvas.canvas.content.components.splice(7, 0, {
+        type: 'divider',
+      });
+    }
+  }
 
   return finalCanvas;
 };

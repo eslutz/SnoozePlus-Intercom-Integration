@@ -99,7 +99,8 @@ const submit: RequestHandler = async (req, res, next) => {
       // Fill the finalCanvas with a summary of the set snoozes.
       submitLogger.info('Building final canvas.');
       submitLogger.profile('finalCanvas');
-      const finalCanvas = canvasService.getFinalCanvas();
+      const messages = await messageDbService.getMessages(workspaceId, conversationId);
+      const finalCanvas = canvasService.getFinalCanvas(messages);
       submitLogger.profile('finalCanvas', {
         level: 'info',
         message: 'Completed final canvas.',
