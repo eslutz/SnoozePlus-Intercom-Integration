@@ -272,7 +272,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     });
     currentSnoozeCanvas.canvas.content.components.splice(4, 0, {
       type: 'text',
-      text: `Sending on ${sendDate.toLocaleDateString()} at ${sendDate.toLocaleTimeString()}.`,
+      text: `Sending on ${sendDate.toLocaleDateString()} at ${sendDate.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})}.`,
       style: 'muted',
     });
 
@@ -360,7 +360,7 @@ const getFinalCanvas = (messages: MessageDTO[]) => {
     });
     finalCanvas.canvas.content.components.splice(5, 0, {
       type: 'text',
-      text: `Sending on ${sendDate.toLocaleDateString()} at ${sendDate.toLocaleTimeString()}.`,
+      text: `Sending on ${sendDate.toLocaleDateString()} at ${sendDate.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})}.`,
       style: 'muted',
     });
 

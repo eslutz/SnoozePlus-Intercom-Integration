@@ -41,9 +41,7 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
     snoozeLogger.debug(`Current snooze duration total: ${snoozeDurationTotal}`);
     // Determine the send date as the current date and time plus the snooze duration.
     const sendDate = new Date();
-    sendDate.setUTCDate(
-      sendDate.getUTCDate() + Number(input.input_values[`snoozeDuration${i}`])
-    );
+    sendDate.setUTCDate(sendDate.getUTCDate() + snoozeDurationTotal);
     snoozeLogger.debug(`Message send date (UTC): ${sendDate.toISOString()}`);
     messages.push({
       message: encryptedMessage,
@@ -52,15 +50,14 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
         i === snoozeCount && input.input_values.then === 'close',
     });
   }
-  snoozeLogger.info(`Snooze messages: ${JSON.stringify(messages)}`);
+  snoozeLogger.debug(`Snooze messages: ${JSON.stringify(messages)}`);
   snoozeLogger.info(
-    `Final snooze duration total: ${snoozeDurationTotal} day(s)`
+    `Final snooze duration total: ${snoozeDurationTotal} day(s).`
   );
 
   snoozeLogger.info('Getting snooze until date.');
   // Get the date the snooze will end.
-  const snoozeUntil = new Date();
-  snoozeUntil.setUTCDate(snoozeUntil.getUTCDate() + snoozeDurationTotal);
+  const snoozeUntil = new Date(messages[messages.length - 1].sendDate);
   snoozeLogger.info(`Snooze until date: ${snoozeUntil.toISOString()}`);
 
   snoozeLogger.debug('Creating snooze request object.');
@@ -114,7 +111,7 @@ const setSnoozeNote = (
 ): string => {
   const dayLabel = snoozeDuration === 1 ? 'day' : 'days';
   const messageLabel = snoozeCount === 1 ? 'message' : 'messages';
-  const note = `<p><strong>Snooze+ has been set.</strong></p><br /><p>The conversation will be snoozed for a total of ${snoozeDuration} ${dayLabel}, with ${snoozeCount} ${messageLabel} being sent.  The snooze will end on ${snoozeUntil.toLocaleDateString()}.</p>`;
+  const note = `<p><strong>Snooze+ has been set.</strong></p><br /><p>The conversation will be snoozed for a total of ${snoozeDuration} ${dayLabel}, with ${snoozeCount} ${messageLabel} being sent.  The last message will send on ${snoozeUntil.toLocaleDateString()} at ${snoozeUntil.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})}.</p>`;
 
   return note;
 };
