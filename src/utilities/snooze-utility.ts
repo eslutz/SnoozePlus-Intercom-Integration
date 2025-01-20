@@ -41,10 +41,10 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
     snoozeLogger.debug(`Current snooze duration total: ${snoozeDurationTotal}`);
     // Determine the send date as the current date and time plus the snooze duration.
     const sendDate = new Date();
-    sendDate.setDate(
-      sendDate.getDate() + Number(input.input_values[`snoozeDuration${i}`])
+    sendDate.setUTCDate(
+      sendDate.getUTCDate() + Number(input.input_values[`snoozeDuration${i}`])
     );
-    snoozeLogger.debug(`Message send date: ${sendDate}`);
+    snoozeLogger.debug(`Message send date (UTC): ${sendDate.toISOString()}`);
     messages.push({
       message: encryptedMessage,
       sendDate: sendDate,

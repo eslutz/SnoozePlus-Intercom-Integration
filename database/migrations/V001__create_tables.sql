@@ -11,7 +11,7 @@ CREATE TABLE messages (
   workspace_id TEXT NOT NULL,
   conversation_id INTEGER NOT NULL,
   message TEXT NOT NULL,
-  send_date TIMESTAMP NOT NULL,
+  send_date TIMESTAMP WITH TIME ZONE NOT NULL,
   close_conversation BOOLEAN NOT NULL DEFAULT FALSE,
   archived BOOLEAN NOT NULL DEFAULT FALSE,
   CONSTRAINT fk_workspace_id FOREIGN KEY (workspace_id)

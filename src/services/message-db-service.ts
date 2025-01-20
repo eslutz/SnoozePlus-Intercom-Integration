@@ -279,7 +279,7 @@ const saveMessages = async (
       workspaceId,
       conversationId,
       message.message,
-      message.sendDate,
+      message.sendDate.toISOString(),
       message.closeConversation,
     ];
 
