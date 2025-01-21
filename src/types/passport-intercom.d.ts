@@ -44,13 +44,24 @@ declare module 'passport-intercom' {
   type VerifyFunction = (
     req: Request,
     accessToken: string,
-    refreshToken: string,
+    refreshToken: string | undefined,
     profile: Profile,
-    done: (error: any, user?: any) => void
-  ) => void;
+    done: (
+      error: Error | null,
+      user?: Profile | false | null,
+      info?: { message: string }
+    ) => void
+  ) => void | Promise<void>;
 
   export class Strategy extends PassportStrategy {
     constructor(options: IntercomStrategyOptions, verify: VerifyFunction);
-    authenticate(req: Request, options?: any): void;
+    authenticate(
+      req: Request,
+      options?: {
+        state?: string;
+        failureRedirect?: string;
+        failureMessage?: string;
+      }
+    ): void;
   }
 }
