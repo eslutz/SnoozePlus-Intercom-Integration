@@ -31,8 +31,7 @@ const receiver: RequestHandler = async (req, res, next) => {
   webhookLogger.debug(`Webhook notification full topic: ${fullTopic}`);
   const topic: string = fullTopic.substring(fullTopic.lastIndexOf('.') + 1);
   webhookLogger.debug(`Webhook notification topic: ${topic}`);
-  // TODO: Validate that workspaceId is present in the request.
-  const workspaceId: string = req.body.data.workspace_id;
+  const workspaceId: string = req.body.app_id;
   webhookLogger.debug(`Webhook notification workspace_id: ${workspaceId}`);
   const conversationId: number = req.body.data.item.id;
   webhookLogger.debug(
