@@ -202,19 +202,14 @@ const submit: RequestHandler = async (req, res, next) => {
       next(err);
     }
 
-    /* TODO: Figure out how to cancel the snooze in Intercom.
-     * Get a 422 response when trying to cancel the snooze.
-     * Potentially set conversation to open instead.
-     */
     // Cancel the conversation snooze.
     try {
       submitLogger.info('Unsnoozing conversation.');
       submitLogger.profile('unsnooze');
-      const unsnoozeResponse = await intercomService.setSnooze(
+      const unsnoozeResponse = await intercomService.cancelSnooze(
         user.adminId,
         user.accessToken,
-        conversationId,
-        setUnixTimestamp(new Date(Date.now()))
+        conversationId
       );
       submitLogger.profile('unsnooze', {
         level: 'info',
@@ -229,10 +224,16 @@ const submit: RequestHandler = async (req, res, next) => {
       next(err);
     }
 
-    submitLogger.profile('cancelSnooze', {
+    // Reset to original canvas.
+    submitLogger.info('Resetting to initial canvas.');
+    submitLogger.profile('initialCanvas');
+    const initialCanvas = canvasService.getInitialCanvas();
+    submitLogger.profile('initialCanvas', {
       level: 'info',
       message: 'Completed cancel snooze request.',
     });
+
+    res.send(initialCanvas);
   } else {
     // Reset to original canvas.
     submitLogger.info('Resetting to initial canvas.');

@@ -82,6 +82,72 @@ const addNote = async (
   });
 };
 
+const cancelSnooze = async (
+  adminId: number,
+  adminAccessToken: string,
+  conversationId: number
+): Promise<any> => {
+  // Decrypt the access token before sending.
+  let decryptedAccessToken: string;
+  intercomLogger.info('Decrypting access token.');
+  intercomLogger.profile('decrypt');
+  try {
+    decryptedAccessToken = decrypt(adminAccessToken);
+  } catch (err) {
+    intercomLogger.error(`Error decrypting access token: ${err}`);
+    throw err;
+  }
+  intercomLogger.profile('decrypt', {
+    level: 'info',
+    message: 'Access token decrypted.',
+  });
+
+  return new Promise((resolve, reject) => {
+    operation.attempt(async (currentAttempt) => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/conversations/${conversationId}/parts`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${decryptedAccessToken}`,
+              'Content-Type': 'application/json',
+              'Intercom-Version': '2.11',
+            },
+            body: JSON.stringify({
+              admin_id: adminId,
+              message_type: 'open',
+            }),
+          }
+        );
+        intercomLogger.debug(
+          `Open conversation response: ${JSON.stringify(response)}`
+        );
+
+        if (!response.ok) {
+          intercomLogger.error(
+            `Response status ${response.status}: Error during cancel snooze request.`
+          );
+
+          resolve(null);
+        }
+
+        const data = await response.json();
+
+        resolve(data);
+      } catch (err) {
+        intercomLogger.error(
+          `Error during POST request on attempt ${currentAttempt}: ${err}`
+        );
+        if (operation.retry(err as Error)) {
+          return;
+        }
+        reject(operation.mainError());
+      }
+    });
+  });
+};
+
 const closeConversation = async (
   adminId: number,
   adminAccessToken: string,
@@ -310,4 +376,4 @@ const setSnooze = async (
   });
 };
 
-export { addNote, closeConversation, sendMessage, setSnooze };
+export { addNote, cancelSnooze, closeConversation, sendMessage, setSnooze };
