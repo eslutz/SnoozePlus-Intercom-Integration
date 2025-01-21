@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { encrypt } from './crypto-utility.js';
 import logger from '../config/logger-config.js';
 import { Message } from '../models/message-model.js';
@@ -5,6 +8,12 @@ import { SnoozeRequest } from '../models/snooze-request-model.js';
 
 const snoozeLogger = logger.child({ module: 'snooze-utility' });
 
+/**
+ * Calculates the number of days until a specified send date.
+ *
+ * @param sendDate - The date a message is sent.
+ * @returns The number of days from the current date until the send date.
+ */
 const calculateDaysUntilSending = (sendDate: Date): number => {
   const currentDate = new Date();
   // Difference in time between current date and send date in milliseconds
@@ -15,37 +24,58 @@ const calculateDaysUntilSending = (sendDate: Date): number => {
   return daysUntilSending;
 };
 
-// Take the request and determine how many snoozes were set.
+/**
+ * Creates a snooze request object based on the provided input.
+ *
+ * @param input - The input object containing snooze details.
+ * @param input.input_values - An object containing the messages and snooze durations.
+ * @returns A `SnoozeRequest` object containing the messages, note, and snooze until timestamp.
+ *
+ * @throws Will throw an error if message encryption fails.
+ *
+ * @example
+ * const input = {
+ *   input_values: {
+ *     message1: "First message",
+ *     snoozeDuration1: "2",
+ *     message2: "Second message",
+ *     snoozeDuration2: "3",
+ *     then: "close"
+ *   }
+ * };
+ * const snoozeRequest = createSnoozeRequest(input);
+ * console.log(snoozeRequest);
+ */
 const createSnoozeRequest = (input: any): SnoozeRequest => {
-  snoozeLogger.info('Getting number of snoozes set.');
+  snoozeLogger.debug('Getting number of snoozes set.');
   // Get the keys from the inputs object and use array length property to get number of inputs.
   const keysArray = Object.keys(input.input_values);
   const keysArrayCount = keysArray.length;
   const snoozeCount = Math.floor(keysArrayCount / 2);
-  snoozeLogger.info(`Number of snoozes set: ${snoozeCount}`);
+  snoozeLogger.debug(`Number of snoozes set: ${snoozeCount}`);
 
-  snoozeLogger.info('Getting messages and duration of each snooze.');
+  snoozeLogger.debug('Getting messages and duration of each snooze.');
   // Get messages and send date for each snooze.
   let snoozeDurationTotal = 0;
   const messages: Message[] = [];
   for (let i = 1; i <= snoozeCount; i++) {
     // Encrypt the message before storing it.
     let encryptedMessage: string;
-    snoozeLogger.info('Encrypting message.');
+    snoozeLogger.debug('Encrypting message.');
     snoozeLogger.profile('encrypt');
     try {
       encryptedMessage = encrypt(input.input_values[`message${i}`]);
     } catch (err) {
-      snoozeLogger.error(`Error encrypting message: ${err}`);
+      snoozeLogger.error(`Error encrypting message: ${String(err)}`);
       throw err;
     }
     snoozeLogger.profile('encrypt', {
-      level: 'info',
+      level: 'debug',
       message: 'Message encrypted.',
     });
 
     snoozeLogger.debug(
-      `Snooze duration: ${input.input_values[`snoozeDuration${i}`]}`
+      `Snooze duration - message ${i}: ${input.input_values[`snoozeDuration${i}`]}`
     );
     snoozeDurationTotal += Number(input.input_values[`snoozeDuration${i}`]);
     snoozeLogger.debug(`Current snooze duration total: ${snoozeDurationTotal}`);
@@ -60,17 +90,11 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
         i === snoozeCount && input.input_values.then === 'close',
     });
   }
-  snoozeLogger.debug(`Snooze messages: ${JSON.stringify(messages)}`);
-  snoozeLogger.info(
-    `Final snooze duration total: ${snoozeDurationTotal} day(s).`
-  );
 
-  snoozeLogger.info('Getting snooze until date.');
   // Get the date the snooze will end.
   const snoozeUntil = new Date(messages[messages.length - 1].sendDate);
-  snoozeLogger.info(`Snooze until date: ${snoozeUntil.toISOString()}`);
+  snoozeLogger.debug(`Snooze until date set: ${snoozeUntil.toISOString()}`);
 
-  snoozeLogger.debug('Creating snooze request object.');
   const snoozeRequest: SnoozeRequest = {
     messages: messages,
     note: setSnoozeNote(snoozeCount, snoozeDurationTotal, snoozeUntil),
@@ -83,6 +107,12 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
   return snoozeRequest;
 };
 
+/**
+ * Generates an HTML note indicating that the snooze has been canceled and specifies the number of messages that will not be sent.
+ *
+ * @param messagesDeleted - The number of messages that were scheduled to be sent but will now be canceled.
+ * @returns A formatted HTML string.
+ */
 const setSnoozeCanceledNote = (messagesDeleted: number): string => {
   const messageLabel = messagesDeleted === 1 ? 'message' : 'messages';
   const note = `<p><strong>Snooze+ has been canceled.</stronger></p><br /><p>The remaining ${messagesDeleted} ${messageLabel} will not be sent.</p>`;
@@ -90,6 +120,13 @@ const setSnoozeCanceledNote = (messagesDeleted: number): string => {
   return note;
 };
 
+/**
+ * Generates a closing note in HTML format for a conversation that has ended triggered by a webhook.
+ *
+ * @param reasonClosed - The reason why the conversation was closed.
+ * @param messagesDeleted - The number of messages that were deleted.
+ * @returns A formatted HTML string.
+ */
 const setCloseNote = (
   reasonClosed: string,
   messagesDeleted: number
@@ -100,12 +137,23 @@ const setCloseNote = (
   return note;
 };
 
+/**
+ * Generates a closing note in HTML format indicating that Snooze+ has ended and the last message has been sent.
+ *
+ * @returns {string} A formatted HTML string.
+ */
 const setLastMessageCloseNote = (): string => {
   const note = `<p><strong>Snooze+ has ended.</strong></p><br /><p>The last message has been sent and has closed the conversation.</p>`;
 
   return note;
 };
 
+/**
+ * Generates a note in HTML format indicating the number of messages waiting to be sent.
+ *
+ * @param messageCount - The number of messages waiting to be sent.
+ * @returns A formatted HTML string.
+ */
 const setSendMessageNote = (messageCount: number): string => {
   const messageLabel = messageCount === 1 ? 'message' : 'messages';
   const verbForm = messageCount === 1 ? 'is' : 'are';
@@ -114,6 +162,14 @@ const setSendMessageNote = (messageCount: number): string => {
   return note;
 };
 
+/**
+ * Generates a note in HTML format when a snooze had been set with details of the snooze.
+ *
+ * @param snoozeCount - The number of messages to be sent during the snooze period.
+ * @param snoozeDuration - The duration of the snooze period in days.
+ * @param snoozeUntil - The date until which the conversation is snoozed.
+ * @returns A formatted HTML string.
+ */
 const setSnoozeNote = (
   snoozeCount: number,
   snoozeDuration: number,
@@ -126,6 +182,12 @@ const setSnoozeNote = (
   return note;
 };
 
+/**
+ * Converts a given Date object to a Unix timestamp.
+ *
+ * @param date - The Date object to be converted.
+ * @returns The Unix timestamp as a number.
+ */
 const setUnixTimestamp = (date: Date): number =>
   Math.floor(date.getTime() / 1000);
 
