@@ -39,12 +39,12 @@ const appLogger = logger.child({ module: 'app' });
 appLogger.info('*** Starting SnoozePlus Intercom Integration ***');
 
 // Start the scheduler for sending messages.
-(async () => {
+void (async () => {
   try {
     await scheduleJobs();
-    appLogger.debug('Message scheduler started.');
+    appLogger.info('Message scheduler is running.');
   } catch (err) {
-    appLogger.error(`Failed to start scheduler: ${err}`);
+    appLogger.error(`Failed to start message scheduler: ${String(err)}`);
     process.exit(1);
   }
 })();
@@ -55,30 +55,33 @@ const server = app
     appLogger.info(`Application is ready at port: ${config.port}`);
   })
   .on('error', (err) => {
-    appLogger.error(`Error occurred, server can't start: ${err}`);
+    appLogger.error(`Error occurred, server can't start: ${err.message}`);
+    appLogger.debug(`Error name: ${err.name}, stack: ${err.stack}`);
   });
 
 process.on('SIGTERM', () => {
   appLogger.info('SIGTERM signal received: shutting down application.');
-  server.close(async (err) => {
+  server.close((err) => {
     if (err) {
       appLogger.error(`Error closing server: ${String(err)}`);
       process.exit(1);
     }
-    try {
-      appLogger.info('Draining DB pool.');
-      await pool.end();
-      appLogger.info('DB pool drained.');
-      appLogger.info('Canceling scheduled jobs.');
-      await schedule.gracefulShutdown();
-      appLogger.info('Scheduled jobs canceled.');
-      appLogger.info('Flushing logs.');
-      await logtail.flush();
-      appLogger.info('Logs flushed.');
-      appLogger.info('Application shut down.');
-    } catch (err) {
-      appLogger.error(`Error shutting down application: ${String(err)}`);
-      process.exit(1);
-    }
+    void (async () => {
+      try {
+        appLogger.info('Draining DB pool.');
+        await pool.end();
+        appLogger.info('DB pool drained.');
+        appLogger.info('Canceling scheduled jobs.');
+        await schedule.gracefulShutdown();
+        appLogger.info('Scheduled jobs canceled.');
+        appLogger.info('Flushing logs.');
+        await logtail.flush();
+        appLogger.info('Logs flushed.');
+        appLogger.info('Application shut down.');
+      } catch (err) {
+        appLogger.error(`Error shutting down application: ${String(err)}`);
+        process.exit(1);
+      }
+    })();
   });
 });
