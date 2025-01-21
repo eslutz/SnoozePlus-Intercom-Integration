@@ -1,5 +1,5 @@
 import logger from '../config/logger-config.js';
-import { MessageDTO } from '../models/message-dto-model.js';
+import { Message } from '../models/message-model.js';
 import { decrypt } from '../utilities/crypto-utility.js';
 import { calculateDaysUntilSending } from '../utilities/snooze-utility.js';
 
@@ -210,7 +210,7 @@ const getSetSnoozeCanvas = (numOfSnoozes: number) => {
   return setSnoozeCanvas;
 };
 
-const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
+const getCurrentSnoozesCanvas = (messages: Message[]) => {
   const currentSnoozeCanvas = {
     canvas: {
       content: {
@@ -251,7 +251,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
     try {
       decryptedMessage = decrypt(messages[i].message);
     } catch (err) {
-      canvasLogger.error(`Error decrypting message: ${err}`);
+      canvasLogger.error(`Error decrypting message: ${String(err)}`);
       throw err;
     }
     canvasLogger.profile('decrypt', {
@@ -293,7 +293,7 @@ const getCurrentSnoozesCanvas = (messages: MessageDTO[]) => {
   return currentSnoozeCanvas;
 };
 
-const getFinalCanvas = (messages: MessageDTO[]) => {
+const getFinalCanvas = (messages: Message[]) => {
   const finalCanvas = {
     canvas: {
       content: {
@@ -340,7 +340,7 @@ const getFinalCanvas = (messages: MessageDTO[]) => {
     try {
       decryptedMessage = decrypt(messages[i].message);
     } catch (err) {
-      canvasLogger.error(`Error decrypting message: ${err}`);
+      canvasLogger.error(`Error decrypting message: ${String(err)}`);
       throw err;
     }
     canvasLogger.profile('decrypt', {
