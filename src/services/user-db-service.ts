@@ -1,8 +1,8 @@
 import pool from '../config/db-config.js';
 import logger from '../config/logger-config.js';
 import operation from '../config/retry-config.js';
-import { UserDTO } from '../models/dto-user-model.js';
-import { User } from '../models/user-model.js';
+import { WorkspaceDTO } from '../models/workspace-dto-model.js';
+import { Workspace, mapUserDTOToUser } from '../models/workspace-model.js';
 
 const userDbLogger = logger.child({ module: 'user-db-service' });
 

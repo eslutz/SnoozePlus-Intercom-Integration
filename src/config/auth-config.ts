@@ -4,7 +4,7 @@ import config from './config.js';
 import logger from './logger-config.js';
 import * as userDbService from '../services/user-db-service.js';
 import { encrypt } from '../utilities/crypto-utility.js';
-import { User } from '../models/user-model.js';
+import { Workspace } from '../models/workspace-model.js';
 
 const authLogger = logger.child({ module: 'auth-config' });
 
@@ -58,7 +58,7 @@ passport.use(
         profile.accessToken = encryptedAccessToken;
 
         // Create a user to save to the database.
-        const user: User = {
+        const user: Workspace = {
           workspaceId: profile._json.app.id_code,
           adminId: Number(profile.id),
           accessToken: encryptedAccessToken,

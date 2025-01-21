@@ -3,7 +3,7 @@ import config from '../config/config.js';
 import logger from '../config/logger-config.js';
 import operation from '../config/retry-config.js';
 import { decrypt } from '../utilities/crypto-utility.js';
-import { MessageDTO } from '../models/dto-message-model.js';
+import { MessageDTO } from '../models/message-dto-model.js';
 
 const intercomLogger = logger.child({ module: 'intercom-service' });
 

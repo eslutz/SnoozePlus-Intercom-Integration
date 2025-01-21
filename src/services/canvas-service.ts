@@ -1,5 +1,5 @@
 import logger from '../config/logger-config.js';
-import { MessageDTO } from '../models/dto-message-model.js';
+import { MessageDTO } from '../models/message-dto-model.js';
 import { decrypt } from '../utilities/crypto-utility.js';
 import { calculateDaysUntilSending } from '../utilities/snooze-utility.js';
 

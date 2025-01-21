@@ -1,9 +1,9 @@
 CREATE TABLE users (
-  PRIMARY KEY (workspace_id),
   workspace_id TEXT NOT NULL,
   admin_id INTEGER NOT NULL,
   access_token TEXT NOT NULL,
-  authorization_code TEXT NOT NULL
+  authorization_code TEXT NOT NULL,
+  PRIMARY KEY (workspace_id)
 );
 
 CREATE TABLE messages (

@@ -10,7 +10,7 @@ import {
   setLastMessageCloseNote,
   setSendMessageNote,
 } from '../utilities/snooze-utility.js';
-import { MessageDTO } from '../models/dto-message-model.js';
+import { MessageDTO } from '../models/message-dto-model.js';
 
 const scheduleMessageLogger = logger.child({
   module: 'schedule-message-service',
@@ -29,7 +29,7 @@ const scheduleMessages = async (): Promise<void> => {
       message: `Retrieved ${messages.length} message(s) to send.`,
     });
   } catch (err) {
-    scheduleMessageLogger.error(`Error retrieving todays messages: ${err}`);
+    scheduleMessageLogger.error(`Error retrieving todays messages: ${String(err)}`);
   }
 
   scheduleMessageLogger.info(`Scheduling ${messages.length} message(s).`);
@@ -38,7 +38,7 @@ const scheduleMessages = async (): Promise<void> => {
   for (const message of messages) {
     // Send the message at the scheduled time.
     scheduleMessageLogger.info(
-      `Scheduling message ${message.id} to be sent at ${message.sendDate}`
+      `Scheduling message ${message.id} to be sent at ${message.sendDate.toISOString()}`
     );
     scheduleMessageLogger.profile('scheduleMessage');
     try {
@@ -47,7 +47,7 @@ const scheduleMessages = async (): Promise<void> => {
         message.sendDate <= new Date() ? new Date() : message.sendDate;
       schedule.scheduleJob(sendDate, async (messageFireDate) => {
         scheduleMessageLogger.debug(
-          `Scheduled run: ${messageFireDate}, Actual run: ${new Date()}.`
+          `Scheduled run: ${messageFireDate.toISOString()}, Actual run: ${new Date().toISOString()}.`
         );
         try {
           scheduleMessageLogger.info(`Sending message ${message.id}`);
@@ -55,14 +55,14 @@ const scheduleMessages = async (): Promise<void> => {
           const messageResponse = await sendMessage(message);
           scheduleMessageLogger.profile('sendMessage', {
             level: 'info',
-            message: `Scheduled message ${message.id} to be sent at ${message.sendDate}`,
+            message: `Scheduled message ${message.id} to be sent at ${message.sendDate.toISOString()}`,
           });
           scheduleMessageLogger.debug(
             `Send Messages response: ${JSON.stringify(messageResponse)}`
           );
         } catch (err) {
           scheduleMessageLogger.error(
-            `Error sending message ${message.id}: ${err}`
+            `Error sending message ${message.id}: ${String(err)}`
           );
         }
 
@@ -76,7 +76,7 @@ const scheduleMessages = async (): Promise<void> => {
             message: `Archived ${archivedMessage} message with GUID ${message.id}`,
           });
         } catch (err) {
-          scheduleMessageLogger.error(`Error deleting message: ${err}`);
+          scheduleMessageLogger.error(`Error deleting message: ${String(err)}`);
         }
 
         // Add note that the message has been sent and how many messages are remaining.
@@ -101,7 +101,7 @@ const scheduleMessages = async (): Promise<void> => {
           );
         } catch (err) {
           scheduleMessageLogger.error(
-            `Error adding note to conversation ${message.conversationId}: ${err}`
+            `Error adding note to conversation ${message.conversationId}: ${String(err)}`
           );
         }
 
@@ -143,7 +143,7 @@ const scheduleMessages = async (): Promise<void> => {
             );
           } catch (err) {
             scheduleMessageLogger.error(
-              `Error closing conversation ${message.id}: ${err}`
+              `Error closing conversation ${message.id}: ${String(err)}`
             );
           }
         }
@@ -156,7 +156,7 @@ const scheduleMessages = async (): Promise<void> => {
       });
     } catch (err) {
       scheduleMessageLogger.error(
-        `Error scheduling message ${message.id}: ${err}`
+        `Error scheduling message ${message.id}: ${String(err)}`
       );
     }
   }
