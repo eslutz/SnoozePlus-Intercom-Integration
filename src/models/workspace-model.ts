@@ -22,7 +22,7 @@ export interface Workspace {
  * @param dto - The WorkspaceDTO object containing workspace data from external source
  * @returns A Workspace object with mapped properties
  */
-export const mapUserDTOToUser = (dto: WorkspaceDTO): Workspace => ({
+export const mapWorkspaceDTOToWorkspace = (dto: WorkspaceDTO): Workspace => ({
   workspaceId: dto.workspace_id,
   adminId: dto.admin_id,
   accessToken: dto.access_token,

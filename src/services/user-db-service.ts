@@ -1,50 +1,57 @@
 import pool from '../config/db-config.js';
 import logger from '../config/logger-config.js';
-import operation from '../config/retry-config.js';
+import createRetryOperation from '../config/retry-config.js';
 import { WorkspaceDTO } from '../models/workspace-dto-model.js';
-import { Workspace, mapUserDTOToUser } from '../models/workspace-model.js';
+import {
+  Workspace,
+  mapWorkspaceDTOToWorkspace,
+} from '../models/workspace-model.js';
 
 const userDbLogger = logger.child({ module: 'user-db-service' });
 
-const getUser = async (workspaceId: string): Promise<UserDTO | null> => {
-  const getUser = `
+/**
+ * Retrieves a user from the database based on the workspace ID.
+ *
+ * @param workspaceId - The unique identifier of the workspace to search for
+ * @returns A Promise that resolves to either a User object containing the user's data or null if no user is found
+ * @throws {Error} If the database operation fails after all retry attempts
+ */
+
+const getUser = async (workspaceId: string): Promise<Workspace | null> => {
+  const getUserQuery = `
     SELECT workspace_id, admin_id, access_token
     FROM users
     WHERE workspace_id = $1;
   `;
   const getParameters = [workspaceId];
 
+  const operation = createRetryOperation();
+
   return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
-      try {
-        const response = await pool.query(getUser, getParameters);
-        if (response.rowCount === 0) {
-          userDbLogger.debug('User not found.');
-          resolve(null);
-        } else {
-          const user: UserDTO = {
-            workspaceId: response.rows[0].workspace_id,
-            adminId: response.rows[0].admin_id,
-            accessToken: response.rows[0].access_token,
-          };
-          userDbLogger.debug(`User found: ${JSON.stringify(user)}`);
-          resolve(user);
-        }
-      } catch (err) {
-        userDbLogger.error(
-          `Error executing get user query on attempt ${currentAttempt}: ${err}`
-        );
-        if (operation.retry(err as Error)) {
-          return;
-        }
-        reject(operation.mainError());
-      }
+    operation.attempt((currentAttempt) => {
+      pool
+        .query<WorkspaceDTO>(getUserQuery, getParameters)
+        .then((res) => {
+          if (res.rows.length > 0) {
+            const user: Workspace = mapWorkspaceDTOToWorkspace(res.rows[0]);
+            resolve(user);
+          } else {
+            resolve(null);
+          }
+        })
+        .catch((err: Error) => {
+          if (operation.retry(err)) {
+            userDbLogger.warn(`Attempt ${currentAttempt} failed. Retrying...`);
+            return;
+          }
+          reject(operation.mainError()!);
+        });
     });
   });
 };
 
-const saveUser = async (user: User): Promise<string> => {
-  const saveUser = `
+const saveUser = async (user: Workspace): Promise<string> => {
+  const saveUserQuery = `
     INSERT INTO users (workspace_id, admin_id, access_token, authorization_code)
     VALUES ($1, $2, $3, $4)
     ON CONFLICT (workspace_id) DO UPDATE SET
@@ -59,23 +66,29 @@ const saveUser = async (user: User): Promise<string> => {
     user.authorizationCode,
   ];
 
-  return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
-      try {
-        const response = await pool.query(saveUser, saveParameters);
-        const workspaceId: string = response.rows[0].workspace_id;
-        userDbLogger.debug(`User saved with Workspace ID: ${workspaceId}`);
+  const operation = createRetryOperation();
 
-        resolve(workspaceId);
-      } catch (err) {
-        userDbLogger.error(
-          `Error executing save user query on attempt ${currentAttempt}: ${err}`
-        );
-        if (operation.retry(err as Error)) {
-          return;
-        }
-        reject(operation.mainError());
-      }
+  return new Promise((resolve, reject) => {
+    operation.attempt((currentAttempt) => {
+      pool
+        .query<WorkspaceDTO>(saveUserQuery, saveParameters)
+        .then((res) => {
+          const workspaceId = res.rows[0].workspace_id;
+          userDbLogger.debug(`User saved with Workspace ID: ${workspaceId}`);
+          resolve(workspaceId);
+        })
+        .catch((err: Error) => {
+          userDbLogger.error(
+            `Error executing saveUser query on attempt ${currentAttempt}: ${err}`
+          );
+          if (operation.retry(err)) {
+            userDbLogger.warn(
+              `Attempt ${currentAttempt} to saveUser failed. Retrying...`
+            );
+            return;
+          }
+          reject(operation.mainError()!);
+        });
     });
   });
 };
