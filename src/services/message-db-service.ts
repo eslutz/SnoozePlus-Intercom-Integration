@@ -69,67 +69,6 @@ const archiveMessages = async (
   });
 };
 
-const deleteMessage = async (messageId: string): Promise<number> => {
-  const deleteMessage = `
-    DELETE FROM messages
-    WHERE id = $1;
-  `;
-  const deleteParameters = [messageId];
-
-  return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
-      try {
-        const response = await pool.query(deleteMessage, deleteParameters);
-        messageDbLogger.debug(
-          `Messages deleted: ${JSON.stringify(response.rowCount)}`
-        );
-
-        resolve(response.rowCount ?? 0);
-      } catch (err) {
-        messageDbLogger.error(
-          `Error executing delete message query on attempt ${currentAttempt}: ${err}`
-        );
-        if (operation.retry(err as Error)) {
-          return;
-        }
-        reject(operation.mainError());
-      }
-    });
-  });
-};
-
-const deleteMessages = async (
-  adminId: number,
-  conversationId: number
-): Promise<number> => {
-  const deleteMessages = `
-    DELETE FROM messages
-    WHERE admin_id = $1 AND conversation_id = $2;
-  `;
-  const deleteParameters = [adminId, conversationId];
-
-  return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
-      try {
-        const response = await pool.query(deleteMessages, deleteParameters);
-        messageDbLogger.debug(
-          `Messages deleted: ${JSON.stringify(response.rowCount)}`
-        );
-
-        resolve(response.rowCount ?? 0);
-      } catch (err) {
-        messageDbLogger.error(
-          `Error executing delete messages query on attempt ${currentAttempt}: ${err}`
-        );
-        if (operation.retry(err as Error)) {
-          return;
-        }
-        reject(operation.mainError());
-      }
-    });
-  });
-};
-
 const getMessages = async (
   workspaceId: string,
   conversationId: number
@@ -187,9 +126,9 @@ const getRemainingMessageCount = async (
     SELECT COUNT(*)
     FROM messages
     WHERE NOT archived
-    AND admin_id = $1 AND conversation_id = $2;
+    AND workspace_id = $1 AND conversation_id = $2;
   `;
-  const messageCountParameters = [message.adminId, message.conversationId];
+  const messageCountParameters = [message.workspaceId, message.conversationId];
 
   return new Promise((resolve, reject) => {
     operation.attempt(async (currentAttempt) => {
@@ -318,8 +257,6 @@ const saveMessages = async (
 export {
   archiveMessage,
   archiveMessages,
-  deleteMessage,
-  deleteMessages,
   getMessages,
   getRemainingMessageCount,
   getTodaysMessages,
