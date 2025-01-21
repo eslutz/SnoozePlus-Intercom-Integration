@@ -1,23 +1,23 @@
 import schedule from 'node-schedule';
+import { addNote, closeConversation, sendMessage } from './intercom-service.js';
 import {
   archiveMessage,
   getRemainingMessageCount,
   getTodaysMessages,
 } from './message-db-service.js';
-import { addNote, closeConversation, sendMessage } from './intercom-service.js';
 import logger from '../config/logger-config.js';
+import { Message } from '../models/message-model.js';
 import {
   setLastMessageCloseNote,
   setSendMessageNote,
 } from '../utilities/snooze-utility.js';
-import { MessageDTO } from '../models/message-dto-model.js';
 
 const scheduleMessageLogger = logger.child({
   module: 'schedule-message-service',
 });
 
 const scheduleMessages = async (): Promise<void> => {
-  let messages: MessageDTO[] = [];
+  let messages: Message[] = [];
   try {
     scheduleMessageLogger.info(
       "Running scheduled task to retrieve today's messages."
@@ -29,7 +29,9 @@ const scheduleMessages = async (): Promise<void> => {
       message: `Retrieved ${messages.length} message(s) to send.`,
     });
   } catch (err) {
-    scheduleMessageLogger.error(`Error retrieving todays messages: ${String(err)}`);
+    scheduleMessageLogger.error(
+      `Error retrieving todays messages: ${String(err)}`
+    );
   }
 
   scheduleMessageLogger.info(`Scheduling ${messages.length} message(s).`);
@@ -88,7 +90,7 @@ const scheduleMessages = async (): Promise<void> => {
           const remainingMessages = await getRemainingMessageCount(message);
           const noteResponse = await addNote(
             message.adminId,
-            message.adminAccessToken,
+            message.accessToken,
             message.conversationId,
             setSendMessageNote(remainingMessages)
           );
@@ -114,7 +116,7 @@ const scheduleMessages = async (): Promise<void> => {
             scheduleMessageLogger.profile('addNote');
             const noteResponse = await addNote(
               message.adminId,
-              message.adminAccessToken,
+              message.accessToken,
               message.conversationId,
               setLastMessageCloseNote()
             );
@@ -131,7 +133,7 @@ const scheduleMessages = async (): Promise<void> => {
             scheduleMessageLogger.profile('closeConversation');
             const closeResponse = await closeConversation(
               message.adminId,
-              message.adminAccessToken,
+              message.accessToken,
               message.conversationId
             );
             scheduleMessageLogger.profile('closeConversation', {
