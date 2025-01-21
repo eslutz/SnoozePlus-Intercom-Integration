@@ -13,9 +13,8 @@ const validateConfig = (config: Config) => {
     'encryptionKey',
   ];
 
-  const missingFields: string[] = requiredFields.filter(field =>
-    !config[field] ||
-    config[field].trim() === ''
+  const missingFields: string[] = requiredFields.filter(
+    (field) => !config[field] || config[field].trim() === ''
   );
 
   if (missingFields.length > 0) {

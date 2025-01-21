@@ -7,7 +7,6 @@ import * as userDbService from '../services/user-db-service.js';
 import {
   createSnoozeRequest,
   setSnoozeCanceledNote,
-  setUnixTimestamp,
 } from '../utilities/snooze-utility.js';
 
 const submitLogger = logger.child({ module: 'submit-controller' });
@@ -32,7 +31,6 @@ const submit: RequestHandler = async (req, res, next) => {
   }
 
   if (req.body.component_id === 'submitNumOfSnoozes') {
-    let messageCanvas;
     const requestedNumOfSnoozes = req.body.input_values.numOfSnoozes;
     // Check if the input is a valid number.
     if (isNaN(requestedNumOfSnoozes)) {
@@ -47,29 +45,14 @@ const submit: RequestHandler = async (req, res, next) => {
 
       return;
     } else {
+      const numOfSnoozes = Number(requestedNumOfSnoozes);
+      submitLogger.info(`Number of snoozes requested: ${numOfSnoozes}`);
       submitLogger.info('Building message canvas.');
-      submitLogger.profile('messageCanvas');
-      try {
-        const numOfSnoozes = Number(requestedNumOfSnoozes);
-        submitLogger.info(`Number of snoozes requested: ${numOfSnoozes}`);
-        messageCanvas = canvasService.getSetSnoozeCanvas(numOfSnoozes);
-      } catch (err) {
-        submitLogger.error(
-          `An error occurred building the message canvas: ${err}`
-        );
-        res
-          .status(500)
-          .send(`An error occurred building the message canvas: ${err}`);
-        next(err);
-      }
-      submitLogger.profile('messageCanvas', {
-        level: 'info',
-        message: 'Completed message canvas.',
-      });
-      submitLogger.debug(`Message canvas: ${JSON.stringify(messageCanvas)}`);
+      const messageCanvas = canvasService.getSetSnoozeCanvas(numOfSnoozes);
+      submitLogger.info('Returning message canvas.');
+
+      res.send(messageCanvas);
     }
-    // Send the completed message canvas.
-    res.send(messageCanvas);
   } else if (req.body.component_id === 'submitSnooze') {
     try {
       // Create the snooze request from the input values.
@@ -100,7 +83,10 @@ const submit: RequestHandler = async (req, res, next) => {
       // Fill the finalCanvas with a summary of the set snoozes.
       submitLogger.info('Building final canvas.');
       submitLogger.profile('finalCanvas');
-      const messages = await messageDbService.getMessages(workspaceId, conversationId);
+      const messages = await messageDbService.getMessages(
+        workspaceId,
+        conversationId
+      );
       const finalCanvas = canvasService.getFinalCanvas(messages);
       submitLogger.profile('finalCanvas', {
         level: 'info',
@@ -143,10 +129,12 @@ const submit: RequestHandler = async (req, res, next) => {
       // Send the final canvas.
       res.send(finalCanvas);
     } catch (err) {
-      submitLogger.error(`An error occurred building the final canvas: ${err}`);
+      submitLogger.error(
+        `An error occurred submitting the snooze request: ${err}`
+      );
       res
         .status(500)
-        .send(`An error occurred building the final canvas: ${err}`);
+        .send(`An error occurred submitting the snooze request: ${err}`);
       next(err);
     }
   } else if (req.body.component_id === 'cancelSnooze') {

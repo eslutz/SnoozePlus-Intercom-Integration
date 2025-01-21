@@ -24,7 +24,8 @@ const initialize: RequestHandler = async (req, res, next) => {
           'Messages found. Building current snoozes canvas.'
         );
         initializeLogger.profile('currentSnoozesCanvas');
-        const currentSnoozesCanvas = canvasService.getCurrentSnoozesCanvas(messages);
+        const currentSnoozesCanvas =
+          canvasService.getCurrentSnoozesCanvas(messages);
         initializeLogger.profile('currentSnoozesCanvas', {
           level: 'info',
           message: 'Completed current snoozes canvas.',

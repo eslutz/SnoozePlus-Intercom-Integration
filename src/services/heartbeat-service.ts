@@ -17,7 +17,9 @@ const sendHeartbeat = async (success = true): Promise<void> => {
         if (response.ok) {
           heartbeatLogger.info('Heartbeat sent successfully.');
         } else {
-          heartbeatLogger.error(`Failed to send heartbeat. Status: ${response.status}`);
+          heartbeatLogger.error(
+            `Failed to send heartbeat. Status: ${response.status}`
+          );
         }
         resolve();
       } catch (err) {

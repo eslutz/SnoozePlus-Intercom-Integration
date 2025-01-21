@@ -44,7 +44,9 @@ const installationHealthcheck: RequestHandler = async (req, res, next) => {
 
   if (!workspace_id) {
     healthcheckLogger.error('workspace_id is missing in the request.');
-    res.status(400).json({ state: 'UNKNOWN', message: 'Missing workspace_id.' });
+    res
+      .status(400)
+      .json({ state: 'UNKNOWN', message: 'Missing workspace_id.' });
     return;
   }
 
