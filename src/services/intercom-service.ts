@@ -1,20 +1,21 @@
 import fetch from 'node-fetch';
 import config from '../config/config.js';
 import logger from '../config/logger-config.js';
-import operation from '../config/retry-config.js';
+import createRetryOperation from '../config/retry-config.js';
+import { IntercomResponse } from '../models/intercom-response-model.js';
+import { Message } from '../models/message-model.js';
 import { decrypt } from '../utilities/crypto-utility.js';
-import { MessageDTO } from '../models/message-dto-model.js';
 
 const intercomLogger = logger.child({ module: 'intercom-service' });
 
 const baseUrl = config.intercomUrl;
 
-const addNote = async (
+const addNote = (
   adminId: number,
   adminAccessToken: string,
   conversationId: number,
   note: string
-): Promise<any> => {
+): Promise<IntercomResponse> => {
   // Decrypt the access token before sending.
   let decryptedAccessToken: string;
   intercomLogger.info('Decrypting access token.');
@@ -22,7 +23,7 @@ const addNote = async (
   try {
     decryptedAccessToken = decrypt(adminAccessToken);
   } catch (err) {
-    intercomLogger.error(`Error decrypting access token: ${err}`);
+    intercomLogger.error(`Error decrypting access token: ${String(err)}`);
     throw err;
   }
   intercomLogger.profile('decrypt', {
@@ -32,7 +33,8 @@ const addNote = async (
 
   // Add a note to the conversation.
   return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
+    const operation = createRetryOperation();
+    operation.attempt((currentAttempt) => {
       try {
         const requestUrl = `${baseUrl}/conversations/${conversationId}/reply`;
         const requestBody = {
@@ -52,41 +54,55 @@ const addNote = async (
           headers: requestHeaders,
           body: JSON.stringify(requestBody),
         });
-        const response = await fetch(requestUrl, {
+        fetch(requestUrl, {
           method: 'POST',
           headers: requestHeaders,
           body: JSON.stringify(requestBody),
-        });
-        intercomLogger.debug(`Add note response: ${JSON.stringify(response)}`);
+        })
+          .then((response) => {
+            intercomLogger.debug(
+              `Add note response: ${JSON.stringify(response)}`
+            );
 
-        if (!response.ok) {
-          intercomLogger.error(
-            `Response status ${response.status}: Error during add note request`
-          );
-          resolve(null);
-        }
+            if (!response.ok) {
+              intercomLogger.error(
+                `Response status ${response.status}: Error during add note request.`
+              );
+              resolve({} as IntercomResponse);
+            }
 
-        const data = await response.json();
-
-        resolve(data);
+            return response.json();
+          })
+          .then((data) => {
+            resolve(data as IntercomResponse);
+          })
+          .catch((err: Error) => {
+            intercomLogger.error(
+              `Error during POST request on attempt ${currentAttempt}: ${err}`
+            );
+            if (operation.retry(err)) {
+              return null;
+            }
+            reject(operation.mainError()!);
+          });
       } catch (err) {
         intercomLogger.error(
-          `Error during POST request on attempt ${currentAttempt}: ${err}`
+          `Error during POST request on attempt ${currentAttempt}: ${String(err)}`
         );
         if (operation.retry(err as Error)) {
           return null;
         }
-        reject(operation.mainError());
+        reject(operation.mainError()!);
       }
     });
   });
 };
 
-const cancelSnooze = async (
+const cancelSnooze = (
   adminId: number,
   adminAccessToken: string,
   conversationId: number
-): Promise<any> => {
+): Promise<IntercomResponse> => {
   // Decrypt the access token before sending.
   let decryptedAccessToken: string;
   intercomLogger.info('Decrypting access token.');
@@ -94,7 +110,7 @@ const cancelSnooze = async (
   try {
     decryptedAccessToken = decrypt(adminAccessToken);
   } catch (err) {
-    intercomLogger.error(`Error decrypting access token: ${err}`);
+    intercomLogger.error(`Error decrypting access token: ${String(err)}`);
     throw err;
   }
   intercomLogger.profile('decrypt', {
@@ -103,56 +119,66 @@ const cancelSnooze = async (
   });
 
   return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
+    const operation = createRetryOperation();
+    operation.attempt((currentAttempt) => {
       try {
-        const response = await fetch(
-          `${baseUrl}/conversations/${conversationId}/parts`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${decryptedAccessToken}`,
-              'Content-Type': 'application/json',
-              'Intercom-Version': '2.11',
-            },
-            body: JSON.stringify({
-              admin_id: adminId,
-              message_type: 'open',
-            }),
-          }
-        );
-        intercomLogger.debug(
-          `Open conversation response: ${JSON.stringify(response)}`
-        );
+        fetch(`${baseUrl}/conversations/${conversationId}/parts`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${decryptedAccessToken}`,
+            'Content-Type': 'application/json',
+            'Intercom-Version': '2.11',
+          },
+          body: JSON.stringify({
+            admin_id: adminId,
+            message_type: 'open',
+          }),
+        })
+          .then((response) => {
+            intercomLogger.debug(
+              `Open conversation response: ${JSON.stringify(response)}`
+            );
 
-        if (!response.ok) {
-          intercomLogger.error(
-            `Response status ${response.status}: Error during cancel snooze request.`
-          );
+            if (!response.ok) {
+              intercomLogger.error(
+                `Response status ${response.status}: Error during cancel snooze request.`
+              );
 
-          resolve(null);
-        }
+              resolve({} as IntercomResponse);
+            }
 
-        const data = await response.json();
-
-        resolve(data);
+            return response.json();
+          })
+          .then((data) => {
+            resolve(data as IntercomResponse);
+          })
+          .catch((err) => {
+            intercomLogger.error(
+              `Error during POST request on attempt ${currentAttempt}: ${String(err)}`
+            );
+            if (operation.retry(err as Error)) {
+              return;
+            }
+            reject(operation.mainError()!);
+          });
       } catch (err) {
         intercomLogger.error(
-          `Error during POST request on attempt ${currentAttempt}: ${err}`
+          `Error during POST request on attempt ${currentAttempt}: ${String(err)}`
         );
         if (operation.retry(err as Error)) {
           return;
         }
-        reject(operation.mainError());
+        reject(operation.mainError()!);
       }
     });
   });
 };
 
-const closeConversation = async (
+const closeConversation = (
   adminId: number,
   adminAccessToken: string,
   conversationId: number
-): Promise<any> => {
+): Promise<IntercomResponse> => {
   // Decrypt the access token before sending.
   let decryptedAccessToken: string;
   intercomLogger.info('Decrypting access token.');
@@ -160,7 +186,7 @@ const closeConversation = async (
   try {
     decryptedAccessToken = decrypt(adminAccessToken);
   } catch (err) {
-    intercomLogger.error(`Error decrypting access token: ${err}`);
+    intercomLogger.error(`Error decrypting access token: ${String(err)}`);
     throw err;
   }
   intercomLogger.profile('decrypt', {
@@ -170,7 +196,8 @@ const closeConversation = async (
 
   // Close the conversation in Intercom.
   return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
+    const operation = createRetryOperation();
+    operation.attempt((currentAttempt) => {
       try {
         const requestUrl = `${baseUrl}/conversations/${conversationId}/parts`;
         const requestBody = {
@@ -189,40 +216,52 @@ const closeConversation = async (
           headers: requestHeaders,
           body: JSON.stringify(requestBody),
         });
-        const response = await fetch(requestUrl, {
+        fetch(requestUrl, {
           method: 'POST',
           headers: requestHeaders,
           body: JSON.stringify(requestBody),
-        });
-        intercomLogger.debug(
-          `Close conversation response: ${JSON.stringify(response)}`
-        );
+        })
+          .then((response) => {
+            intercomLogger.debug(
+              `Close conversation response: ${JSON.stringify(response)}`
+            );
 
-        if (!response.ok) {
-          intercomLogger.error(
-            `Response status ${response.status}: Error during close conversation request`
-          );
+            if (!response.ok) {
+              intercomLogger.error(
+                `Response status ${response.status}: Error during close conversation request.`
+              );
 
-          resolve(null);
-        }
+              resolve({} as IntercomResponse);
+            }
 
-        const data = await response.json();
-
-        resolve(data);
+            return response.json();
+          })
+          .then((data) => {
+            resolve(data as IntercomResponse);
+          })
+          .catch((err) => {
+            intercomLogger.error(
+              `Error during POST request on attempt ${currentAttempt}: ${String(err)}`
+            );
+            if (operation.retry(err as Error)) {
+              return;
+            }
+            reject(operation.mainError()!);
+          });
       } catch (err) {
         intercomLogger.error(
-          `Error during POST request on attempt ${currentAttempt}: ${err}`
+          `Error during POST request on attempt ${currentAttempt}: ${String(err)}`
         );
         if (operation.retry(err as Error)) {
           return;
         }
-        reject(operation.mainError());
+        reject(operation.mainError()!);
       }
     });
   });
 };
 
-const sendMessage = async (message: MessageDTO): Promise<any> => {
+const sendMessage = (message: Message): Promise<IntercomResponse> => {
   // Decrypt the message before sending.
   let decryptedMessage: string;
   intercomLogger.info('Decrypting message.');
@@ -230,7 +269,7 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
   try {
     decryptedMessage = decrypt(message.message);
   } catch (err) {
-    intercomLogger.error(`Error decrypting message: ${err}`);
+    intercomLogger.error(`Error decrypting message: ${String(err)}`);
     throw err;
   }
   intercomLogger.profile('decrypt', {
@@ -243,9 +282,9 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
   intercomLogger.info('Decrypting access token.');
   intercomLogger.profile('decrypt');
   try {
-    decryptedAccessToken = decrypt(message.adminAccessToken);
+    decryptedAccessToken = decrypt(message.accessToken);
   } catch (err) {
-    intercomLogger.error(`Error decrypting access token: ${err}`);
+    intercomLogger.error(`Error decrypting access token: ${String(err)}`);
     throw err;
   }
   intercomLogger.profile('decrypt', {
@@ -255,7 +294,8 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
 
   // Send the message to Intercom.
   return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
+    const operation = createRetryOperation();
+    operation.attempt((currentAttempt) => {
       try {
         const requestUrl = `${baseUrl}/conversations/${message.conversationId}/reply`;
         const requestBody = {
@@ -275,45 +315,57 @@ const sendMessage = async (message: MessageDTO): Promise<any> => {
           headers: requestHeaders,
           body: JSON.stringify(requestBody),
         });
-        const response = await fetch(requestUrl, {
+        fetch(requestUrl, {
           method: 'POST',
           headers: requestHeaders,
           body: JSON.stringify(requestBody),
-        });
-        intercomLogger.debug(
-          `Send message response: ${JSON.stringify(response)}`
-        );
+        })
+          .then((response) => {
+            intercomLogger.debug(
+              `Send message response: ${JSON.stringify(response)}`
+            );
 
-        if (!response.ok) {
-          intercomLogger.error(
-            `Response status ${response.status}: Error during send reply request`
-          );
+            if (!response.ok) {
+              intercomLogger.error(
+                `Response status ${response.status}: Error during send reply request.`
+              );
 
-          resolve(null);
-        }
+              resolve({} as IntercomResponse);
+            }
 
-        const data = await response.json();
-
-        resolve(data);
+            return response.json();
+          })
+          .then((data) => {
+            resolve(data as IntercomResponse);
+          })
+          .catch((err: Error) => {
+            intercomLogger.error(
+              `Error during POST request on attempt ${currentAttempt}: ${err.message}`
+            );
+            if (operation.retry(err)) {
+              return;
+            }
+            reject(operation.mainError()!);
+          });
       } catch (err) {
         intercomLogger.error(
-          `Error during POST request on attempt ${currentAttempt}: ${err}`
+          `Error during POST request on attempt ${currentAttempt}: ${String(err)}`
         );
         if (operation.retry(err as Error)) {
           return;
         }
-        reject(operation.mainError());
+        reject(operation.mainError()!);
       }
     });
   });
 };
 
-const setSnooze = async (
+const setSnooze = (
   adminId: number,
   adminAccessToken: string,
   conversationId: number,
   unixTimestamp: number
-): Promise<any> => {
+): Promise<IntercomResponse> => {
   // Decrypt the access token before sending.
   let decryptedAccessToken: string;
   intercomLogger.info('Decrypting access token.');
@@ -321,7 +373,7 @@ const setSnooze = async (
   try {
     decryptedAccessToken = decrypt(adminAccessToken);
   } catch (err) {
-    intercomLogger.error(`Error decrypting access token: ${err}`);
+    intercomLogger.error(`Error decrypting access token: ${String(err)}`);
     throw err;
   }
   intercomLogger.profile('decrypt', {
@@ -330,47 +382,57 @@ const setSnooze = async (
   });
 
   return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
+    const operation = createRetryOperation();
+    operation.attempt((currentAttempt) => {
       try {
-        const response = await fetch(
-          `${baseUrl}/conversations/${conversationId}/parts`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${decryptedAccessToken}`,
-              'Content-Type': 'application/json',
-              'Intercom-Version': '2.11',
-            },
-            body: JSON.stringify({
-              admin_id: adminId,
-              message_type: 'snoozed',
-              snoozed_until: unixTimestamp,
-            }),
-          }
-        );
-        intercomLogger.debug(
-          `Set snooze response: ${JSON.stringify(response)}`
-        );
+        fetch(`${baseUrl}/conversations/${conversationId}/parts`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${decryptedAccessToken}`,
+            'Content-Type': 'application/json',
+            'Intercom-Version': '2.11',
+          },
+          body: JSON.stringify({
+            admin_id: adminId,
+            message_type: 'snoozed',
+            snoozed_until: unixTimestamp,
+          }),
+        })
+          .then((response) => {
+            intercomLogger.debug(
+              `Set snooze response: ${JSON.stringify(response)}`
+            );
 
-        if (!response.ok) {
-          intercomLogger.error(
-            `Response status ${response.status}: Error during set snooze request`
-          );
+            if (!response.ok) {
+              intercomLogger.error(
+                `Response status ${response.status}: Error during set snooze request.`
+              );
 
-          resolve(null);
-        }
+              resolve({} as IntercomResponse);
+            }
 
-        const data = await response.json();
-
-        resolve(data);
+            return response.json();
+          })
+          .then((data) => {
+            resolve(data as IntercomResponse);
+          })
+          .catch((err: Error) => {
+            intercomLogger.error(
+              `Error during POST request on attempt ${currentAttempt}: ${err.message}`
+            );
+            if (operation.retry(err)) {
+              return;
+            }
+            reject(operation.mainError()!);
+          });
       } catch (err) {
         intercomLogger.error(
-          `Error during POST request on attempt ${currentAttempt}: ${err}`
+          `Error during POST request on attempt ${currentAttempt}: ${String(err)}`
         );
         if (operation.retry(err as Error)) {
           return;
         }
-        reject(operation.mainError());
+        reject(operation.mainError()!);
       }
     });
   });
