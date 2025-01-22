@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
 import logger from '../config/logger-config.js';
-import SignatureHmacAlgorithm from '../enums/signature-hmac-algorithm-enum.js';
+import SignatureAlgorithm from '../enums/signature-algorithm-enum.js';
 import { signatureValidator } from '../utilities/crypto-utility.js';
 
 const validateCanvasSignatureLogger = logger.child({
@@ -20,7 +20,7 @@ const validateSignature: RequestHandler = (req, res, next) => {
   const signatureValid = signatureValidator(
     req.body,
     signature,
-    SignatureHmacAlgorithm.CANVAS
+    SignatureAlgorithm.CANVAS
   );
   if (!signatureValid) {
     validateCanvasSignatureLogger.error('Invalid signature');

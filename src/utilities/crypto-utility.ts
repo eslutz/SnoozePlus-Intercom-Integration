@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import config from '../config/config.js';
-import SignatureHmacAlgorithm from '../enums/signature-hmac-algorithm-enum.js';
+import SignatureAlgorithm from '../enums/signature-algorithm-enum.js';
 
 /**
  * Decrypts an encrypted text using a specified algorithm and key.
@@ -59,7 +59,7 @@ const encrypt = (text: string): string => {
 const signatureValidator = (
   requestBody: Request['body'],
   signature: string,
-  algorithm: SignatureHmacAlgorithm
+  algorithm: SignatureAlgorithm
 ): boolean => {
   const stringifiedBody = JSON.stringify(requestBody);
 

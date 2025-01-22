@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
 import logger from '../config/logger-config.js';
-import SignatureHmacAlgorithm from '../enums/signature-hmac-algorithm-enum.js';
+import SignatureAlgorithm from '../enums/signature-algorithm-enum.js';
 import { signatureValidator } from '../utilities/crypto-utility.js';
 
 const validateWebhookSignatureLogger = logger.child({
@@ -30,7 +30,7 @@ const validateSignature: RequestHandler = (req, res, next) => {
   const signatureValid = signatureValidator(
     req.body,
     signature,
-    SignatureHmacAlgorithm.WEBHOOK
+    SignatureAlgorithm.WEBHOOK
   );
   if (!signatureValid) {
     validateWebhookSignatureLogger.error('Invalid signature');
