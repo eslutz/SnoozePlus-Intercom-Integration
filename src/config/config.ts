@@ -1,33 +1,19 @@
+/**
+ * Configuration module for the application.
+ *
+ * @module config
+ * @exports config The validated configuration object
+ * @throws {Error} Will throw an error during validation if required fields are missing
+ * @remarks This module exports a configuration object that is populated from environment
+ * variables with fallback default values. The configuration is validated on load to ensure
+ * all required fields are present. *
+ */
 import { Config } from '../models/config-model';
 
-const validateConfig = (config: Config) => {
-  const requiredFields = [
-    'sessionSecret',
-    'pgDatabase',
-    'pgHost',
-    'pgPassword',
-    'pgUser',
-    'intercomClientId',
-    'intercomClientSecret',
-    'encryptionAlgorithm',
-    'encryptionKey',
-  ];
-
-  const missingFields: string[] = requiredFields.filter(
-    (field) => !config[field] || config[field].trim() === ''
-  );
-
-  if (missingFields.length > 0) {
-    throw new Error(
-      `Missing required configuration values: ${missingFields.join(', ')}`
-    );
-  }
-};
-
-const config = {
+const config: Config = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   isProduction: process.env.NODE_ENV === 'production',
-  port: process.env.PORT ?? 3000,
+  port: process.env.PORT ? Number(process.env.PORT) : 3000,
   sessionSecret: process.env.SESSION_SECRET ?? '',
   betterstackHeartbeatUrl: process.env.BETTERSTACK_HEARTBEAT_URL ?? '',
   betterstackLogtailKey: process.env.BETTERSTACK_LOGTAIL_KEY ?? '',
@@ -58,6 +44,42 @@ const config = {
     : 5000,
   retryRandomize: process.env.RETRY_RANDOMIZE === 'true',
   ipAllowlist: process.env.IP_ALLOWLIST ?? '',
+};
+
+/**
+ * Validates the configuration object by checking for required fields.
+ *
+ * @function validateConfig
+ * @param {Config} config - The configuration object to validate
+ * @throws {Error} Throws an error if any required fields are missing or empty
+ * @remarks Empty strings (or strings containing only whitespace) are considered invalid values
+ */
+const validateConfig = (config: Config) => {
+  const requiredFields = [
+    'sessionSecret',
+    'pgDatabase',
+    'pgHost',
+    'pgPassword',
+    'pgUser',
+    'intercomClientId',
+    'intercomClientSecret',
+    'encryptionAlgorithm',
+    'encryptionKey',
+  ];
+
+  const missingFields: string[] = requiredFields.filter((field) => {
+    const value = config[field];
+    if (typeof value === 'string') {
+      return !value || value.trim() === '';
+    }
+    return value === null || value === undefined;
+  });
+
+  if (missingFields.length > 0) {
+    throw new Error(
+      `Missing required configuration values: ${missingFields.join(', ')}`
+    );
+  }
 };
 
 // Validate the configuration.

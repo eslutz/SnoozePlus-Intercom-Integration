@@ -55,9 +55,8 @@ export const mapMessageDTOToMessage = (
  * @param dto - The MessageDTO object to be mapped
  * @returns A Message object with empty authentication fields (adminId and accessToken)
  *
- * @remarks
- * This function creates a new Message object from a MessageDTO, setting default values
- * for authentication-related fields (adminId = 0, accessToken = '')
+ * @remarks This function creates a new Message object from a MessageDTO, setting default
+ * values for authentication-related fields (adminId = 0, accessToken = '')
  */
 export const mapMessageDTOToMessageWithoutAuth = (
   dto: MessageDTO

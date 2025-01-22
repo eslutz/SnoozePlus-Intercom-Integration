@@ -1,3 +1,17 @@
+/**
+ * Logger configuration module.
+ *
+ * @module logger-config
+ * @exports logger Configured Winston logger instance
+ * @exports logtail Logtail client instance
+ * @remarks This module sets up a Winston logger with the following features:
+ *  - Custom severity levels (error, warn, info, http, debug)
+ *  - Colored console output
+ *  - JSON log format with timestamps
+ *  - Daily rotating file logs in local development
+ *  - Logtail integration for non-local environments
+ *  - Exception and rejection handling
+ */
 import winston from 'winston';
 import 'winston-daily-rotate-file';
 import { Logtail } from '@logtail/node';
