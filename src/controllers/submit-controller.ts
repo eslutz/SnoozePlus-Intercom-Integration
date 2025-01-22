@@ -3,7 +3,7 @@ import logger from '../config/logger-config.js';
 import * as canvasService from '../services/canvas-service.js';
 import * as intercomService from '../services/intercom-service.js';
 import * as messageDbService from '../services/message-db-service.js';
-import * as userDbService from '../services/user-db-service.js';
+import * as workspaceDbService from '../services/user-db-service.js';
 import {
   createSnoozeRequest,
   setSnoozeCanceledNote,
@@ -23,7 +23,7 @@ const submit: RequestHandler = async (req, res, next) => {
   submitLogger.debug(`conversation:id: ${conversationId}`);
 
   // Retrieve user based on workspace_id
-  const user = await userDbService.getUser(workspaceId);
+  const user = await workspaceDbService.getWorkspace(workspaceId);
   if (!user) {
     submitLogger.error(`User not found. Workspace ID: ${workspaceId}`);
     res.status(500).send('User not found.');

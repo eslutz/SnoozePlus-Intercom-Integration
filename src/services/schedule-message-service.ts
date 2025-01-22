@@ -16,6 +16,27 @@ const scheduleMessageLogger = logger.child({
   module: 'schedule-message-service',
 });
 
+/**
+ * Schedules and processes messages for automated sending through the system.
+ *
+ * This function performs the following operations:
+ * 1. Retrieves messages scheduled for today
+ * 2. For each message:
+ *    - Schedules it for sending at the specified time
+ *    - Sends the message when scheduled time arrives
+ *    - Archives the message after sending
+ *    - Adds a note about the message being sent
+ *    - Optionally closes the conversation if specified
+ *
+ * The function handles various error cases at each step and logs operations
+ * through the scheduleMessageLogger.
+ *
+ * If a message's scheduled send date has already passed, it will be sent immediately.
+ *
+ * @function scheduleMessages
+ * @throws Will log but not throw errors that occur during message processing
+ * @returns {Promise<void>} Resolves when all messages have been scheduled
+ */
 const scheduleMessages = async (): Promise<void> => {
   let messages: Message[] = [];
   try {

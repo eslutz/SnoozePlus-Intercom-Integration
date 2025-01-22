@@ -7,6 +7,14 @@ const heartbeatLogger = logger.child({ module: 'heartbeat-service' });
 
 const baseUrl = config.betterstackHeartbeatUrl;
 
+/**
+ * Sends a heartbeat signal to a monitoring endpoint with retry functionality.
+ *
+ * @function sendHeartbeat
+ * @param success Determines which endpoint URL to use: If true, uses base URL; if false, appends '/fail' to base URL
+ * @returns {Promise<void>} Resolves when heartbeat is successfully sent or max retries are exhausted
+ * @throws {Error} If all retry attempts fail to send the heartbeat
+ */
 const sendHeartbeat = (success = true): Promise<void> => {
   const url = success ? baseUrl : `${baseUrl}/fail`;
 

@@ -1,12 +1,11 @@
 /**
  * Express router for healthcheck endpoints.
- * @module healthcheckRouter
  *
+ * @module healthcheckRouter
  * @route GET / - Basic healthcheck endpoint to verify service is running
  * @route GET /db-healthcheck - Verifies database connection health
  * @route POST /installation-healthcheck - Validates that app has been installed in an Intercom workspace
- *
- * @middleware validateSignature - Validates Canvas LMS request signature
+ * @middleware validateSignature - Authenticates requests from Intercom installation healthcheck
  */
 import express from 'express';
 import * as healthcheckController from '../controllers/healthcheck-controller.js';

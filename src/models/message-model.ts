@@ -4,14 +4,14 @@ import { MessageDTO } from './message-dto-model.js';
  * Represents a message object for communication with auth details.
  *
  * @interface Message
- * @property {string} workspaceId - The unique identifier of the workspace where the message belongs
- * @property {number} conversationId - The unique identifier of the conversation this message is part of
- * @property {string} message - The content of the message
- * @property {Date} sendDate - The date and time when the message was sent
- * @property {boolean} closeConversation - Flag indicating if this message should close the conversation
- * @property {boolean} archived - Flag indicating if the message has been archived
- * @property {number} adminId - The unique identifier of the admin user
- * @property {string} accessToken - The access token for authentication
+ * @property {string} workspaceId The unique identifier of the workspace where the message belongs
+ * @property {number} conversationId The unique identifier of the conversation this message is part of
+ * @property {string} message The content of the message
+ * @property {Date} sendDate The date and time when the message was sent
+ * @property {boolean} closeConversation Flag indicating if this message should close the conversation
+ * @property {boolean} archived Flag indicating if the message has been archived
+ * @property {number} adminId The unique identifier of the admin user
+ * @property {string} accessToken The access token for authentication
  */
 export interface Message {
   readonly id: string;
@@ -28,10 +28,10 @@ export interface Message {
 /**
  * Maps a MessageDTO object to a Message object with additional admin authentication details.
  *
- * @param dto - The MessageDTO object containing message data
- * @param adminId - The ID of the admin user
- * @param accessToken - The access token for authentication
- * @returns A Message object with merged DTO and admin authentication properties
+ * @param dto The MessageDTO object containing message data
+ * @param adminId The ID of the admin user
+ * @param accessToken The access token for authentication
+ * @returns {Message} A Message object with merged DTO and admin authentication properties
  */
 export const mapMessageDTOToMessage = (
   dto: MessageDTO,

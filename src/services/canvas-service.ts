@@ -5,14 +5,24 @@ import { calculateDaysUntilSending } from '../utilities/snooze-utility.js';
 
 const canvasLogger = logger.child({ module: 'canvas-service' });
 
-const getInitialCanvas = () => {
-  /*
-  This object defines the canvas that will display when your app initializes.
-
-  More information on these can be found in the reference docs.
-  Canvas docs: https://developers.intercom.com/docs/references/canvas-kit/responseobjects/canvas/
-  Components docs: https://developers.intercom.com/docs/references/canvas-kit/interactivecomponents/button/
-*/
+/**
+ * Creates and returns the initial canvas configuration for the Snooze+ Intercom integration.
+ * This canvas is displayed when the app first initializes and presents the user with options
+ * to select the number of conversation snoozes.
+ *
+ * The canvas includes:
+ * - A welcome header
+ * - Instructional text
+ * - A dropdown to select number of snoozes (1-5)
+ * - A submit button to proceed
+ *
+ * @see {@link https://developers.intercom.com/docs/references/canvas-kit/responseobjects/canvas/|Canvas Documentation}
+ * @see {@link https://developers.intercom.com/docs/references/canvas-kit/interactivecomponents/button/|Components Documentation}
+ *
+ * @function getInitialCanvas
+ * @returns {Object} An Intercom canvas configuration object containing the initial UI components
+ */
+const getInitialCanvas = (): object => {
   const initialCanvas = {
     canvas: {
       content: {
@@ -84,7 +94,18 @@ const getInitialCanvas = () => {
   return initialCanvas;
 };
 
-const getSetSnoozeCanvas = (numOfSnoozes: number) => {
+/**
+ * Generates a canvas configuration object for the snooze feature interface.
+ * The canvas includes dropdown menus for snooze duration and text areas for messages,
+ * with the number of input sets determined by the numOfSnoozes parameter.
+ * Each set of inputs includes a duration dropdown and message textarea, separated by dividers.
+ * The canvas also includes a final action selector and submit button.
+ *
+ * @function getSetSnoozeCanvas
+ * @param numOfSnoozes The number of sequential snooze periods to configure
+ * @returns {Object} A canvas configuration object containing the complete interface structure
+ */
+const getSetSnoozeCanvas = (numOfSnoozes: number): object => {
   const setSnoozeCanvas = {
     canvas: {
       content: {
@@ -210,7 +231,17 @@ const getSetSnoozeCanvas = (numOfSnoozes: number) => {
   return setSnoozeCanvas;
 };
 
-const getCurrentSnoozesCanvas = (messages: Message[]) => {
+/**
+ * Generates a canvas object displaying current snooze messages in Intercom messenger.
+ * The canvas includes the message content, sending date, and a button to cancel snoozes.
+ * Messages are displayed in reverse chronological order (newest first).
+ *
+ * @function getCurrentSnoozesCanvas
+ * @param messages Array of Message objects containing encrypted message content and send dates
+ * @returns {Object}A canvas object compatible with Intercom messenger format containing formatted message display
+ * @throws Will throw an error if message decryption fails
+ */
+const getCurrentSnoozesCanvas = (messages: Message[]): object => {
   const currentSnoozeCanvas = {
     canvas: {
       content: {
@@ -293,7 +324,17 @@ const getCurrentSnoozesCanvas = (messages: Message[]) => {
   return currentSnoozeCanvas;
 };
 
-const getFinalCanvas = (messages: Message[]) => {
+/**
+ * Generates a canvas object for displaying snoozed messages with their send dates.
+ * The canvas includes a header, message details, and a cancel button.
+ * Messages are displayed in reverse chronological order (newest first).
+ *
+ * @function getFinalCanvas
+ * @param messages An array of Message objects containing encrypted messages and send dates
+ * @returns {Object} A canvas object containing formatted components for display
+ * @throws Will throw an error if message decryption fails
+ */
+const getFinalCanvas = (messages: Message[]): object => {
   const finalCanvas = {
     canvas: {
       content: {

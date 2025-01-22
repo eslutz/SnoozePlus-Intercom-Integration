@@ -10,6 +10,15 @@ import {
 
 const messageDbLogger = logger.child({ module: 'message-db-service' });
 
+/**
+ * Archives a message in the database by setting its 'archived' flag to TRUE.
+ * Uses retry logic to handle potential database connection issues.
+ *
+ * @function archiveMessage
+ * @param messageId The unique identifier of the message to be archived
+ * @returns {Promise<number>} A Promise that resolves to the number of rows affected (should be 1 if successful, 0 if message not found)
+ * @throws Will throw an error if all retry attempts fail to execute the database query
+ */
 const archiveMessage = async (messageId: string): Promise<number> => {
   const archiveMessageQuery = `
     UPDATE messages
@@ -42,6 +51,15 @@ const archiveMessage = async (messageId: string): Promise<number> => {
   });
 };
 
+/**
+ * Archives messages in the database for a specific workspace and conversation.
+ *
+ * @function archiveMessages
+ * @param workspaceId The unique identifier of the workspace
+ * @param conversationId The numeric identifier of the conversation
+ * @returns {Promise<number>} Promise that resolves to the number of messages archived
+ * @throws Error if the database operation fails after all retry attempts
+ */
 const archiveMessages = async (
   workspaceId: string,
   conversationId: number
@@ -77,6 +95,17 @@ const archiveMessages = async (
   });
 };
 
+/**
+ * Retrieves messages from the database for a specific workspace and conversation.
+ * The messages are ordered by send date in ascending order and excludes archived messages.
+ * Implements retry logic for database operations.
+ *
+ * @function getMessages
+ * @param workspaceId The unique identifier of the workspace
+ * @param conversationId The numeric identifier of the conversation
+ * @returns {Promise<Message[]>} Promise resolving to an array of Message objects
+ * @throws Will throw an error if database operations fail after all retry attempts
+ */
 const getMessages = async (
   workspaceId: string,
   conversationId: number
@@ -117,6 +146,14 @@ const getMessages = async (
   });
 };
 
+/**
+ * Retrieves the count of unarchived messages for a specific workspace and conversation.
+ *
+ * @function getRemainingMessageCount
+ * @param message The message object containing workspaceId and conversationId
+ * @returns {Promise<number>} Promise that resolves to the number of remaining unarchived messages
+ * @throws Error if the database query fails after all retry attempts
+ */
 const getRemainingMessageCount = async (message: Message): Promise<number> => {
   const messageCountQuery = `
     SELECT COUNT(*)
@@ -149,6 +186,20 @@ const getRemainingMessageCount = async (message: Message): Promise<number> => {
   });
 };
 
+/**
+ * Retrieves all unarchived messages scheduled to be sent before the end of the current day.
+ *
+ * This function queries the database for messages that are:
+ * - Not archived
+ * - Scheduled to be sent before midnight of the current day
+ * - Joined with user information for admin_id and access_token
+ *
+ * The operation includes retry logic for handling temporary database connection issues.
+ *
+ * @function getTodaysMessages
+ * @returns {Promise<Message[]>} A promise that resolves to an array of Message objects
+ * @throws {Error} If all retry attempts fail when querying the database
+ */
 const getTodaysMessages = async (): Promise<Message[]> => {
   const selectMessages = `
     SELECT m.id, m.workspace_id, m.conversation_id, m.message, m.send_date, m.close_conversation, m.archived,
@@ -188,6 +239,17 @@ const getTodaysMessages = async (): Promise<Message[]> => {
   });
 };
 
+/**
+ * Saves multiple messages to the database for a given workspace and conversation.
+ * Uses retry logic for handling transient database errors.
+ *
+ * @function saveMessages
+ * @param workspaceId The unique identifier of the workspace
+ * @param conversationId The numeric identifier of the conversation
+ * @param messages Array of Message objects to be saved
+ * @returns {Promise<string[]>} Promise resolving to an array of message GUIDs (strings) for the saved messages
+ * @throws Will log but not throw if database operations fail after retry attempts
+ */
 const saveMessages = async (
   workspaceId: string,
   conversationId: number,

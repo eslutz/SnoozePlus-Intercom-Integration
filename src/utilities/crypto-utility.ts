@@ -8,8 +8,9 @@ import SignatureHmacAlgorithm from '../enums/signature-hmac-algorithm-enum.js';
  * The encrypted text should be in the format `ivHex:encrypted`, where `ivHex` is the initialization vector
  * in hexadecimal format and `encrypted` is the encrypted data in hexadecimal format.
  *
- * @param encryptedText - The encrypted text to decrypt, in the format `ivHex:encrypted`.
- * @returns The decrypted text in UTF-8 format.
+ * @function decrypt
+ * @param encryptedText The encrypted text to decrypt, in the format `ivHex:encrypted`
+ * @returns {string} The decrypted text in UTF-8 format
  */
 const decrypt = (encryptedText: string): string => {
   const [ivHex, encrypted] = encryptedText.split(':');
@@ -30,8 +31,9 @@ const decrypt = (encryptedText: string): string => {
  * creates a cipher using the algorithm, key, and IV, and then encrypts the text.
  * The resulting encrypted text is returned in the format `iv:encryptedText`.
  *
- * @param text - The plaintext string to be encrypted.
- * @returns The encrypted text in the format `iv:encryptedText`.
+ * @function encrypt
+ * @param text The plaintext string to be encrypted
+ * @returns {string} The encrypted text in the format `iv:encryptedText`
  */
 const encrypt = (text: string): string => {
   const iv = crypto.randomBytes(16);
@@ -48,10 +50,11 @@ const encrypt = (text: string): string => {
 /**
  * Validates the signature of a request body using HMAC and the specified algorithm.
  *
- * @param requestBody - The body of the request to validate.
- * @param signature - The HMAC signature to compare against.
- * @param algorithm - The HMAC algorithm to use for creating the digest.
- * @returns `true` if the signature is valid, `false` otherwise.
+ * @function signatureValidator
+ * @param requestBody The body of the request to validate
+ * @param signature The HMAC signature to compare against
+ * @param algorithm The HMAC algorithm to use for creating the digest
+ * @returns {boolean} `true` if the signature is valid, `false` otherwise
  */
 const signatureValidator = (
   requestBody: Request['body'],

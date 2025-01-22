@@ -3,17 +3,15 @@
  * Sets up main routing with middleware and sub-routers for different endpoints.
  *
  * @module router
- *
  * @route GET / - Welcome message
  * @route /auth - Authentication related routes
  * @route /healthcheck - Health check endpoints
  * @route /initialize - Initialization endpoints
  * @route /submit - Form submission endpoints
  * @route /webhook - Webhook handling endpoints
- *
  * @remarks
- * Includes 404 catch-all handler for undefined routes.
- * IP validation middleware currently disabled (TODO).
+ *  - Includes 404 catch-all handler for undefined routes
+ *  - IP validation middleware currently disabled (TODO)
  */
 import express from 'express';
 import authRouter from './auth-router.js';

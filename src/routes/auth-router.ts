@@ -1,8 +1,6 @@
 /**
  * Express router for authentication endpoints.
  * @module authRouter
- *
- * Routes:
  * @route GET/POST /intercom - Login with Intercom login
  * @route GET/POST /intercom/callback - Callback for Intercom OAuth
  * @route GET /failure - Authentication failures

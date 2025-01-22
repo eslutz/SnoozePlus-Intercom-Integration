@@ -10,6 +10,18 @@ const intercomLogger = logger.child({ module: 'intercom-service' });
 
 const baseUrl = config.intercomUrl;
 
+/**
+ * Adds a note to an Intercom conversation.
+ *
+ * @function addNote
+ * @param adminId The ID of the admin adding the note
+ * @param adminAccessToken The encrypted access token for authentication
+ * @param conversationId The ID of the conversation to add the note to
+ * @param note The content of the note to be added
+ * @returns {Promise<IntercomResponse>} A Promise that resolves to an IntercomResponse object
+ * @throws Will throw an error if access token decryption fails
+ * @throws Error if the request fails after all retry attempts
+ */
 const addNote = (
   adminId: number,
   adminAccessToken: string,
@@ -98,6 +110,17 @@ const addNote = (
   });
 };
 
+/**
+ * Cancels the snooze status for a conversation in Intercom by making it open.
+ *
+ * @function cancelSnooze
+ * @param adminId The ID of the admin performing the action
+ * @param adminAccessToken The encrypted access token for authentication
+ * @param conversationId The ID of the conversation to unsnooze
+ * @returns {Promise<IntercomResponse>} Promise that resolves to an IntercomResponse object
+ * @throws Error if access token decryption fails
+ * @throws Error if the request fails after all retry attempts
+ */
 const cancelSnooze = (
   adminId: number,
   adminAccessToken: string,
@@ -174,6 +197,17 @@ const cancelSnooze = (
   });
 };
 
+/**
+ * Closes a conversation in Intercom using the provided admin credentials and conversation ID.
+ *
+ * @function closeConversation
+ * @param adminId The ID of the admin closing the conversation
+ * @param adminAccessToken The encrypted access token for admin authentication
+ * @param conversationId The ID of the conversation to close
+ * @returns {Promise<IntercomResponse>} A Promise that resolves to an IntercomResponse object
+ * @throws Will throw an error if access token decryption fails
+ * @throws Will throw an error if the request fails after all retry attempts
+ */
 const closeConversation = (
   adminId: number,
   adminAccessToken: string,
@@ -261,6 +295,20 @@ const closeConversation = (
   });
 };
 
+/**
+ * Sends a message to Intercom's conversation API endpoint.
+ *
+ * @function sendMessage
+ * @param message The message object containing encrypted message content and credentials
+ * @param message.message Encrypted message content to be sent
+ * @param message.accessToken Encrypted access token for authentication
+ * @param message.conversationId ID of the Intercom conversation to reply to
+ * @param message.adminId ID of the admin sending the message
+ * @returns {Promise<IntercomResponse>} Resolves with Intercom's API response
+ * @throws Will throw an error if message decryption fails
+ * @throws Will throw an error if access token decryption fails
+ * @throws Will throw an error if the request fails after all retry attempts
+ */
 const sendMessage = (message: Message): Promise<IntercomResponse> => {
   // Decrypt the message before sending.
   let decryptedMessage: string;
@@ -360,6 +408,17 @@ const sendMessage = (message: Message): Promise<IntercomResponse> => {
   });
 };
 
+/**
+ * Sets a snooze time for an Intercom conversation.
+ *
+ * @function setSnooze
+ * @param adminId The ID of the admin setting the snooze
+ * @param adminAccessToken The encrypted access token for authentication
+ * @param conversationId The ID of the conversation to be snoozed
+ * @param unixTimestamp The Unix timestamp until when the conversation should be snoozed
+ * @returns {Promise<IntercomResponse>} Promise resolving to an IntercomResponse object
+ * @throws Will throw an error if token decryption fails
+ */
 const setSnooze = (
   adminId: number,
   adminAccessToken: string,

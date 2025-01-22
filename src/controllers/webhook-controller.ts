@@ -2,7 +2,7 @@ import { RequestHandler } from 'express';
 import logger from '../config/logger-config.js';
 import { addNote } from '../services/intercom-service.js';
 import * as messageService from '../services/message-db-service.js';
-import * as userDbService from '../services/user-db-service.js';
+import * as workspaceDbService from '../services/user-db-service.js';
 import { setCloseNote } from '../utilities/snooze-utility.js';
 
 const webhookLogger = logger.child({
@@ -37,7 +37,7 @@ const receiver: RequestHandler = async (req, res, next) => {
   webhookLogger.debug(
     `Webhook notification conversation_id: ${conversationId}`
   );
-  const user = await userDbService.getUser(workspaceId);
+  const user = await workspaceDbService.getWorkspace(workspaceId);
   if (!user) {
     webhookLogger.error(`User not found. Workspace ID: ${workspaceId}`);
     res.status(500).send('User not found.');

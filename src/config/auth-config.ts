@@ -2,7 +2,7 @@ import passport from 'passport';
 import { Strategy as IntercomStrategy } from 'passport-intercom';
 import config from './config.js';
 import logger from './logger-config.js';
-import * as userDbService from '../services/user-db-service.js';
+import * as workspaceDbService from '../services/user-db-service.js';
 import { encrypt } from '../utilities/crypto-utility.js';
 import { Workspace } from '../models/workspace-model.js';
 
@@ -66,9 +66,9 @@ passport.use(
         };
 
         authLogger.debug('Saving user to database');
-        authLogger.profile('saveUser');
-        const userResponse = await userDbService.saveUser(user);
-        authLogger.profile('saveUser', {
+        authLogger.profile('saveWorkspace');
+        const userResponse = await workspaceDbService.saveWorkspace(user);
+        authLogger.profile('saveWorkspace', {
           level: 'debug',
           message: 'User saved to database.',
         });

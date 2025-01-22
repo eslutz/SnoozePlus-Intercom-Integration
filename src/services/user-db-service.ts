@@ -7,18 +7,18 @@ import {
   mapWorkspaceDTOToWorkspace,
 } from '../models/workspace-model.js';
 
-const userDbLogger = logger.child({ module: 'user-db-service' });
+const workspaceDbLogger = logger.child({ module: 'workspace-db-service' });
 
 /**
- * Retrieves a user from the database based on the workspace ID.
+ * Retrieves a workspace from the database based on the workspace ID.
  *
- * @param workspaceId - The unique identifier of the workspace to search for
- * @returns A Promise that resolves to either a User object containing the user's data or null if no user is found
+ * @function getWorkspace
+ * @param workspaceId The unique identifier of the workspace to search for
+ * @returns {Promise<Workspace | null>} A Promise that resolves to either a Workspace object containing the workspace's data or null if no workspace is found
  * @throws {Error} If the database operation fails after all retry attempts
  */
-
-const getUser = async (workspaceId: string): Promise<Workspace | null> => {
-  const getUserQuery = `
+const getWorkspace = async (workspaceId: string): Promise<Workspace | null> => {
+  const getWorkspaceQuery = `
     SELECT workspace_id, admin_id, access_token
     FROM users
     WHERE workspace_id = $1;
@@ -30,18 +30,18 @@ const getUser = async (workspaceId: string): Promise<Workspace | null> => {
   return new Promise((resolve, reject) => {
     operation.attempt((currentAttempt) => {
       pool
-        .query<WorkspaceDTO>(getUserQuery, getParameters)
+        .query<WorkspaceDTO>(getWorkspaceQuery, getParameters)
         .then((res) => {
           if (res.rows.length > 0) {
-            const user: Workspace = mapWorkspaceDTOToWorkspace(res.rows[0]);
-            resolve(user);
+            const workspace: Workspace = mapWorkspaceDTOToWorkspace(res.rows[0]);
+            resolve(workspace);
           } else {
             resolve(null);
           }
         })
         .catch((err: Error) => {
           if (operation.retry(err)) {
-            userDbLogger.warn(`Attempt ${currentAttempt} failed. Retrying...`);
+            workspaceDbLogger.warn(`Attempt ${currentAttempt} failed. Retrying...`);
             return;
           }
           reject(operation.mainError()!);
@@ -50,8 +50,22 @@ const getUser = async (workspaceId: string): Promise<Workspace | null> => {
   });
 };
 
-const saveUser = async (user: Workspace): Promise<string> => {
-  const saveUserQuery = `
+/**
+ * Saves or updates a workspace in the database.
+ * If a workspace with the given ID exists, it updates the access token and authorization code.
+ * If it doesn't exist, it creates a new workspace entry.
+ *
+ * @function saveWorkspace
+ * @param user The workspace object containing user details
+ * @param user.workspaceId Unique identifier for the workspace
+ * @param user.adminId ID of the workspace administrator
+ * @param user.accessToken Access token for authentication
+ * @param user.authorizationCode Authorization code for the workspace
+ * @returns {Promise<string>} Returns a promise that resolves to the workspace ID
+ * @throws Will throw an error if database operations fail after all retry attempts
+ */
+const saveWorkspace = async (user: Workspace): Promise<string> => {
+  const saveWorkspaceQuery = `
     INSERT INTO users (workspace_id, admin_id, access_token, authorization_code)
     VALUES ($1, $2, $3, $4)
     ON CONFLICT (workspace_id) DO UPDATE SET
@@ -71,19 +85,19 @@ const saveUser = async (user: Workspace): Promise<string> => {
   return new Promise((resolve, reject) => {
     operation.attempt((currentAttempt) => {
       pool
-        .query<WorkspaceDTO>(saveUserQuery, saveParameters)
+        .query<WorkspaceDTO>(saveWorkspaceQuery, saveParameters)
         .then((res) => {
           const workspaceId = res.rows[0].workspace_id;
-          userDbLogger.debug(`User saved with Workspace ID: ${workspaceId}`);
+          workspaceDbLogger.debug(`User saved with Workspace ID: ${workspaceId}`);
           resolve(workspaceId);
         })
         .catch((err: Error) => {
-          userDbLogger.error(
-            `Error executing saveUser query on attempt ${currentAttempt}: ${err}`
+          workspaceDbLogger.error(
+            `Error executing saveWorkspace query on attempt ${currentAttempt}: ${err}`
           );
           if (operation.retry(err)) {
-            userDbLogger.warn(
-              `Attempt ${currentAttempt} to saveUser failed. Retrying...`
+            workspaceDbLogger.warn(
+              `Attempt ${currentAttempt} to saveWorkspace failed. Retrying...`
             );
             return;
           }
@@ -93,4 +107,4 @@ const saveUser = async (user: Workspace): Promise<string> => {
   });
 };
 
-export { getUser, saveUser };
+export { getWorkspace, saveWorkspace };

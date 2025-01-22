@@ -14,11 +14,11 @@ const schedulerLogger = logger.child({ module: 'scheduler-utility' });
  * If an error occurs during the execution of the scheduled task, it logs the error.
  * Additionally, if the application is running in a production environment, it sends a heartbeat signal.
  *
- * @async
  * @function scheduleJobs
+ * @returns {Promise<void>} A promise that resolves when the jobs are scheduled
  * @throws Will log an error if scheduling the job fails.
  */
-const scheduleJobs = async () => {
+const scheduleJobs = async (): Promise<void> => {
   // Schedule the task to run every 6 hours
   try {
     schedule.scheduleJob('0 */6 * * *', async (scheduledFireDate) => {

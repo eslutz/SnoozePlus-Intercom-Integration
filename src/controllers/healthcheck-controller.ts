@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
 import pool from '../config/db-config.js';
 import logger from '../config/logger-config.js';
-import { getUser } from '../services/user-db-service.js';
+import { getWorkspace } from '../services/user-db-service.js';
 
 const healthcheckLogger = logger.child({ module: 'healthcheck-controller' });
 
@@ -51,7 +51,7 @@ const installationHealthcheck: RequestHandler = async (req, res, next) => {
   }
 
   try {
-    const user = await getUser(workspace_id);
+    const user = await getWorkspace(workspace_id);
     if (user) {
       res.status(200).json({ state: 'OK' });
       return;
