@@ -66,7 +66,9 @@ passport.use(
         try {
           encryptedAuthorizationCode = encrypt(req.query.code as string);
         } catch (err) {
-          authLogger.error(`Error encrypting authorization code: ${String(err)}`);
+          authLogger.error(
+            `Error encrypting authorization code: ${String(err)}`
+          );
           throw err;
         }
         authLogger.profile('encrypt', {

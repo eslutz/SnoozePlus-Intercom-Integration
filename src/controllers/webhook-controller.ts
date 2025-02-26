@@ -4,36 +4,36 @@ import { addNote } from '../services/intercom-service.js';
 import * as messageService from '../services/message-db-service.js';
 import * as workspaceDbService from '../services/user-db-service.js';
 import { setCloseNote } from '../utilities/snooze-utility.js';
+import { IntercomWebhookRequest } from '../models/intercom-request-webhook-model.js';
 
 const webhookLogger = logger.child({
   module: 'webhook-controller',
 });
 
 // HEAD: /webhook - Receive webhook request to validate endpoint.
-const validate: RequestHandler = async (req, res, next) => {
+const validate: RequestHandler = (req, res) => {
   try {
     webhookLogger.debug(`HEAD request headers: ${JSON.stringify(req.headers)}`);
     res.status(200).send();
   } catch (err) {
-    webhookLogger.error(`An error occurred: ${err}`);
+    webhookLogger.error(`An error occurred: ${String(err)}`);
     res.status(500).send();
-    next(err);
   }
 };
 
-// POST: /webhook - Receive webhook notifications.
 const receiver: RequestHandler = async (req, res, next) => {
   webhookLogger.info('Webhook notification received.');
   webhookLogger.profile('receiver');
   res.status(200).send('Webhook notification received.');
 
-  const fullTopic: string = req.body.topic;
+  const webhookRequest = req.body as IntercomWebhookRequest;
+  const fullTopic: string = webhookRequest.topic;
   webhookLogger.debug(`Webhook notification full topic: ${fullTopic}`);
   const topic: string = fullTopic.substring(fullTopic.lastIndexOf('.') + 1);
   webhookLogger.debug(`Webhook notification topic: ${topic}`);
-  const workspaceId: string = req.body.app_id;
+  const workspaceId: string = webhookRequest.app_id;
   webhookLogger.debug(`Webhook notification workspace_id: ${workspaceId}`);
-  const conversationId: number = req.body.data.item.id;
+  const conversationId: number = webhookRequest.data.item.id;
   webhookLogger.debug(
     `Webhook notification conversation_id: ${conversationId}`
   );
@@ -73,8 +73,8 @@ const receiver: RequestHandler = async (req, res, next) => {
       );
     }
   } catch (err) {
-    webhookLogger.error(`An error occurred: ${err}`);
-    res.status(500).send(`An error occurred: ${err}`);
+    webhookLogger.error(`An error occurred: ${String(err)}`);
+    res.status(500).send(`An error occurred: ${String(err)}`);
     next(err);
   }
 
@@ -100,8 +100,8 @@ const receiver: RequestHandler = async (req, res, next) => {
     });
     webhookLogger.debug(`Add Note response: ${JSON.stringify(response)}`);
   } catch (err) {
-    webhookLogger.error(`An error occurred: ${err}`);
-    res.status(500).send(`An error occurred: ${err}`);
+    webhookLogger.error(`An error occurred: ${String(err)}`);
+    res.status(500).send(`An error occurred: ${String(err)}`);
     next(err);
   }
   webhookLogger.profile('receiver', {

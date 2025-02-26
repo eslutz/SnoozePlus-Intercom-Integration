@@ -33,7 +33,9 @@ const getWorkspace = async (workspaceId: string): Promise<Workspace | null> => {
         .query<WorkspaceDTO>(getWorkspaceQuery, getParameters)
         .then((res) => {
           if (res.rows.length > 0) {
-            const workspace: Workspace = mapWorkspaceDTOToWorkspace(res.rows[0]);
+            const workspace: Workspace = mapWorkspaceDTOToWorkspace(
+              res.rows[0]
+            );
             resolve(workspace);
           } else {
             resolve(null);
@@ -41,7 +43,9 @@ const getWorkspace = async (workspaceId: string): Promise<Workspace | null> => {
         })
         .catch((err: Error) => {
           if (operation.retry(err)) {
-            workspaceDbLogger.warn(`Attempt ${currentAttempt} failed. Retrying...`);
+            workspaceDbLogger.warn(
+              `Attempt ${currentAttempt} failed. Retrying...`
+            );
             return;
           }
           reject(operation.mainError()!);
@@ -88,7 +92,9 @@ const saveWorkspace = async (user: Workspace): Promise<string> => {
         .query<WorkspaceDTO>(saveWorkspaceQuery, saveParameters)
         .then((res) => {
           const workspaceId = res.rows[0].workspace_id;
-          workspaceDbLogger.debug(`User saved with Workspace ID: ${workspaceId}`);
+          workspaceDbLogger.debug(
+            `User saved with Workspace ID: ${workspaceId}`
+          );
           resolve(workspaceId);
         })
         .catch((err: Error) => {

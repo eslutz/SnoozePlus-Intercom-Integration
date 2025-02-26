@@ -32,34 +32,34 @@
  * @property {Conversationparts} conversation_parts Parts/messages of the conversation
  */
 export interface IntercomResponse {
-  type: string;
-  id: string;
-  created_at: number;
-  updated_at: number;
-  waiting_since: number;
-  snoozed_until: null;
-  source: Source;
-  contacts: Contacts;
-  first_contact_reply: Firstcontactreply;
-  admin_assignee_id: null;
-  team_assignee_id: null;
-  open: boolean;
-  state: string;
-  read: boolean;
-  tags: Tags;
-  priority: string;
-  sla_applied: null;
-  statistics: null;
-  conversation_rating: null;
-  teammates: null;
-  title: null;
-  custom_attributes: Customattributes;
-  topics: Customattributes;
-  ticket: null;
-  linked_objects: Linkedobjects;
-  ai_agent: null;
-  ai_agent_participated: boolean;
-  conversation_parts: Conversationparts;
+  readonly type: string;
+  readonly id: string;
+  readonly created_at: number;
+  readonly updated_at: number;
+  readonly waiting_since: number;
+  readonly snoozed_until: null;
+  readonly source: Source;
+  readonly contacts: Contacts;
+  readonly first_contact_reply: Firstcontactreply;
+  readonly admin_assignee_id: null;
+  readonly team_assignee_id: null;
+  readonly open: boolean;
+  readonly state: string;
+  readonly read: boolean;
+  readonly tags: Tags;
+  readonly priority: string;
+  readonly sla_applied: null;
+  readonly statistics: null;
+  readonly conversation_rating: null;
+  readonly teammates: null;
+  readonly title: null;
+  readonly custom_attributes: Customattributes;
+  readonly topics: Customattributes;
+  readonly ticket: null;
+  readonly linked_objects: Linkedobjects;
+  readonly ai_agent: null;
+  readonly ai_agent_participated: boolean;
+  readonly conversation_parts: Conversationparts;
 }
 
 /**
@@ -71,9 +71,9 @@ export interface IntercomResponse {
  * @property {number} total_count The total number of conversation parts in the collection
  */
 interface Conversationparts {
-  type: string;
-  conversation_parts: Conversationpart[];
-  total_count: number;
+  readonly type: string;
+  readonly conversation_parts: Conversationpart[];
+  readonly total_count: number;
 }
 
 /**
@@ -94,18 +94,18 @@ interface Conversationparts {
  * @property {boolean} redacted Indicates if the conversation part has been redacted
  */
 interface Conversationpart {
-  type: string;
-  id: string;
-  part_type: string;
-  body: string;
-  created_at: number;
-  updated_at: number;
-  notified_at: number;
-  assigned_to: null;
-  author: Author;
-  attachments: unknown[];
-  external_id: null;
-  redacted: boolean;
+  readonly type: string;
+  readonly id: string;
+  readonly part_type: string;
+  readonly body: string;
+  readonly created_at: number;
+  readonly updated_at: number;
+  readonly notified_at: number;
+  readonly assigned_to: null;
+  readonly author: Author;
+  readonly attachments: unknown[];
+  readonly external_id: null;
+  readonly redacted: boolean;
 }
 
 /**
@@ -118,10 +118,10 @@ interface Conversationpart {
  * @property {boolean} has_more Indicates whether there are more items available for pagination
  */
 interface Linkedobjects {
-  type: string;
-  data: unknown[];
-  total_count: number;
-  has_more: boolean;
+  readonly type: string;
+  readonly data: unknown[];
+  readonly total_count: number;
+  readonly has_more: boolean;
 }
 
 /**
@@ -141,8 +141,8 @@ type Customattributes = object;
  * @property {unknown[]} tags An array of tags with unknown structure
  */
 interface Tags {
-  type: string;
-  tags: unknown[];
+  readonly type: string;
+  readonly tags: unknown[];
 }
 
 /**
@@ -154,9 +154,9 @@ interface Tags {
  * @property {null} url The URL associated with the first contact reply, always null
  */
 interface Firstcontactreply {
-  created_at: number;
-  type: string;
-  url: null;
+  readonly created_at: number;
+  readonly type: string;
+  readonly url: null;
 }
 
 /**
@@ -167,8 +167,8 @@ interface Firstcontactreply {
  * @property {Contact[]} contacts An array of Contact objects containing contact information
  */
 interface Contacts {
-  type: string;
-  contacts: Contact[];
+  readonly type: string;
+  readonly contacts: Contact[];
 }
 
 /**
@@ -180,9 +180,9 @@ interface Contacts {
  * @property {string} external_id The external identifier of the contact
  */
 interface Contact {
-  type: string;
-  id: string;
-  external_id: string;
+  readonly type: string;
+  readonly id: string;
+  readonly external_id: string;
 }
 
 /**
@@ -200,15 +200,15 @@ interface Contact {
  * @property {boolean} redacted Indicates if the source content has been redacted
  */
 interface Source {
-  type: string;
-  id: string;
-  delivered_as: string;
-  subject: string;
-  body: string;
-  author: Author;
-  attachments: unknown[];
-  url: null;
-  redacted: boolean;
+  readonly type: string;
+  readonly id: string;
+  readonly delivered_as: string;
+  readonly subject: string;
+  readonly body: string;
+  readonly author: Author;
+  readonly attachments: unknown[];
+  readonly url: null;
+  readonly redacted: boolean;
 }
 
 /**
@@ -221,8 +221,8 @@ interface Source {
  * @property {string} email The email address of the author
  */
 interface Author {
-  type: string;
-  id: string;
-  name: string;
-  email: string;
+  readonly type: string;
+  readonly id: string;
+  readonly name: string;
+  readonly email: string;
 }

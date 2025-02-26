@@ -12,17 +12,20 @@ const healthcheck: RequestHandler = (_req, res, next) => {
     healthcheckLogger.debug('Application is active.');
     res.status(200).send('Snooze+ is active.');
   } catch (err) {
-    healthcheckLogger.error(`An error occurred: ${err}`);
-    res.status(500).send(`An error occurred: ${err}`);
+    healthcheckLogger.error(`An error occurred: ${String(err)}`);
+    res.status(500).send(`An error occurred: ${String(err)}`);
     next(err);
   }
 };
 
 // GET: /db-healthcheck - Perform healthcheck on the database.
-const dbHealthcheck: RequestHandler = async (_req, res, next) => {
+const dbHealthcheck: RequestHandler = (_req, res, next) => {
   healthcheckLogger.debug('Checking database connection.');
   healthcheckLogger.profile('dbHealthcheck');
-  pool.query('SELECT NOW()', (err, result) => {
+  interface TimeResult {
+    now: Date;
+  }
+  pool.query('SELECT NOW()', (err, result: { rows: TimeResult[] }) => {
     if (err) {
       healthcheckLogger.error(`Database connection error: ${err}`);
       res.status(500).send(`Unable to connect to the database: ${err}`);
@@ -30,17 +33,19 @@ const dbHealthcheck: RequestHandler = async (_req, res, next) => {
     }
     healthcheckLogger.profile('dbHealthcheck', {
       level: 'debug',
-      message: `Database connected: ${result.rows[0].now}`,
+      message: `Database connected: ${result.rows[0].now.toISOString()}`,
     });
     res
       .status(200)
-      .send(`Database connection is active: ${result.rows[0].now}`);
+      .send(
+        `Database connection is active: ${result.rows[0].now.toISOString()}`
+      );
   });
 };
 
 // POST: /installation-healthcheck - Handle installation health check requests.
-const installationHealthcheck: RequestHandler = async (req, res, next) => {
-  const { workspace_id } = req.body;
+const installationHealthcheck: RequestHandler = async (req, res) => {
+  const { workspace_id } = req.body as { workspace_id: string };
 
   if (!workspace_id) {
     healthcheckLogger.error('workspace_id is missing in the request.');
@@ -66,8 +71,8 @@ const installationHealthcheck: RequestHandler = async (req, res, next) => {
       });
       return;
     }
-  } catch (error) {
-    healthcheckLogger.error(`Error determining health state: ${error}`);
+  } catch (err) {
+    healthcheckLogger.error(`Error determining health state: ${String(err)}`);
     res.status(500).json({ state: 'UNKNOWN', message: 'Server error.' });
     return;
   }

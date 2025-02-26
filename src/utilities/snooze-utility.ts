@@ -2,6 +2,7 @@ import { encrypt } from './crypto-utility.js';
 import logger from '../config/logger-config.js';
 import { Message } from '../models/message-model.js';
 import { SnoozeRequest } from '../models/snooze-request-model.js';
+import { IntercomCanvasInput } from '../models/intercom-request-canvas-model.js';
 
 const snoozeLogger = logger.child({ module: 'snooze-utility' });
 
@@ -27,14 +28,13 @@ const calculateDaysUntilSending = (sendDate: Date): number => {
  *
  * @function createSnoozeRequest
  * @param input The input object containing snooze details.
- * @param input.input_values An object containing the messages and snooze durations.
  * @returns {SnoozeRequest} A `SnoozeRequest` object containing the messages, note, and snooze until timestamp.
  * @throws Will throw an error if message encryption fails.
  */
-const createSnoozeRequest = (input: any): SnoozeRequest => {
+const createSnoozeRequest = (input: IntercomCanvasInput): SnoozeRequest => {
   snoozeLogger.debug('Getting number of snoozes set.');
   // Get the keys from the inputs object and use array length property to get number of inputs.
-  const keysArray = Object.keys(input.input_values);
+  const keysArray = Object.keys(input);
   const keysArrayCount = keysArray.length;
   const snoozeCount = Math.floor(keysArrayCount / 2);
   snoozeLogger.debug(`Number of snoozes set: ${snoozeCount}`);
@@ -49,7 +49,7 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
     snoozeLogger.debug('Encrypting message.');
     snoozeLogger.profile('encrypt');
     try {
-      encryptedMessage = encrypt(input.input_values[`message${i}`]);
+      encryptedMessage = encrypt(input[`message${i}`]);
     } catch (err) {
       snoozeLogger.error(`Error encrypting message: ${String(err)}`);
       throw err;
@@ -60,9 +60,9 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
     });
 
     snoozeLogger.debug(
-      `Snooze duration - message ${i}: ${input.input_values[`snoozeDuration${i}`]}`
+      `Snooze duration - message ${i}: ${input[`snoozeDuration${i}`]}`
     );
-    snoozeDurationTotal += Number(input.input_values[`snoozeDuration${i}`]);
+    snoozeDurationTotal += Number(input[`snoozeDuration${i}`]);
     snoozeLogger.debug(`Current snooze duration total: ${snoozeDurationTotal}`);
     // Determine the send date as the current date and time plus the snooze duration.
     const sendDate = new Date();
@@ -71,9 +71,8 @@ const createSnoozeRequest = (input: any): SnoozeRequest => {
     messages.push({
       message: encryptedMessage,
       sendDate: sendDate,
-      closeConversation:
-        i === snoozeCount && input.input_values.then === 'close',
-    });
+      closeConversation: i === snoozeCount && input.then === 'close',
+    } as Message);
   }
 
   // Get the date the snooze will end.

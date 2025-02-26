@@ -1,5 +1,6 @@
 import morgan from 'morgan';
 import logger from '../config/logger-config.js';
+import { LogData } from '../models/log-data-model.js';
 
 // Configure Morgan to use the winston logger.
 const morganMiddleware = morgan(
@@ -18,7 +19,7 @@ const morganMiddleware = morgan(
     stream: {
       // Configure Morgan to use custom logger with the http severity level.
       write: (message) => {
-        const data = JSON.parse(message);
+        const data = JSON.parse(message) as LogData;
         logger.http(`incoming-request`, data);
       },
     },

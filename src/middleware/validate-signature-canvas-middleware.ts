@@ -18,7 +18,7 @@ const validateSignature: RequestHandler = (req, res, next) => {
 
   // Check if the signature is valid.
   const signatureValid = signatureValidator(
-    req.body,
+    JSON.stringify(req.body),
     signature,
     SignatureAlgorithm.CANVAS
   );

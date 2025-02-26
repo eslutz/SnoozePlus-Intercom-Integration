@@ -1,8 +1,14 @@
 import { RequestHandler } from 'express';
 import passport from 'passport';
 
+// Define the authenticate function type
+type AuthenticateFunction = (
+  strategy: string,
+  options?: Record<string, unknown>
+) => RequestHandler;
+
 const callback: RequestHandler = (req, res, next) => {
-  passport.authenticate('intercom', {
+  void (passport.authenticate as AuthenticateFunction)('intercom', {
     successRedirect: req.query.state
       ? decodeURIComponent(req.query.state as string)
       : '/initialize',
@@ -15,8 +21,8 @@ const failure: RequestHandler = (req, res) => {
 };
 
 const login: RequestHandler = (req, res, next) => {
-  const state = req.query.state || req.session.lastUrl || '/';
-  passport.authenticate('intercom', {
+  const state = req.query.state ?? req.session.lastUrl ?? '/';
+  void (passport.authenticate as AuthenticateFunction)('intercom', {
     state: encodeURIComponent(state as string),
   })(req, res, next);
 };

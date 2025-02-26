@@ -57,15 +57,13 @@ const encrypt = (text: string): string => {
  * @returns {boolean} `true` if the signature is valid, `false` otherwise
  */
 const signatureValidator = (
-  requestBody: Request['body'],
+  stringifiedRequestBody: string,
   signature: string,
   algorithm: SignatureAlgorithm
 ): boolean => {
-  const stringifiedBody = JSON.stringify(requestBody);
-
   // Create a digest from the request body using the specified algorithm.
   const hmac = crypto.createHmac(algorithm, config.intercomClientSecret);
-  const digest = hmac.update(stringifiedBody).digest('hex');
+  const digest = hmac.update(stringifiedRequestBody).digest('hex');
 
   return digest === signature;
 };

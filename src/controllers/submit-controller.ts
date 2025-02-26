@@ -8,6 +8,7 @@ import {
   createSnoozeRequest,
   setSnoozeCanceledNote,
 } from '../utilities/snooze-utility.js';
+import { IntercomCanvasRequest } from '../models/intercom-request-canvas-model.js';
 
 const submitLogger = logger.child({ module: 'submit-controller' });
 
@@ -15,11 +16,12 @@ const submitLogger = logger.child({ module: 'submit-controller' });
 const submit: RequestHandler = async (req, res, next) => {
   submitLogger.info('Submit request received.');
   submitLogger.profile('submit');
-  submitLogger.info(`Request type: ${req.body.component_id}`);
+  const canvasRequest = req.body as IntercomCanvasRequest;
+  submitLogger.info(`Request type: ${canvasRequest.component_id}`);
   submitLogger.debug(`POST request body: ${JSON.stringify(req.body)}`);
-  const workspaceId = req.body?.workspace_id;
+  const workspaceId = canvasRequest.workspace_id;
   submitLogger.debug(`workspace_id: ${workspaceId}`);
-  const conversationId = Number(req.body.conversation.id);
+  const conversationId = Number(canvasRequest.conversation.id);
   submitLogger.debug(`conversation:id: ${conversationId}`);
 
   // Retrieve user based on workspace_id
@@ -30,8 +32,8 @@ const submit: RequestHandler = async (req, res, next) => {
     return;
   }
 
-  if (req.body.component_id === 'submitNumOfSnoozes') {
-    const requestedNumOfSnoozes = req.body.input_values.numOfSnoozes;
+  if (canvasRequest.component_id === 'submitNumOfSnoozes') {
+    const requestedNumOfSnoozes = canvasRequest.input_values.numOfSnoozes;
     // Check if the input is a valid number.
     if (isNaN(requestedNumOfSnoozes)) {
       submitLogger.error(
@@ -53,12 +55,12 @@ const submit: RequestHandler = async (req, res, next) => {
 
       res.send(messageCanvas);
     }
-  } else if (req.body.component_id === 'submitSnooze') {
+  } else if (canvasRequest.component_id === 'submitSnooze') {
     try {
       // Create the snooze request from the input values.
       submitLogger.info('Parsing request for snooze request.');
       submitLogger.profile('createSnoozeRequest');
-      const snoozeRequest = createSnoozeRequest(req.body);
+      const snoozeRequest = createSnoozeRequest(canvasRequest.input_values);
       submitLogger.profile('createSnoozeRequest', {
         level: 'info',
         message: 'Snooze request created.',
@@ -130,14 +132,16 @@ const submit: RequestHandler = async (req, res, next) => {
       res.send(finalCanvas);
     } catch (err) {
       submitLogger.error(
-        `An error occurred submitting the snooze request: ${err}`
+        `An error occurred submitting the snooze request: ${String(err)}`
       );
       res
         .status(500)
-        .send(`An error occurred submitting the snooze request: ${err}`);
+        .send(
+          `An error occurred submitting the snooze request: ${String(err)}`
+        );
       next(err);
     }
-  } else if (req.body.component_id === 'cancelSnooze') {
+  } else if (canvasRequest.component_id === 'cancelSnooze') {
     submitLogger.info('Cancel snooze request received.');
     submitLogger.profile('cancelSnooze');
 
@@ -158,8 +162,12 @@ const submit: RequestHandler = async (req, res, next) => {
         `Messages archived response: ${JSON.stringify(messagesArchived)}`
       );
     } catch (err) {
-      submitLogger.error(`An error occurred archiving messages: ${err}`);
-      res.status(500).send(`An error occurred archiving messages: ${err}`);
+      submitLogger.error(
+        `An error occurred archiving messages: ${String(err)}`
+      );
+      res
+        .status(500)
+        .send(`An error occurred archiving messages: ${String(err)}`);
       next(err);
     }
 
@@ -182,11 +190,13 @@ const submit: RequestHandler = async (req, res, next) => {
       );
     } catch (err) {
       submitLogger.error(
-        `An error occurred adding cancelling snooze note: ${err}`
+        `An error occurred adding cancelling snooze note: ${String(err)}`
       );
       res
         .status(500)
-        .send(`An error occurred adding cancelling snooze note: ${err}`);
+        .send(
+          `An error occurred adding cancelling snooze note: ${String(err)}`
+        );
       next(err);
     }
 
@@ -207,8 +217,12 @@ const submit: RequestHandler = async (req, res, next) => {
         `Unsnooze response: ${JSON.stringify(unsnoozeResponse)}`
       );
     } catch (err) {
-      submitLogger.error(`An error occurred unsnoozing conversation: ${err}`);
-      res.status(500).send(`An error occurred unsnoozing conversation: ${err}`);
+      submitLogger.error(
+        `An error occurred unsnoozing conversation: ${String(err)}`
+      );
+      res
+        .status(500)
+        .send(`An error occurred unsnoozing conversation: ${String(err)}`);
       next(err);
     }
 

@@ -28,29 +28,29 @@
  * @property {string} ipAllowlist Comma-separated list of allowed IP addresses
  */
 export interface Config {
-  nodeEnv: string;
-  isProduction: boolean;
-  port: number;
-  logLevel: string;
-  betterstackHeartbeatUrl: string;
-  betterstackLogtailKey: string;
-  pgDatabase: string;
-  pgHost: string;
-  pgPassword: string;
-  pgPort: number;
-  pgUser: string;
-  intercomClientId: string;
-  intercomClientSecret: string;
-  intercomCallbackUrl: string;
-  intercomUrl: string;
-  encryptionAlgorithm: string;
-  encryptionKey: string;
-  retryAttempts: number;
-  retryFactor: number;
-  retryMinTimeout: number;
-  retryMaxTimeout: number;
-  retryRandomize: boolean;
-  sessionSecret: string;
-  ipAllowlist: string;
-  [key: string]: string | number | boolean;
+  readonly nodeEnv: string;
+  readonly isProduction: boolean;
+  readonly port: number;
+  readonly logLevel: string;
+  readonly betterstackHeartbeatUrl: string;
+  readonly betterstackLogtailKey: string;
+  readonly pgDatabase: string;
+  readonly pgHost: string;
+  readonly pgPassword: string;
+  readonly pgPort: number;
+  readonly pgUser: string;
+  readonly intercomClientId: string;
+  readonly intercomClientSecret: string;
+  readonly intercomCallbackUrl: string;
+  readonly intercomUrl: string;
+  readonly encryptionAlgorithm: string;
+  readonly encryptionKey: string;
+  readonly retryAttempts: number;
+  readonly retryFactor: number;
+  readonly retryMinTimeout: number;
+  readonly retryMaxTimeout: number;
+  readonly retryRandomize: boolean;
+  readonly sessionSecret: string;
+  readonly ipAllowlist: string;
+  readonly [key: string]: string | number | boolean;
 }
