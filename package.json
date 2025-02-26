@@ -35,7 +35,9 @@
     "prod-build": "npm outdated && npm run lint && npm run test && tsc && npm run copy-files && cp .env.production dist/.env",
     "copy-files": "cp package.json dist/package.json && cp -rp scripts/ dist/",
     "lint": "prettier ./src --write && eslint ./src --fix",
-    "test": "node --env-file=.env.test ./node_modules/.bin/jest --watch"
+    "test": "node --env-file=.env.test ./node_modules/.bin/jest --passWithNoTests",
+    "test-watch": "node --env-file=.env.test ./node_modules/.bin/jest --watch",
+    "test-coverage": "node --env-file=.env.test ./node_modules/.bin/jest --coverage"
   },
   "engines": {
     "node": ">=20"
@@ -69,8 +71,8 @@
     "@types/pg": "^8.11.10",
     "@types/retry": "^0.12.5",
     "eslint": "^9.15.0",
-    "eslint-config-prettier": "^9.1.0",
-    "globals": "^15.11.0",
+    "eslint-config-prettier": "^10.0.1",
+    "globals": "^16.0.0",
     "jest": "^29.7.0",
     "prettier": "^3.3.3",
     "ts-jest": "^29.2.5",
