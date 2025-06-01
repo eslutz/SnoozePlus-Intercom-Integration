@@ -1,6 +1,6 @@
-// Test pure utility functions from snooze-utility
+// Test pure utility functions from snooze-utility (without importing the actual module due to dependencies)
 describe('snooze-utility pure functions', () => {
-  describe('calculateDaysUntilSending', () => {
+  describe('calculateDaysUntilSending logic', () => {
     it('should calculate positive days for future date', () => {
       // Use a fixed current date for testing
       const mockCurrentTime = new Date('2024-01-15T10:00:00Z').getTime();
@@ -93,7 +93,7 @@ describe('snooze-utility pure functions', () => {
     });
   });
 
-  describe('setUnixTimestamp', () => {
+  describe('setUnixTimestamp logic', () => {
     it('should convert Date to Unix timestamp', () => {
       const setUnixTimestamp = (date: Date): number =>
         Math.floor(date.getTime() / 1000);

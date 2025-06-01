@@ -1,4 +1,5 @@
-import { mapWorkspaceDTOToWorkspace } from '../workspace-model';
+// Import the actual modules to get coverage
+import { mapWorkspaceDTOToWorkspace, type Workspace } from '../workspace-model';
 import type { WorkspaceDTO } from '../workspace-dto-model';
 
 describe('Workspace Model', () => {

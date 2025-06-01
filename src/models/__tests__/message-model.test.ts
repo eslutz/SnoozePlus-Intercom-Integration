@@ -1,4 +1,5 @@
-import { mapMessageDTOToMessage, mapMessageDTOToMessageWithoutAuth } from '../message-model';
+// Import the actual modules to get coverage
+import { mapMessageDTOToMessage, mapMessageDTOToMessageWithoutAuth, type Message } from '../message-model';
 import type { MessageDTO } from '../message-dto-model';
 
 describe('Message Model', () => {
