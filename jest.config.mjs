@@ -3,14 +3,15 @@ export default {
   preset: 'ts-jest',
   testEnvironment: 'node',
   testMatch: [
-    '<rootDir>/src/**/__tests__/**/*.{ts,js}',
+    '<rootDir>/src/**/__tests__/**/*.{test,spec}.{ts,js}',
     '<rootDir>/src/**/*.(test|spec).{ts,js}',
   ],
-  collectCoverage: false,
+  collectCoverage: true,
   collectCoverageFrom: [
     'src/**/*.{ts,js}',
     '!src/**/*.d.ts',
     '!src/app.ts',
+    '!src/__tests__/helpers/**',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],

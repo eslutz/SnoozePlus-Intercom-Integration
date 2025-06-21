@@ -1,95 +1,45 @@
+import { createDateMock } from '../../__tests__/helpers/test-helpers';
+
 // Test pure utility functions from snooze-utility (without importing the actual module due to dependencies)
 describe('snooze-utility pure functions', () => {
   describe('calculateDaysUntilSending logic', () => {
+    const mockCurrentTime = new Date('2024-01-15T10:00:00Z').getTime();
+    const dateMock = createDateMock(mockCurrentTime);
+
+    const calculateDaysUntilSending = (sendDate: Date): number => {
+      const currentDate = new Date();
+      const timeDifference = sendDate.getTime() - currentDate.getTime();
+      const daysUntilSending = Math.ceil(timeDifference / (1000 * 3600 * 24));
+      return daysUntilSending;
+    };
+
+    beforeEach(() => {
+      dateMock.setup();
+    });
+
+    afterEach(() => {
+      dateMock.teardown();
+    });
+
     it('should calculate positive days for future date', () => {
-      // Use a fixed current date for testing
-      const mockCurrentTime = new Date('2024-01-15T10:00:00Z').getTime();
-      const originalDate = global.Date;
-      
-      // Mock Date constructor to return our mock current date
-      global.Date = jest.fn((dateString?: string) => {
-        if (dateString) {
-          return new originalDate(dateString);
-        }
-        return new originalDate(mockCurrentTime);
-      }) as any;
-      
-      // Copy static methods
-      global.Date.now = jest.fn(() => mockCurrentTime);
-      Object.setPrototypeOf(global.Date, originalDate);
-
-      const calculateDaysUntilSending = (sendDate: Date): number => {
-        const currentDate = new Date();
-        const timeDifference = sendDate.getTime() - currentDate.getTime();
-        const daysUntilSending = Math.ceil(timeDifference / (1000 * 3600 * 24));
-        return daysUntilSending;
-      };
-
       const futureDate = new Date('2024-01-18T10:00:00Z'); // 3 days later
       const result = calculateDaysUntilSending(futureDate);
 
       expect(result).toBe(3);
-
-      // Restore original Date
-      global.Date = originalDate;
     });
 
     it('should calculate negative days for past date', () => {
-      const mockCurrentTime = new Date('2024-01-15T10:00:00Z').getTime();
-      const originalDate = global.Date;
-      
-      global.Date = jest.fn((dateString?: string) => {
-        if (dateString) {
-          return new originalDate(dateString);
-        }
-        return new originalDate(mockCurrentTime);
-      }) as any;
-      
-      global.Date.now = jest.fn(() => mockCurrentTime);
-      Object.setPrototypeOf(global.Date, originalDate);
-
-      const calculateDaysUntilSending = (sendDate: Date): number => {
-        const currentDate = new Date();
-        const timeDifference = sendDate.getTime() - currentDate.getTime();
-        const daysUntilSending = Math.ceil(timeDifference / (1000 * 3600 * 24));
-        return daysUntilSending;
-      };
-
       const pastDate = new Date('2024-01-12T10:00:00Z'); // 3 days ago
       const result = calculateDaysUntilSending(pastDate);
 
       expect(result).toBe(-3);
-
-      global.Date = originalDate;
     });
 
     it('should return 1 for same day but later time', () => {
-      const mockCurrentTime = new Date('2024-01-15T10:00:00Z').getTime();
-      const originalDate = global.Date;
-      
-      global.Date = jest.fn((dateString?: string) => {
-        if (dateString) {
-          return new originalDate(dateString);
-        }
-        return new originalDate(mockCurrentTime);
-      }) as any;
-      
-      global.Date.now = jest.fn(() => mockCurrentTime);
-      Object.setPrototypeOf(global.Date, originalDate);
-
-      const calculateDaysUntilSending = (sendDate: Date): number => {
-        const currentDate = new Date();
-        const timeDifference = sendDate.getTime() - currentDate.getTime();
-        const daysUntilSending = Math.ceil(timeDifference / (1000 * 3600 * 24));
-        return daysUntilSending;
-      };
-
       const laterToday = new Date('2024-01-15T15:00:00Z'); // 5 hours later
       const result = calculateDaysUntilSending(laterToday);
 
       expect(result).toBe(1); // Math.ceil should round up partial days
-
-      global.Date = originalDate;
     });
   });
 
