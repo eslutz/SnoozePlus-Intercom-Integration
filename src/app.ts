@@ -1,13 +1,23 @@
 import config from './config/config.js';
 import express from 'express';
 import session from 'express-session';
-import schedule from 'node-schedule';
 import passport from 'passport';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import pool from './config/db-config.js';
-import logger, { logtail } from './config/logger-config.js';
+import helmet from 'helmet';
+import compression from 'compression';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import logger from './config/logger-config.js';
 import { morganMiddleware } from './middleware/logger-middleware.js';
+import {
+  globalErrorHandler,
+  notFoundHandler,
+  gracefulShutdown,
+  unhandledRejectionHandler,
+  uncaughtExceptionHandler,
+} from './middleware/error-middleware.js';
+import { handleValidationError } from './middleware/validation-middleware.js';
 import router from './routes/router.js';
 import scheduleJobs from './utilities/scheduler-utility.js';
 import './config/auth-config.js';
@@ -18,24 +28,103 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-app.use(morganMiddleware);
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Trust proxy for rate limiting and IP detection
+app.set('trust proxy', 1);
 
+// Security middleware
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+      },
+    },
+    crossOriginEmbedderPolicy: false, // Required for Intercom embedding
+  })
+);
+
+// CORS configuration
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? [config.intercomUrl, 'https://app.intercom.io']
+        : [
+            'http://localhost:3000',
+            config.intercomUrl,
+            'https://app.intercom.io',
+          ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Hub-Signature'],
+  })
+);
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
+
+// Compression middleware
+app.use(compression());
+
+// Request parsing middleware
+app.use(morganMiddleware);
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// Static file serving
 app.use(express.static('public'));
 app.use(express.static(path.join(__dirname)));
 
 // Configure session and add passport.
 const sessionSecret = config.sessionSecret;
 app.use(
-  session({ secret: sessionSecret, resave: false, saveUninitialized: false })
+  session({
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    name: 'snoozeplus.sid',
+    cookie: {
+      secure: config.isProduction,
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  })
 );
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Request ID middleware for tracking
+app.use((req, _res, next) => {
+  req.headers['x-request-id'] =
+    req.headers['x-request-id'] ??
+    `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  next();
+});
+
+// Routes
 app.use('/', router);
 
+// Error handling middleware
+app.use(handleValidationError);
+app.use(notFoundHandler);
+app.use(globalErrorHandler);
+
 const appLogger = logger.child({ module: 'app' });
+
+// Global error handlers
+process.on('unhandledRejection', unhandledRejectionHandler);
+process.on('uncaughtException', uncaughtExceptionHandler);
+
 appLogger.info('*** Starting SnoozePlus Intercom Integration ***');
 
 // Start the scheduler for sending messages.
@@ -59,29 +148,10 @@ const server = app
     appLogger.debug(`Error name: ${err.name}, stack: ${err.stack}`);
   });
 
-process.on('SIGTERM', () => {
-  appLogger.info('SIGTERM signal received: shutting down application.');
-  server.close((err) => {
-    if (err) {
-      appLogger.error(`Error closing server: ${String(err)}`);
-      process.exit(1);
-    }
-    void (async () => {
-      try {
-        appLogger.info('Draining DB pool.');
-        await pool.end();
-        appLogger.info('DB pool drained.');
-        appLogger.info('Canceling scheduled jobs.');
-        await schedule.gracefulShutdown();
-        appLogger.info('Scheduled jobs canceled.');
-        appLogger.info('Flushing logs.');
-        await logtail.flush();
-        appLogger.info('Logs flushed.');
-        appLogger.info('Application shut down.');
-      } catch (err) {
-        appLogger.error(`Error shutting down application: ${String(err)}`);
-        process.exit(1);
-      }
-    })();
-  });
+// Graceful shutdown handlers
+process.on('SIGTERM', (signal) => {
+  void gracefulShutdown(server)(signal);
+});
+process.on('SIGINT', (signal) => {
+  void gracefulShutdown(server)(signal);
 });
