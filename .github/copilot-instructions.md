@@ -1,9 +1,11 @@
 # Copilot Instructions for SnoozePlus-Intercom-Integration
 
 ## Project Overview
+
 This is a TypeScript-based Inbox integration for Intercom that automates delayed responses to customers. The project allows support teams to schedule automated responses after a specified delay period.
 
 ## Technology Stack
+
 - **Language**: TypeScript (98.6%)
 - **Runtime**: Node.js
 - **Framework**: Express.js for API server
@@ -12,6 +14,7 @@ This is a TypeScript-based Inbox integration for Intercom that automates delayed
 - **Package Manager**: npm
 
 ## Key Dependencies
+
 - `@intercom/api`: Official Intercom API client
 - `express`: Web framework
 - `dotenv`: Environment variable management
@@ -19,6 +22,7 @@ This is a TypeScript-based Inbox integration for Intercom that automates delayed
 - TypeScript and related tooling
 
 ## Project Structure
+
 - `/api`: API endpoints and webhook handlers
 - `/src`: Core application logic
   - `intercom.ts`: Intercom API integration and client setup
@@ -26,16 +30,20 @@ This is a TypeScript-based Inbox integration for Intercom that automates delayed
 - Configuration files: `tsconfig.json`, `.env.example`
 
 ## Core Functionality
+
 1. **Webhook Processing**: Handles Intercom webhooks for conversation events
 2. **Delayed Response Scheduling**: Manages automated response timing
 3. **Intercom Integration**: Sends messages and manages conversation states
 
 ## Environment Variables
+
 The project requires environment variables defined in `.env.example`:
+
 - `INTERCOM_ACCESS_TOKEN`: Intercom API authentication
 - Additional environment variables as specified in the .env.example file
 
 ## Development Guidelines
+
 - Use TypeScript for all new code
 - Follow existing patterns for error handling
 - Test webhook integrations using Intercom's webhook testing tools
@@ -43,11 +51,13 @@ The project requires environment variables defined in `.env.example`:
 - Write unit tests using Jest for all new functionality
 
 ## Key Components
+
 - Webhook handler for processing Intercom events
 - Intercom client configuration and API integration
 - Response scheduling logic
 
 ## Testing Considerations
+
 - **Framework**: Use Jest for all unit and integration tests
 - Test webhook signature verification if implemented
 - Verify scheduled messages are sent at correct times
@@ -57,6 +67,11 @@ The project requires environment variables defined in `.env.example`:
 - Aim for high test coverage on critical business logic
 
 ## Security Notes
+
 - Use environment variables for all sensitive data (API tokens)
 - Implement proper webhook verification
 - Never expose API credentials in code
+
+## Formatting and Style Guidelines
+
+- Always follow the formatting and style conventions defined in the project's `.editorconfig` and `.prettierrc` files. This includes indentation, line endings, quote style, trailing commas, and other code style rules.
