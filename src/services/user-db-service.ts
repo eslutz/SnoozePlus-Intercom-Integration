@@ -33,9 +33,13 @@ const getWorkspace = async (workspaceId: string): Promise<Workspace | null> => {
         .query<WorkspaceDTO>(getWorkspaceQuery, getParameters)
         .then((res) => {
           if (res.rows.length > 0) {
-            const workspace: Workspace = mapWorkspaceDTOToWorkspace(
-              res.rows[0]
-            );
+            const workspaceDto = res.rows[0];
+            if (!workspaceDto) {
+              reject(new Error('Workspace data is undefined'));
+              return;
+            }
+            const workspace: Workspace =
+              mapWorkspaceDTOToWorkspace(workspaceDto);
             resolve(workspace);
           } else {
             resolve(null);
@@ -91,7 +95,12 @@ const saveWorkspace = async (user: Workspace): Promise<string> => {
       pool
         .query<WorkspaceDTO>(saveWorkspaceQuery, saveParameters)
         .then((res) => {
-          const workspaceId = res.rows[0].workspace_id;
+          const workspaceId = res.rows[0]?.workspace_id;
+          if (workspaceId === undefined) {
+            throw new Error(
+              'Save workspace query returned undefined workspace_id'
+            );
+          }
           workspaceDbLogger.debug(
             `User saved with Workspace ID: ${workspaceId}`
           );

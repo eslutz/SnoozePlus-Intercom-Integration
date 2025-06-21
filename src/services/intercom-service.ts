@@ -93,7 +93,7 @@ const addNote = (
               `Error during POST request on attempt ${currentAttempt}: ${err}`
             );
             if (operation.retry(err)) {
-              return null;
+              return;
             }
             reject(operation.mainError()!);
           });
@@ -102,7 +102,7 @@ const addNote = (
           `Error during POST request on attempt ${currentAttempt}: ${String(err)}`
         );
         if (operation.retry(err as Error)) {
-          return null;
+          return;
         }
         reject(operation.mainError()!);
       }

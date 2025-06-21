@@ -280,7 +280,10 @@ const getCurrentSnoozesCanvas = (messages: Message[]): object => {
     canvasLogger.debug('Decrypting message.');
     canvasLogger.profile('decrypt');
     try {
-      decryptedMessage = decrypt(messages[i].message);
+      if (!messages[i]?.message) {
+        throw new Error('Message is undefined or null');
+      }
+      decryptedMessage = decrypt(messages[i]!.message);
     } catch (err) {
       canvasLogger.error(`Error decrypting message: ${String(err)}`);
       throw err;
@@ -290,7 +293,10 @@ const getCurrentSnoozesCanvas = (messages: Message[]): object => {
       message: 'Message decrypted.',
     });
 
-    const sendDate = new Date(messages[i].sendDate);
+    if (!messages[i]?.sendDate) {
+      throw new Error('Send date is undefined or null');
+    }
+    const sendDate = new Date(messages[i]!.sendDate);
     const daysUntilSending = calculateDaysUntilSending(sendDate);
     currentSnoozeCanvas.canvas.content.components.splice(2, 0, {
       type: 'text',
@@ -379,7 +385,10 @@ const getFinalCanvas = (messages: Message[]): object => {
     canvasLogger.debug('Decrypting message.');
     canvasLogger.profile('decrypt');
     try {
-      decryptedMessage = decrypt(messages[i].message);
+      if (!messages[i]?.message) {
+        throw new Error('Message is undefined or null');
+      }
+      decryptedMessage = decrypt(messages[i]!.message);
     } catch (err) {
       canvasLogger.error(`Error decrypting message: ${String(err)}`);
       throw err;
@@ -389,7 +398,10 @@ const getFinalCanvas = (messages: Message[]): object => {
       message: 'Message decrypted.',
     });
 
-    const sendDate = new Date(messages[i].sendDate);
+    if (!messages[i]?.sendDate) {
+      throw new Error('Send date is undefined or null');
+    }
+    const sendDate = new Date(messages[i]!.sendDate);
     const daysUntilSending = calculateDaysUntilSending(sendDate);
     finalCanvas.canvas.content.components.splice(3, 0, {
       type: 'text',

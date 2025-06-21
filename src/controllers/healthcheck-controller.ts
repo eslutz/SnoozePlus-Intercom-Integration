@@ -33,12 +33,12 @@ const dbHealthcheck: RequestHandler = (_req, res, next) => {
     }
     healthcheckLogger.profile('dbHealthcheck', {
       level: 'debug',
-      message: `Database connected: ${result.rows[0].now.toISOString()}`,
+      message: `Database connected: ${result.rows[0]?.now.toISOString() ?? 'Unknown'}`,
     });
     res
       .status(200)
       .send(
-        `Database connection is active: ${result.rows[0].now.toISOString()}`
+        `Database connection is active: ${result.rows[0]?.now.toISOString() ?? 'Unknown'}`
       );
   });
 };

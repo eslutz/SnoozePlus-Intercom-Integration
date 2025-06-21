@@ -169,7 +169,11 @@ const getRemainingMessageCount = async (message: Message): Promise<number> => {
       pool
         .query<{ count: string }>(messageCountQuery, messageCountParameters)
         .then((response) => {
-          const remainingMessages = parseInt(response.rows[0].count, 10);
+          const count = response.rows[0]?.count;
+          if (count === undefined) {
+            throw new Error('Count query returned undefined result');
+          }
+          const remainingMessages = parseInt(count, 10);
           messageDbLogger.debug(`Remaining messages: ${remainingMessages}`);
           resolve(remainingMessages);
         })
@@ -277,7 +281,11 @@ const saveMessages = async (
         pool
           .query<{ id: string }>(insertMessage, messageParameters)
           .then((response) => {
-            const messageGUID: string = response.rows[0].id;
+            const id = response.rows[0]?.id;
+            if (id === undefined) {
+              throw new Error('Insert message query returned undefined id');
+            }
+            const messageGUID: string = id;
             messageDbLogger.debug(`Message saved with GUID: ${messageGUID}`);
             resolve(messageGUID);
           })

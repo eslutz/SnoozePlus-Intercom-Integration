@@ -16,7 +16,7 @@ const callback: RequestHandler = (req, res, next) => {
   })(req, res, next);
 };
 
-const failure: RequestHandler = (req, res) => {
+const failure: RequestHandler = (_req, res) => {
   res.status(401).send('Failed to authenticate.');
 };
 

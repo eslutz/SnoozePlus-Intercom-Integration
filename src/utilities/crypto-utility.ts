@@ -11,9 +11,23 @@ import SignatureAlgorithm from '../enums/signature-algorithm-enum.js';
  * @function decrypt
  * @param encryptedText The encrypted text to decrypt, in the format `ivHex:encrypted`
  * @returns {string} The decrypted text in UTF-8 format
+ * @throws {Error} If the encrypted text format is invalid
  */
 const decrypt = (encryptedText: string): string => {
-  const [ivHex, encrypted] = encryptedText.split(':');
+  const parts = encryptedText.split(':');
+  if (parts.length !== 2) {
+    throw new Error(
+      'Invalid encrypted text format. Expected format: ivHex:encrypted'
+    );
+  }
+
+  const [ivHex, encrypted] = parts;
+  if (!ivHex || !encrypted) {
+    throw new Error(
+      'Invalid encrypted text format. Missing IV or encrypted data'
+    );
+  }
+
   const cipher = crypto.createDecipheriv(
     config.encryptionAlgorithm,
     Buffer.from(config.encryptionKey, 'hex'),

@@ -49,7 +49,11 @@ const createSnoozeRequest = (input: IntercomCanvasInput): SnoozeRequest => {
     snoozeLogger.debug('Encrypting message.');
     snoozeLogger.profile('encrypt');
     try {
-      encryptedMessage = encrypt(input[`message${i}`]);
+      const messageText = input[`message${i}`];
+      if (!messageText) {
+        throw new Error(`Message ${i} is undefined or empty`);
+      }
+      encryptedMessage = encrypt(messageText);
     } catch (err) {
       snoozeLogger.error(`Error encrypting message: ${String(err)}`);
       throw err;
@@ -76,7 +80,11 @@ const createSnoozeRequest = (input: IntercomCanvasInput): SnoozeRequest => {
   }
 
   // Get the date the snooze will end.
-  const snoozeUntil = new Date(messages[messages.length - 1].sendDate);
+  const lastMessage = messages[messages.length - 1];
+  if (!lastMessage?.sendDate) {
+    throw new Error('Last message or its send date is undefined');
+  }
+  const snoozeUntil = new Date(lastMessage.sendDate);
   snoozeLogger.debug(`Snooze until date set: ${snoozeUntil.toISOString()}`);
 
   const snoozeRequest: SnoozeRequest = {

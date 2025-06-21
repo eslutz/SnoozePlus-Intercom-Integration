@@ -38,7 +38,7 @@ const sendHeartbeat = (success = true): Promise<void> => {
               `Error sending heartbeat on attempt ${currentAttempt}: ${err.message}`
             );
             if (operation.retry(err)) {
-              return null;
+              return;
             }
             reject(operation.mainError()!);
           });
@@ -47,7 +47,7 @@ const sendHeartbeat = (success = true): Promise<void> => {
           `Error sending heartbeat on attempt ${currentAttempt}: ${String(err)}`
         );
         if (operation.retry(err as Error)) {
-          return null;
+          return;
         }
         reject(operation.mainError()!);
       }
