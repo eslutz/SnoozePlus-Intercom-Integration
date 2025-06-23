@@ -31,7 +31,7 @@
     "start": "node --env-file=.env dist/app.js",
     "dev": "tsx --env-file=.env.local --watch src/app.ts",
     "build": "npm run clean && npm run type-check && tsc && npm run copy-files",
-    "clean": "rimraf dist coverage",
+    "clean": "npx rimraf dist coverage",
     "type-check": "tsc --noEmit",
     "dev-build": "npm run build && cp .env.dev dist/.env",
     "prod-build": "npm outdated && npm run lint && npm run test && npm run build && cp .env.production dist/.env",
