@@ -2,6 +2,7 @@ import logger from '../config/logger-config.js';
 import { Message } from '../models/message-model.js';
 import { decrypt } from '../utilities/crypto-utility.js';
 import { calculateDaysUntilSending } from '../utilities/snooze-utility.js';
+import { AppError } from '../middleware/error-middleware.js';
 
 const canvasLogger = logger.child({ module: 'canvas-service' });
 
@@ -239,7 +240,7 @@ const getSetSnoozeCanvas = (numOfSnoozes: number): object => {
  * @function getCurrentSnoozesCanvas
  * @param messages Array of Message objects containing encrypted message content and send dates
  * @returns {Object}A canvas object compatible with Intercom messenger format containing formatted message display
- * @throws Will throw an error if message decryption fails
+ * @throws AppError if message decryption fails or message/date is invalid
  */
 const getCurrentSnoozesCanvas = (messages: Message[]): object => {
   const currentSnoozeCanvas = {
@@ -281,12 +282,12 @@ const getCurrentSnoozesCanvas = (messages: Message[]): object => {
     canvasLogger.profile('decrypt');
     try {
       if (!messages[i]?.message) {
-        throw new Error('Message is undefined or null');
+        throw new AppError('Message is undefined or null', 400);
       }
       decryptedMessage = decrypt(messages[i]!.message);
     } catch (err) {
       canvasLogger.error(`Error decrypting message: ${String(err)}`);
-      throw err;
+      throw new AppError('Failed to decrypt message', 500);
     }
     canvasLogger.profile('decrypt', {
       level: 'debug',
@@ -294,7 +295,7 @@ const getCurrentSnoozesCanvas = (messages: Message[]): object => {
     });
 
     if (!messages[i]?.sendDate) {
-      throw new Error('Send date is undefined or null');
+      throw new AppError('Send date is undefined or null', 400);
     }
     const sendDate = new Date(messages[i]!.sendDate);
     const daysUntilSending = calculateDaysUntilSending(sendDate);
@@ -338,7 +339,7 @@ const getCurrentSnoozesCanvas = (messages: Message[]): object => {
  * @function getFinalCanvas
  * @param messages An array of Message objects containing encrypted messages and send dates
  * @returns {Object} A canvas object containing formatted components for display
- * @throws Will throw an error if message decryption fails
+ * @throws AppError if message decryption fails or message/date is invalid
  */
 const getFinalCanvas = (messages: Message[]): object => {
   const finalCanvas = {
@@ -386,12 +387,12 @@ const getFinalCanvas = (messages: Message[]): object => {
     canvasLogger.profile('decrypt');
     try {
       if (!messages[i]?.message) {
-        throw new Error('Message is undefined or null');
+        throw new AppError('Message is undefined or null', 400);
       }
       decryptedMessage = decrypt(messages[i]!.message);
     } catch (err) {
       canvasLogger.error(`Error decrypting message: ${String(err)}`);
-      throw err;
+      throw new AppError('Failed to decrypt message', 500);
     }
     canvasLogger.profile('decrypt', {
       level: 'debug',
@@ -399,7 +400,7 @@ const getFinalCanvas = (messages: Message[]): object => {
     });
 
     if (!messages[i]?.sendDate) {
-      throw new Error('Send date is undefined or null');
+      throw new AppError('Send date is undefined or null', 400);
     }
     const sendDate = new Date(messages[i]!.sendDate);
     const daysUntilSending = calculateDaysUntilSending(sendDate);

@@ -1,5 +1,6 @@
 import { RequestHandler } from 'express';
 import passport from 'passport';
+import { asyncHandler, AppError } from '../middleware/error-middleware.js';
 
 // Define the authenticate function type
 type AuthenticateFunction = (
@@ -27,18 +28,28 @@ const login: RequestHandler = (req, res, next) => {
   })(req, res, next);
 };
 
-const logout: RequestHandler = (req, res, next) => {
-  req.logout((err) => {
-    if (err) {
-      return next(err);
-    }
-    req.session.destroy((err) => {
+const logout: RequestHandler = asyncHandler(async (req, res) => {
+  await new Promise<void>((resolve, reject) => {
+    req.logout((err: Error | null) => {
       if (err) {
-        return next(err);
+        reject(new AppError('Logout failed', 500));
+      } else {
+        resolve();
       }
-      res.status(200).send('Logout successful');
     });
   });
-};
+
+  await new Promise<void>((resolve, reject) => {
+    req.session.destroy((err: Error | null) => {
+      if (err) {
+        reject(new AppError('Session destruction failed', 500));
+      } else {
+        resolve();
+      }
+    });
+  });
+
+  res.status(200).send('Logout successful');
+});
 
 export { callback, failure, login, logout };
