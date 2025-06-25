@@ -120,6 +120,12 @@ export const handleValidationError = (
       method: req.method,
     });
 
+    // Check if response was already sent to prevent duplicate headers
+    if (res.headersSent) {
+      validationLogger.warn('Response already sent, delegating to next middleware');
+      return next(error);
+    }
+
     res.status(400).json({
       error: 'Validation Error',
       message: error.message,

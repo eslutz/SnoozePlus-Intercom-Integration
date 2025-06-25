@@ -50,7 +50,8 @@ export const notFoundHandler = (req: Request, res: Response): void => {
 export const globalErrorHandler = (
   err: Error | AppError,
   req: Request,
-  res: Response
+  res: Response,
+  next: NextFunction
 ): void => {
   let error = err as AppError;
 
@@ -96,6 +97,12 @@ export const globalErrorHandler = (
 
   // Include request ID for tracking
   errorResponse.requestId = req.headers['x-request-id'] ?? 'unknown';
+
+  // Check if response was already sent to prevent duplicate headers
+  if (res.headersSent) {
+    errorLogger.warn('Response already sent, delegating to default Express error handler');
+    return next(err);
+  }
 
   res.status(statusCode).json(errorResponse);
 };
