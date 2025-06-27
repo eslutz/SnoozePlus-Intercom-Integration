@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { Server } from 'http';
 import logger from '../config/logger-config.js';
 import config from '../config/config.js';
 
@@ -25,9 +26,10 @@ export class AppError extends Error {
 /**
  * Async error handler wrapper
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const asyncHandler = (fn: (...args: any[]) => Promise<any>) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+export const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
+): ((req: Request, res: Response, next: NextFunction) => void) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 };
@@ -100,7 +102,9 @@ export const globalErrorHandler = (
 
   // Check if response was already sent to prevent duplicate headers
   if (res.headersSent) {
-    errorLogger.warn('Response already sent, delegating to default Express error handler');
+    errorLogger.warn(
+      'Response already sent, delegating to default Express error handler'
+    );
     return next(err);
   }
 
@@ -110,32 +114,30 @@ export const globalErrorHandler = (
 /**
  * Graceful shutdown handler
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const gracefulShutdown = (server: any) => {
-  return (signal: string) => {
+export const gracefulShutdown = (server: Server) => {
+  return (signal: string): void => {
     errorLogger.info(`Received ${signal}, starting graceful shutdown`);
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    server.close((err: Error | null) => {
+    server.close((err?: Error) => {
       if (err) {
         errorLogger.error(`Error closing server: ${String(err)}`);
         process.exit(1);
       }
 
-      void (async () => {
+      void (async (): Promise<void> => {
         try {
           errorLogger.info('HTTP server closed');
 
           // Import these dynamically to avoid circular dependencies
-          const { default: pool } = await import('../config/db-config.js');
-          const { default: schedule } = await import('node-schedule');
-          const { logtail } = await import('../config/logger-config.js');
+          const { default: pool } = await import('../config/db-config');
+          const { logtail } = await import('../config/logger-config');
 
           errorLogger.info('Draining DB pool.');
           await pool.end();
           errorLogger.info('DB pool drained.');
 
           errorLogger.info('Canceling scheduled jobs.');
+          const schedule = await import('node-schedule');
           await schedule.gracefulShutdown();
           errorLogger.info('Scheduled jobs canceled.');
 

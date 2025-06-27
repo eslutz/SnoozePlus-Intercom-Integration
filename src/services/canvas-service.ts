@@ -1,5 +1,6 @@
 import logger from '../config/logger-config.js';
 import { Message } from '../models/message-model.js';
+import { CanvasResponse } from '../models/intercom-canvas-model.js';
 import { decrypt } from '../utilities/crypto-utility.js';
 import { calculateDaysUntilSending } from '../utilities/snooze-utility.js';
 import { AppError } from '../middleware/error-middleware.js';
@@ -17,14 +18,11 @@ const canvasLogger = logger.child({ module: 'canvas-service' });
  * - A dropdown to select number of snoozes (1-5)
  * - A submit button to proceed
  *
- * @see {@link https://developers.intercom.com/docs/references/canvas-kit/responseobjects/canvas/|Canvas Documentation}
- * @see {@link https://developers.intercom.com/docs/references/canvas-kit/interactivecomponents/button/|Components Documentation}
- *
  * @function getInitialCanvas
- * @returns {Object} An Intercom canvas configuration object containing the initial UI components
+ * @returns {CanvasResponse} An Intercom canvas configuration object containing the initial UI components
  */
-const getInitialCanvas = (): object => {
-  const initialCanvas = {
+const getInitialCanvas = (): CanvasResponse => {
+  const initialCanvas: CanvasResponse = {
     canvas: {
       content: {
         components: [
@@ -47,31 +45,11 @@ const getInitialCanvas = (): object => {
             id: 'numOfSnoozes',
             label: 'How many snoozes?',
             options: [
-              {
-                type: 'option',
-                id: '1',
-                text: '1 snooze 😴',
-              },
-              {
-                type: 'option',
-                id: '2',
-                text: '2 snoozes 😴😴',
-              },
-              {
-                type: 'option',
-                id: '3',
-                text: '3 snoozes 😴😴😴',
-              },
-              {
-                type: 'option',
-                id: '4',
-                text: '4 snoozes 😴😴😴😴',
-              },
-              {
-                type: 'option',
-                id: '5',
-                text: '5 snoozes 😴😴😴😴😴',
-              },
+              { type: 'option', id: '1', text: '1 snooze 😴' },
+              { type: 'option', id: '2', text: '2 snoozes 😴😴' },
+              { type: 'option', id: '3', text: '3 snoozes 😴😴😴' },
+              { type: 'option', id: '4', text: '4 snoozes 😴😴😴😴' },
+              { type: 'option', id: '5', text: '5 snoozes 😴😴😴😴😴' },
             ],
           },
           {
@@ -83,9 +61,7 @@ const getInitialCanvas = (): object => {
             id: 'submitNumOfSnoozes',
             label: 'Next >',
             style: 'secondary',
-            action: {
-              type: 'submit',
-            },
+            action: { type: 'submit' },
           },
         ],
       },
@@ -104,10 +80,10 @@ const getInitialCanvas = (): object => {
  *
  * @function getSetSnoozeCanvas
  * @param numOfSnoozes The number of sequential snooze periods to configure
- * @returns {Object} A canvas configuration object containing the complete interface structure
+ * @returns {CanvasResponse} A canvas configuration object containing the complete interface structure
  */
-const getSetSnoozeCanvas = (numOfSnoozes: number): object => {
-  const setSnoozeCanvas = {
+const getSetSnoozeCanvas = (numOfSnoozes: number): CanvasResponse => {
+  const setSnoozeCanvas: CanvasResponse = {
     canvas: {
       content: {
         components: [
@@ -162,67 +138,28 @@ const getSetSnoozeCanvas = (numOfSnoozes: number): object => {
       id: `snoozeDuration${i}`,
       label: 'Snooze for:',
       options: [
-        {
-          type: 'option',
-          id: '1',
-          text: '1 day',
-        },
-        {
-          type: 'option',
-          id: '2',
-          text: '2 days',
-        },
-        {
-          type: 'option',
-          id: '3',
-          text: '3 days',
-        },
-        {
-          type: 'option',
-          id: '4',
-          text: '4 days',
-        },
-        {
-          type: 'option',
-          id: '5',
-          text: '5 days',
-        },
-        {
-          type: 'option',
-          id: '6',
-          text: '6 days',
-        },
-        {
-          type: 'option',
-          id: '7',
-          text: '1 week',
-        },
-        {
-          type: 'option',
-          id: '14',
-          text: '2 weeks',
-        },
-        {
-          type: 'option',
-          id: '30',
-          text: '1 month',
-        },
+        { type: 'option', id: '1', text: '1 day' },
+        { type: 'option', id: '2', text: '2 days' },
+        { type: 'option', id: '3', text: '3 days' },
+        { type: 'option', id: '4', text: '4 days' },
+        { type: 'option', id: '5', text: '5 days' },
+        { type: 'option', id: '6', text: '6 days' },
+        { type: 'option', id: '7', text: '1 week' },
+        { type: 'option', id: '14', text: '2 weeks' },
+        { type: 'option', id: '30', text: '1 month' },
       ],
     });
     setSnoozeCanvas.canvas.content.components.splice(3, 0, {
       type: 'textarea',
       id: `message${i}`,
       label: 'With message:',
-      // @ts-expect-error: type not yet defined
       placeholder: 'Enter message to send at end of snooze...',
     });
-    // Do not insert a divider if only one snooze or last of multiple snoozes.
     if (i < numOfSnoozes) {
       setSnoozeCanvas.canvas.content.components.splice(4, 0, {
         type: 'spacer',
         size: 'm',
       });
-      // @ts-expect-error: type not yet defined
       setSnoozeCanvas.canvas.content.components.splice(5, 0, {
         type: 'divider',
       });
@@ -239,11 +176,11 @@ const getSetSnoozeCanvas = (numOfSnoozes: number): object => {
  *
  * @function getCurrentSnoozesCanvas
  * @param messages Array of Message objects containing encrypted message content and send dates
- * @returns {Object}A canvas object compatible with Intercom messenger format containing formatted message display
+ * @returns {CanvasResponse} A canvas object compatible with Intercom messenger format containing formatted message display
  * @throws AppError if message decryption fails or message/date is invalid
  */
-const getCurrentSnoozesCanvas = (messages: Message[]): object => {
-  const currentSnoozeCanvas = {
+const getCurrentSnoozesCanvas = (messages: Message[]): CanvasResponse => {
+  const currentSnoozeCanvas: CanvasResponse = {
     canvas: {
       content: {
         components: [
@@ -314,14 +251,11 @@ const getCurrentSnoozesCanvas = (messages: Message[]): object => {
       text: `Sending in ${daysUntilSending} day${daysUntilSending === 1 ? '' : 's'}.`,
       style: 'muted',
     });
-
-    // Insert a spacer between messages.
     if (i < messages.length - 1) {
       currentSnoozeCanvas.canvas.content.components.splice(5, 0, {
         type: 'spacer',
         size: 'm',
       });
-      // @ts-expect-error: type not yet defined
       currentSnoozeCanvas.canvas.content.components.splice(6, 0, {
         type: 'divider',
       });
@@ -338,11 +272,11 @@ const getCurrentSnoozesCanvas = (messages: Message[]): object => {
  *
  * @function getFinalCanvas
  * @param messages An array of Message objects containing encrypted messages and send dates
- * @returns {Object} A canvas object containing formatted components for display
+ * @returns {CanvasResponse} A canvas object containing formatted components for display
  * @throws AppError if message decryption fails or message/date is invalid
  */
-const getFinalCanvas = (messages: Message[]): object => {
-  const finalCanvas = {
+const getFinalCanvas = (messages: Message[]): CanvasResponse => {
+  const finalCanvas: CanvasResponse = {
     canvas: {
       content: {
         components: [
@@ -419,14 +353,11 @@ const getFinalCanvas = (messages: Message[]): object => {
       text: `Sending in ${daysUntilSending} day${daysUntilSending === 1 ? '' : 's'}.`,
       style: 'muted',
     });
-
-    // Insert a spacer between messages.
     if (i < messages.length - 1) {
       finalCanvas.canvas.content.components.splice(6, 0, {
         type: 'spacer',
         size: 'm',
       });
-      // @ts-expect-error: type not yet defined
       finalCanvas.canvas.content.components.splice(7, 0, {
         type: 'divider',
       });

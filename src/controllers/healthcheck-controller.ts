@@ -1,4 +1,4 @@
-import { RequestHandler } from 'express';
+import { RequestHandler, Request, Response } from 'express';
 import pool from '../config/db-config.js';
 import logger from '../config/logger-config.js';
 import { getWorkspace } from '../services/user-db-service.js';
@@ -7,50 +7,61 @@ import { asyncHandler, AppError } from '../middleware/error-middleware.js';
 const healthcheckLogger = logger.child({ module: 'healthcheck-controller' });
 
 // GET: / - Perform healthcheck.
-const healthcheck: RequestHandler = asyncHandler(async (_req, res) => {
-  healthcheckLogger.debug('Checking health of the application.');
-  healthcheckLogger.debug('Application is active.');
-  res.status(200).send('Snooze+ is active.');
-});
+const healthcheck: RequestHandler = asyncHandler(
+  async (_req: Request, res: Response) => {
+    await Promise.resolve(); // Satisfy linter for async function
+    healthcheckLogger.debug('Checking health of the application.');
+    healthcheckLogger.debug('Application is active.');
+    res.status(200).send('Snooze+ is active.');
+  }
+);
 
 // GET: /db-healthcheck - Perform healthcheck on the database.
-const dbHealthcheck: RequestHandler = asyncHandler(async (_req, res) => {
-  healthcheckLogger.debug('Checking database connection.');
-  healthcheckLogger.profile('dbHealthcheck');
+const dbHealthcheck: RequestHandler = asyncHandler(
+  async (_req: Request, res: Response) => {
+    healthcheckLogger.debug('Checking database connection.');
+    healthcheckLogger.profile('dbHealthcheck');
 
-  interface TimeResult {
-    now: Date;
-  }
-
-  const result = await new Promise<{ rows: TimeResult[] }>(
-    (resolve, reject) => {
-      pool.query('SELECT NOW()', (err, result: { rows: TimeResult[] }) => {
-        if (err) {
-          reject(
-            new AppError(`Database connection error: ${err.message}`, 503)
-          );
-        } else {
-          resolve(result);
-        }
-      });
+    interface TimeResult {
+      now: Date;
     }
-  );
 
-  healthcheckLogger.profile('dbHealthcheck', {
-    level: 'debug',
-    message: `Database connected: ${result.rows[0]?.now.toISOString() ?? 'Unknown'}`,
-  });
-
-  res
-    .status(200)
-    .send(
-      `Database connection is active: ${result.rows[0]?.now.toISOString() ?? 'Unknown'}`
+    const result = await new Promise<{ rows: TimeResult[] }>(
+      (
+        resolve: (value: { rows: TimeResult[] }) => void,
+        reject: (reason: Error) => void
+      ) => {
+        pool.query(
+          'SELECT NOW()',
+          (err: Error | null, result: { rows: TimeResult[] }) => {
+            if (err) {
+              reject(
+                new AppError(`Database connection error: ${err.message}`, 503)
+              );
+            } else {
+              resolve(result);
+            }
+          }
+        );
+      }
     );
-});
+
+    healthcheckLogger.profile('dbHealthcheck', {
+      level: 'debug',
+      message: `Database connected: ${result.rows[0]?.now.toISOString() ?? 'Unknown'}`,
+    });
+
+    res
+      .status(200)
+      .send(
+        `Database connection is active: ${result.rows[0]?.now.toISOString() ?? 'Unknown'}`
+      );
+  }
+);
 
 // POST: /installation-healthcheck - Handle installation health check requests.
 const installationHealthcheck: RequestHandler = asyncHandler(
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     const { workspace_id } = req.body as { workspace_id: string };
 
     if (!workspace_id) {

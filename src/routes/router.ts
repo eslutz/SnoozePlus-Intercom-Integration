@@ -13,7 +13,7 @@
  *  - Includes 404 catch-all handler for undefined routes
  *  - IP validation middleware currently disabled (TODO)
  */
-import express from 'express';
+import express, { Request, Response } from 'express';
 import authRouter from './auth-router.js';
 import healthcheckRouter from './healthcheck-router.js';
 import initializeRouter from './initialize-router.js';
@@ -25,7 +25,7 @@ import logger from '../config/logger-config.js';
 const routerLogger = logger.child({ module: 'router' });
 const router = express.Router();
 
-router.route('/').get((_req, res) => {
+router.route('/').get((_req: Request, res: Response) => {
   res.status(200).send('Welcome to Snooze+');
 });
 router.use('/auth', authRouter);
@@ -40,7 +40,7 @@ router.use('/submit', submitRouter);
 router.use('/webhook', webhookRouter);
 
 // Catch all undefined routes and respond with 404
-router.use((req, res) => {
+router.use((req: Request, res: Response) => {
   routerLogger.warn(`Undefined route accessed: ${req.originalUrl}`);
   res.status(404).send('Not Found');
 });

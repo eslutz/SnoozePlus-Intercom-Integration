@@ -1,4 +1,4 @@
-import { RequestHandler } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger-config.js';
 import SignatureAlgorithm from '../enums/signature-algorithm-enum.js';
 import { signatureValidator } from '../utilities/crypto-utility.js';
@@ -7,7 +7,11 @@ const validateWebhookSignatureLogger = logger.child({
   module: 'validate-signature-webhook-middleware',
 });
 
-const validateSignature: RequestHandler = (req, res, next) => {
+const validateSignature = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   // Retrieve the signature from the headers.
   const signature = req.headers['x-hub-signature'] as string;
   if (!signature) {

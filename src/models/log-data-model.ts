@@ -9,9 +9,9 @@
  * @property {number} response_time The time taken to process the request in milliseconds
  */
 export interface LogData {
-  method: string | undefined;
-  url: string | undefined;
-  status: number;
-  content_length: string | undefined;
-  response_time: number;
+  readonly method: string | undefined;
+  readonly url: string | undefined;
+  readonly status: number;
+  readonly content_length: string | undefined;
+  readonly response_time: number;
 }

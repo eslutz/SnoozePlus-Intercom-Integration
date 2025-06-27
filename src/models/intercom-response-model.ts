@@ -1,4 +1,11 @@
 /**
+ * Type definitions for Intercom conversation response objects.
+ * These types provide interfaces for handling Intercom API conversation responses.
+ *
+ * @see {@link https://developers.intercom.com/docs/references/rest-api/api.intercom.io/conversations/conversation | Conversation API Documentation}
+ */
+
+/**
  * Represents the structure of an Intercom API conversation response.
  *
  * @interface IntercomResponse
@@ -7,27 +14,27 @@
  * @property {number} created_at Timestamp when the conversation was created
  * @property {number} updated_at Timestamp when the conversation was last updated
  * @property {number} waiting_since Timestamp indicating how long the conversation has been waiting
- * @property {null} snoozed_until Timestamp until when the conversation is snoozed (if applicable)
+ * @property {number | null} snoozed_until Timestamp until when the conversation is snoozed (if applicable)
  * @property {Source} source The source information of the conversation
  * @property {Contacts} contacts Information about the contacts involved in the conversation
  * @property {Firstcontactreply} first_contact_reply Information about the first reply in the conversation
- * @property {null} admin_assignee_id ID of the admin assigned to the conversation
- * @property {null} team_assignee_id ID of the team assigned to the conversation
+ * @property {string | null} admin_assignee_id ID of the admin assigned to the conversation
+ * @property {string | null} team_assignee_id ID of the team assigned to the conversation
  * @property {boolean} open Indicates if the conversation is open
  * @property {string} state Current state of the conversation
  * @property {boolean} read Indicates if the conversation has been read
  * @property {Tags} tags Tags associated with the conversation
  * @property {string} priority Priority level of the conversation
- * @property {null} sla_applied SLA information applied to the conversation
- * @property {null} statistics Statistical data about the conversation
- * @property {null} conversation_rating Rating information for the conversation
- * @property {null} teammates Information about teammates involved
- * @property {null} title Title of the conversation
+ * @property {unknown} sla_applied SLA information applied to the conversation
+ * @property {unknown} statistics Statistical data about the conversation
+ * @property {unknown} conversation_rating Rating information for the conversation
+ * @property {unknown} teammates Information about teammates involved
+ * @property {string | null} title Title of the conversation
  * @property {Customattributes} custom_attributes Custom attributes associated with the conversation
  * @property {Customattributes} topics Topics associated with the conversation
- * @property {null} ticket Ticket information if applicable
+ * @property {unknown} ticket Ticket information if applicable
  * @property {Linkedobjects} linked_objects Objects linked to the conversation
- * @property {null} ai_agent Information about AI agent if involved
+ * @property {unknown} ai_agent Information about AI agent if involved
  * @property {boolean} ai_agent_participated Indicates if an AI agent participated in the conversation
  * @property {Conversationparts} conversation_parts Parts/messages of the conversation
  */
@@ -37,27 +44,27 @@ export interface IntercomResponse {
   readonly created_at: number;
   readonly updated_at: number;
   readonly waiting_since: number;
-  readonly snoozed_until: null;
+  readonly snoozed_until: number | null;
   readonly source: Source;
   readonly contacts: Contacts;
   readonly first_contact_reply: Firstcontactreply;
-  readonly admin_assignee_id: null;
-  readonly team_assignee_id: null;
+  readonly admin_assignee_id: string | null;
+  readonly team_assignee_id: string | null;
   readonly open: boolean;
   readonly state: string;
   readonly read: boolean;
   readonly tags: Tags;
   readonly priority: string;
-  readonly sla_applied: null;
-  readonly statistics: null;
-  readonly conversation_rating: null;
-  readonly teammates: null;
-  readonly title: null;
+  readonly sla_applied: unknown;
+  readonly statistics: unknown;
+  readonly conversation_rating: unknown;
+  readonly teammates: unknown;
+  readonly title: string | null;
   readonly custom_attributes: Customattributes;
   readonly topics: Customattributes;
-  readonly ticket: null;
+  readonly ticket: unknown;
   readonly linked_objects: Linkedobjects;
-  readonly ai_agent: null;
+  readonly ai_agent: unknown;
   readonly ai_agent_participated: boolean;
   readonly conversation_parts: Conversationparts;
 }

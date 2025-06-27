@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import Joi from 'joi';
+import Joi, { ValidationResult } from 'joi';
 import logger from '../config/logger-config.js';
 
 const validationLogger = logger.child({
@@ -16,22 +16,23 @@ const validationLogger = logger.child({
 export const validateRequest = (
   schema: Joi.ObjectSchema,
   property: 'body' | 'query' | 'params' = 'body'
-) => {
+): ((req: Request, res: Response, next: NextFunction) => void) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { error, value } = schema.validate(req[property], {
+    const dataToValidate = req[property] as Record<string, unknown>;
+    const validationResult: ValidationResult = schema.validate(dataToValidate, {
       abortEarly: false,
       allowUnknown: true,
       stripUnknown: false,
     });
 
-    if (error) {
-      const errorMessages = error.details.map((detail) => detail.message);
+    if (validationResult.error) {
+      const errorMessages = validationResult.error.details.map(
+        (detail) => detail.message
+      );
       validationLogger.warn('Request validation failed', {
         errors: errorMessages,
         property,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        value: req[property],
+        value: dataToValidate,
       });
 
       res.status(400).json({
@@ -42,8 +43,8 @@ export const validateRequest = (
     }
 
     // Replace the original data with the validated (and potentially transformed) data
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    req[property] = value;
+    (req[property] as Record<string, unknown>) =
+      validationResult.value as Record<string, unknown>;
     next();
   };
 };
@@ -122,7 +123,9 @@ export const handleValidationError = (
 
     // Check if response was already sent to prevent duplicate headers
     if (res.headersSent) {
-      validationLogger.warn('Response already sent, delegating to next middleware');
+      validationLogger.warn(
+        'Response already sent, delegating to next middleware'
+      );
       return next(error);
     }
 

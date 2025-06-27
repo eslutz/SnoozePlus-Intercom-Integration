@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import config from '../config/config.js';
 import logger from '../config/logger-config.js';
-import createRetryOperation from '../config/retry-config.js';
+import { retryAsyncOperation } from '../utilities/retry-utility.js';
 import { IntercomResponse } from '../models/intercom-response-model.js';
 import { Message } from '../models/message-model.js';
 import { decrypt } from '../utilities/crypto-utility.js';
@@ -43,64 +43,38 @@ const addNote = async (
     message: 'Access token decrypted.',
   });
 
-  // Add a note to the conversation with retry logic.
-  const operation = createRetryOperation();
-
-  return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
-      try {
-        const requestUrl = `${baseUrl}/conversations/${conversationId}/reply`;
-        const requestBody = {
-          admin_id: adminId,
-          body: note,
-          message_type: 'note',
-          type: 'admin',
-        };
-        const requestHeaders = {
-          Authorization: `Bearer ${decryptedAccessToken}`,
-          'Content-Type': 'application/json',
-          'Intercom-Version': '2.11',
-        };
-
-        intercomLogger.debug('Sending add note request', {
-          url: requestUrl,
-          headers: requestHeaders,
-          body: JSON.stringify(requestBody),
-        });
-
-        const response = await fetch(requestUrl, {
-          method: 'POST',
-          headers: requestHeaders,
-          body: JSON.stringify(requestBody),
-        });
-
-        intercomLogger.debug(`Add note response: ${JSON.stringify(response)}`);
-
-        if (!response.ok) {
-          const error = new AppError(
-            `Response status ${response.status}: Error during add note request.`,
-            response.status
-          );
-          if (operation.retry(error)) {
-            return;
-          }
-          reject(operation.mainError()!);
-          return;
-        }
-
-        const data = await response.json();
-        resolve(data as IntercomResponse);
-      } catch (err) {
-        intercomLogger.error(
-          `Error during POST request on attempt ${currentAttempt}: ${String(err)}`
-        );
-        if (operation.retry(err as Error)) {
-          return;
-        }
-        reject(operation.mainError()!);
-      }
+  return retryAsyncOperation<IntercomResponse>(async () => {
+    const requestUrl = `${baseUrl}/conversations/${conversationId}/reply`;
+    const requestBody = {
+      admin_id: adminId,
+      body: note,
+      message_type: 'note',
+      type: 'admin',
+    };
+    const requestHeaders = {
+      Authorization: `Bearer ${decryptedAccessToken}`,
+      'Content-Type': 'application/json',
+      'Intercom-Version': '2.11',
+    };
+    intercomLogger.debug('Sending add note request', {
+      url: requestUrl,
+      headers: requestHeaders,
+      body: JSON.stringify(requestBody),
     });
-  });
+    const response = await fetch(requestUrl, {
+      method: 'POST',
+      headers: requestHeaders,
+      body: JSON.stringify(requestBody),
+    });
+    intercomLogger.debug(`Add note response: ${JSON.stringify(response)}`);
+    if (!response.ok) {
+      throw new AppError(
+        `Response status ${response.status}: Error during add note request.`,
+        response.status
+      );
+    }
+    return (await response.json()) as IntercomResponse;
+  }, 'addNote');
 };
 
 /**
@@ -133,56 +107,33 @@ const cancelSnooze = async (
     message: 'Access token decrypted.',
   });
 
-  const operation = createRetryOperation();
-
-  return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
-      try {
-        const response = await fetch(
-          `${baseUrl}/conversations/${conversationId}/parts`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${decryptedAccessToken}`,
-              'Content-Type': 'application/json',
-              'Intercom-Version': '2.11',
-            },
-            body: JSON.stringify({
-              admin_id: adminId,
-              message_type: 'open',
-            }),
-          }
-        );
-
-        intercomLogger.debug(
-          `Open conversation response: ${JSON.stringify(response)}`
-        );
-
-        if (!response.ok) {
-          const error = new AppError(
-            `Response status ${response.status}: Error during cancel snooze request.`,
-            response.status
-          );
-          if (operation.retry(error)) {
-            return;
-          }
-          reject(operation.mainError()!);
-          return;
-        }
-
-        const data = await response.json();
-        resolve(data as IntercomResponse);
-      } catch (err) {
-        intercomLogger.error(
-          `Error during POST request on attempt ${currentAttempt}: ${String(err)}`
-        );
-        if (operation.retry(err as Error)) {
-          return;
-        }
-        reject(operation.mainError()!);
+  return retryAsyncOperation<IntercomResponse>(async () => {
+    const response = await fetch(
+      `${baseUrl}/conversations/${conversationId}/parts`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${decryptedAccessToken}`,
+          'Content-Type': 'application/json',
+          'Intercom-Version': '2.11',
+        },
+        body: JSON.stringify({
+          admin_id: adminId,
+          message_type: 'open',
+        }),
       }
-    });
-  });
+    );
+    intercomLogger.debug(
+      `Open conversation response: ${JSON.stringify(response)}`
+    );
+    if (!response.ok) {
+      throw new AppError(
+        `Response status ${response.status}: Error during cancel snooze request.`,
+        response.status
+      );
+    }
+    return (await response.json()) as IntercomResponse;
+  }, 'cancelSnooze');
 };
 
 /**
@@ -215,65 +166,39 @@ const closeConversation = async (
     message: 'Access token decrypted.',
   });
 
-  // Close the conversation in Intercom.
-  const operation = createRetryOperation();
-
-  return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
-      try {
-        const requestUrl = `${baseUrl}/conversations/${conversationId}/parts`;
-        const requestBody = {
-          admin_id: adminId,
-          message_type: 'close',
-          type: 'admin',
-        };
-        const requestHeaders = {
-          Authorization: `Bearer ${decryptedAccessToken}`,
-          'Content-Type': 'application/json',
-          'Intercom-Version': '2.11',
-        };
-
-        intercomLogger.debug('Sending close conversation request', {
-          url: requestUrl,
-          headers: requestHeaders,
-          body: JSON.stringify(requestBody),
-        });
-
-        const response = await fetch(requestUrl, {
-          method: 'POST',
-          headers: requestHeaders,
-          body: JSON.stringify(requestBody),
-        });
-
-        intercomLogger.debug(
-          `Close conversation response: ${JSON.stringify(response)}`
-        );
-
-        if (!response.ok) {
-          const error = new AppError(
-            `Response status ${response.status}: Error during close conversation request.`,
-            response.status
-          );
-          if (operation.retry(error)) {
-            return;
-          }
-          reject(operation.mainError()!);
-          return;
-        }
-
-        const data = await response.json();
-        resolve(data as IntercomResponse);
-      } catch (err) {
-        intercomLogger.error(
-          `Error during POST request on attempt ${currentAttempt}: ${String(err)}`
-        );
-        if (operation.retry(err as Error)) {
-          return;
-        }
-        reject(operation.mainError()!);
-      }
+  return retryAsyncOperation<IntercomResponse>(async () => {
+    const requestUrl = `${baseUrl}/conversations/${conversationId}/parts`;
+    const requestBody = {
+      admin_id: adminId,
+      message_type: 'close',
+      type: 'admin',
+    };
+    const requestHeaders = {
+      Authorization: `Bearer ${decryptedAccessToken}`,
+      'Content-Type': 'application/json',
+      'Intercom-Version': '2.11',
+    };
+    intercomLogger.debug('Sending close conversation request', {
+      url: requestUrl,
+      headers: requestHeaders,
+      body: JSON.stringify(requestBody),
     });
-  });
+    const response = await fetch(requestUrl, {
+      method: 'POST',
+      headers: requestHeaders,
+      body: JSON.stringify(requestBody),
+    });
+    intercomLogger.debug(
+      `Close conversation response: ${JSON.stringify(response)}`
+    );
+    if (!response.ok) {
+      throw new AppError(
+        `Response status ${response.status}: Error during close conversation request.`,
+        response.status
+      );
+    }
+    return (await response.json()) as IntercomResponse;
+  }, 'closeConversation');
 };
 
 /**
@@ -303,8 +228,6 @@ const sendMessage = async (message: Message): Promise<IntercomResponse> => {
     level: 'info',
     message: 'Message decrypted.',
   });
-
-  // Decrypt the access token before sending.
   let decryptedAccessToken: string;
   intercomLogger.info('Decrypting access token.');
   intercomLogger.profile('decrypt');
@@ -319,66 +242,38 @@ const sendMessage = async (message: Message): Promise<IntercomResponse> => {
     message: 'Access token decrypted.',
   });
 
-  // Send the message to Intercom.
-  const operation = createRetryOperation();
-
-  return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
-      try {
-        const requestUrl = `${baseUrl}/conversations/${message.conversationId}/reply`;
-        const requestBody = {
-          admin_id: message.adminId,
-          body: `<p>${decryptedMessage}</p>`,
-          message_type: 'comment',
-          type: 'admin',
-        };
-        const requestHeaders = {
-          Authorization: `Bearer ${decryptedAccessToken}`,
-          'Content-Type': 'application/json',
-          'Intercom-Version': '2.11',
-        };
-
-        intercomLogger.debug('Sending message request', {
-          url: requestUrl,
-          headers: requestHeaders,
-          body: JSON.stringify(requestBody),
-        });
-
-        const response = await fetch(requestUrl, {
-          method: 'POST',
-          headers: requestHeaders,
-          body: JSON.stringify(requestBody),
-        });
-
-        intercomLogger.debug(
-          `Send message response: ${JSON.stringify(response)}`
-        );
-
-        if (!response.ok) {
-          const error = new AppError(
-            `Response status ${response.status}: Error during send reply request.`,
-            response.status
-          );
-          if (operation.retry(error)) {
-            return;
-          }
-          reject(operation.mainError()!);
-          return;
-        }
-
-        const data = await response.json();
-        resolve(data as IntercomResponse);
-      } catch (err) {
-        intercomLogger.error(
-          `Error during POST request on attempt ${currentAttempt}: ${String(err)}`
-        );
-        if (operation.retry(err as Error)) {
-          return;
-        }
-        reject(operation.mainError()!);
-      }
+  return retryAsyncOperation<IntercomResponse>(async () => {
+    const requestUrl = `${baseUrl}/conversations/${message.conversationId}/reply`;
+    const requestBody = {
+      admin_id: message.adminId,
+      body: `<p>${decryptedMessage}</p>`,
+      message_type: 'comment',
+      type: 'admin',
+    };
+    const requestHeaders = {
+      Authorization: `Bearer ${decryptedAccessToken}`,
+      'Content-Type': 'application/json',
+      'Intercom-Version': '2.11',
+    };
+    intercomLogger.debug('Sending message request', {
+      url: requestUrl,
+      headers: requestHeaders,
+      body: JSON.stringify(requestBody),
     });
-  });
+    const response = await fetch(requestUrl, {
+      method: 'POST',
+      headers: requestHeaders,
+      body: JSON.stringify(requestBody),
+    });
+    intercomLogger.debug(`Send message response: ${JSON.stringify(response)}`);
+    if (!response.ok) {
+      throw new AppError(
+        `Response status ${response.status}: Error during send reply request.`,
+        response.status
+      );
+    }
+    return (await response.json()) as IntercomResponse;
+  }, 'sendMessage');
 };
 
 /**
@@ -413,57 +308,32 @@ const setSnooze = async (
     message: 'Access token decrypted.',
   });
 
-  const operation = createRetryOperation();
-
-  return new Promise((resolve, reject) => {
-    operation.attempt(async (currentAttempt) => {
-      try {
-        const response = await fetch(
-          `${baseUrl}/conversations/${conversationId}/parts`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${decryptedAccessToken}`,
-              'Content-Type': 'application/json',
-              'Intercom-Version': '2.11',
-            },
-            body: JSON.stringify({
-              admin_id: adminId,
-              message_type: 'snoozed',
-              snoozed_until: unixTimestamp,
-            }),
-          }
-        );
-
-        intercomLogger.debug(
-          `Set snooze response: ${JSON.stringify(response)}`
-        );
-
-        if (!response.ok) {
-          const error = new AppError(
-            `Response status ${response.status}: Error during set snooze request.`,
-            response.status
-          );
-          if (operation.retry(error)) {
-            return;
-          }
-          reject(operation.mainError()!);
-          return;
-        }
-
-        const data = await response.json();
-        resolve(data as IntercomResponse);
-      } catch (err) {
-        intercomLogger.error(
-          `Error during POST request on attempt ${currentAttempt}: ${String(err)}`
-        );
-        if (operation.retry(err as Error)) {
-          return;
-        }
-        reject(operation.mainError()!);
+  return retryAsyncOperation<IntercomResponse>(async () => {
+    const response = await fetch(
+      `${baseUrl}/conversations/${conversationId}/parts`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${decryptedAccessToken}`,
+          'Content-Type': 'application/json',
+          'Intercom-Version': '2.11',
+        },
+        body: JSON.stringify({
+          admin_id: adminId,
+          message_type: 'snoozed',
+          snoozed_until: unixTimestamp,
+        }),
       }
-    });
-  });
+    );
+    intercomLogger.debug(`Set snooze response: ${JSON.stringify(response)}`);
+    if (!response.ok) {
+      throw new AppError(
+        `Response status ${response.status}: Error during set snooze request.`,
+        response.status
+      );
+    }
+    return (await response.json()) as IntercomResponse;
+  }, 'setSnooze');
 };
 
 export { addNote, cancelSnooze, closeConversation, sendMessage, setSnooze };

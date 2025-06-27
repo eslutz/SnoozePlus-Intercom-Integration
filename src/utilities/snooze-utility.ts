@@ -3,6 +3,7 @@ import logger from '../config/logger-config.js';
 import { Message } from '../models/message-model.js';
 import { SnoozeRequest } from '../models/snooze-request-model.js';
 import { IntercomCanvasInput } from '../models/intercom-request-canvas-model.js';
+import { AppError } from '../middleware/error-middleware.js';
 
 const snoozeLogger = logger.child({ module: 'snooze-utility' });
 
@@ -34,7 +35,7 @@ const calculateDaysUntilSending = (sendDate: Date): number => {
 const createSnoozeRequest = (input: IntercomCanvasInput): SnoozeRequest => {
   snoozeLogger.debug('Getting number of snoozes set.');
   // Get the keys from the inputs object and use array length property to get number of inputs.
-  const keysArray = Object.keys(input);
+  const keysArray = Object.keys(input as unknown as Record<string, unknown>);
   const keysArrayCount = keysArray.length;
   const snoozeCount = Math.floor(keysArrayCount / 2);
   snoozeLogger.debug(`Number of snoozes set: ${snoozeCount}`);
@@ -49,13 +50,16 @@ const createSnoozeRequest = (input: IntercomCanvasInput): SnoozeRequest => {
     snoozeLogger.debug('Encrypting message.');
     snoozeLogger.profile('encrypt');
     try {
-      const messageText = input[`message${i}`];
-      if (!messageText) {
-        throw new Error(`Message ${i} is undefined or empty`);
+      const messageText = (input as unknown as Record<string, unknown>)[
+        `message${i}`
+      ];
+      if (typeof messageText !== 'string' || !messageText.trim()) {
+        throw new AppError('Message is undefined or empty', 400);
       }
       encryptedMessage = encrypt(messageText);
     } catch (err) {
-      snoozeLogger.error(`Error encrypting message: ${String(err)}`);
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      snoozeLogger.error(`Error encrypting message: ${errorMsg}`);
       throw err;
     }
     snoozeLogger.profile('encrypt', {
@@ -63,10 +67,17 @@ const createSnoozeRequest = (input: IntercomCanvasInput): SnoozeRequest => {
       message: 'Message encrypted.',
     });
 
+    const snoozeDurationValue = (input as unknown as Record<string, unknown>)[
+      `snoozeDuration${i}`
+    ];
     snoozeLogger.debug(
-      `Snooze duration - message ${i}: ${input[`snoozeDuration${i}`]}`
+      `Snooze duration - message ${i}: ${String(snoozeDurationValue)}`
     );
-    snoozeDurationTotal += Number(input[`snoozeDuration${i}`]);
+    const snoozeDuration = Number(snoozeDurationValue);
+    if (Number.isNaN(snoozeDuration) || snoozeDuration < 0) {
+      throw new AppError(`Invalid snooze duration for message ${i}`, 400);
+    }
+    snoozeDurationTotal += snoozeDuration;
     snoozeLogger.debug(`Current snooze duration total: ${snoozeDurationTotal}`);
     // Determine the send date as the current date and time plus the snooze duration.
     const sendDate = new Date();
@@ -75,14 +86,18 @@ const createSnoozeRequest = (input: IntercomCanvasInput): SnoozeRequest => {
     messages.push({
       message: encryptedMessage,
       sendDate: sendDate,
-      closeConversation: i === snoozeCount && input.then === 'close',
+      closeConversation:
+        i === snoozeCount &&
+        typeof (input as unknown as Record<string, unknown>).then ===
+          'string' &&
+        (input as unknown as Record<string, unknown>).then === 'close',
     } as Message);
   }
 
   // Get the date the snooze will end.
   const lastMessage = messages[messages.length - 1];
   if (!lastMessage?.sendDate) {
-    throw new Error('Last message or its send date is undefined');
+    throw new AppError('Last message or its send date is undefined', 500);
   }
   const snoozeUntil = new Date(lastMessage.sendDate);
   snoozeLogger.debug(`Snooze until date set: ${snoozeUntil.toISOString()}`);

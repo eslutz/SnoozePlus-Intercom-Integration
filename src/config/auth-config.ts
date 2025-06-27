@@ -118,11 +118,11 @@ passport.use(
   )
 );
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-passport.serializeUser((user: any, done: (err: any, id?: any) => void) =>
-  done(null, user)
+passport.serializeUser(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (user: any, done: (err: Error | null, id?: any) => void) => done(null, user)
 );
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-passport.deserializeUser((obj: any, done: (err: any, user?: any) => void) =>
-  done(null, obj)
+passport.deserializeUser(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (obj: any, done: (err: Error | null, user?: any) => void) => done(null, obj)
 );
