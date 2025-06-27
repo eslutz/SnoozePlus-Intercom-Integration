@@ -1,0 +1,20 @@
+{
+  "name": "SnoozePlus Intercom Integration - Development",
+  "dockerComposeFile": ["../docker-compose.yml"],
+  "service": "app",
+  "workspaceFolder": "/app",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "settings": {
+      "typescript.preferences.importModuleSpecifier": "relative",
+      "editor.formatOnSave": true,
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
+  },
+  "forwardPorts": [8706, 5432],
+  "postCreateCommand": "npm install",
+  "remoteUser": "nodejs"
+}
