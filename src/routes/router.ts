@@ -25,8 +25,29 @@ import logger from '../config/logger-config.js';
 const routerLogger = logger.child({ module: 'router' });
 const router = express.Router();
 
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Welcome message
+ *     description: Returns a welcome message for the SnoozePlus API
+ *     tags: [General]
+ *     responses:
+ *       200:
+ *         description: Welcome message
+ *         content:
+ *           text/plain:
+ *             schema:
+ *               type: string
+ *               example: "Welcome to Snooze+"
+ */
 router.route('/').get((_req: Request, res: Response) => {
-  res.status(200).send('Welcome to Snooze+');
+  const welcomeMessage = 'Welcome to Snooze+';
+  const apiDocsMessage =
+    process.env.NODE_ENV !== 'production'
+      ? '\n\nAPI Documentation: /api-docs'
+      : '';
+  res.status(200).send(welcomeMessage + apiDocsMessage);
 });
 router.use('/auth', authRouter);
 

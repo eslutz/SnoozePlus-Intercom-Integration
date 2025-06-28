@@ -8,6 +8,8 @@ import helmet from 'helmet';
 import compression from 'compression';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpecs from './config/swagger-config.js';
 import logger from './config/logger-config.js';
 import { morganMiddleware } from './middleware/logger-middleware.js';
 import {
@@ -38,8 +40,9 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Added for Swagger UI
         imgSrc: ["'self'", 'data:', 'https:'],
+        fontSrc: ["'self'", 'data:'], // Added for Swagger UI fonts
       },
     },
     crossOriginEmbedderPolicy: false, // Required for Intercom embedding
@@ -110,6 +113,19 @@ app.use((req, _res, next) => {
     `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   next();
 });
+
+// Swagger API documentation (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  app.use(
+    '/api-docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpecs, {
+      explorer: true,
+      customCss: '.swagger-ui .topbar { display: none }',
+      customSiteTitle: 'SnoozePlus API Documentation',
+    })
+  );
+}
 
 // Routes
 app.use('/', router);
