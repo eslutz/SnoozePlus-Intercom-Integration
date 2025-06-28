@@ -24,6 +24,7 @@ Snooze+ is an inbox app for Intercom used to automate sending delayed responses 
 - [Authentication](#authentication)
 - [Required Environment Variables](#required-environment-variables)
 - [Tools and Dependencies](#tools-and-dependencies)
+- [Docker & Dev Container Usage](./DOCKER.md)
 
 ## Local Development
 
@@ -36,6 +37,36 @@ Snooze+ is an inbox app for Intercom used to automate sending delayed responses 
 1. **Start the Application**: Run the command `npm run dev` to start the application
 1. **Access the Application**: Access the application at `http://localhost:8706`
 1. **Intercom**: Ensure that you have an Intercom account with an [Inbox App](https://developers.intercom.com/docs/build-an-integration/getting-started/build-an-app-for-your-inbox) created
+
+### Running Locally
+
+1. Copy environment variables: `cp docs/.env.sample .env.local`
+1. Fill in required values
+1. Install dependencies: `npm install`
+1. Start development server: `npm run dev`
+
+### Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+### Building
+
+```bash
+# Development build
+npm run dev-build
+
+# Production build
+npm run prod-build
+```
 
 ## Development Tools
 
@@ -54,7 +85,7 @@ VS Code launch configurations are provided for:
 - Debugging the application
 - Debugging tests
 
-### Testing
+### Testing framework
 
 [Jest](https://jestjs.io) is configured for testing with:
 
@@ -218,3 +249,7 @@ The application leverages the following packages:
 - [Node Schedule](https://www.npmjs.com/package/node-schedule): Cron-like and not-cron-like job scheduler for Node.js
 - [Retry](https://www.npmjs.com/package/retry): Abstraction for exponential and custom retry strategies
 - [pg](https://www.npmjs.com/package/pg): PostgreSQL client for Node.js
+
+## Postman Collection
+
+See [POSTMAN.md](./POSTMAN.md) for instructions on importing and using the Postman collection to test all API endpoints.

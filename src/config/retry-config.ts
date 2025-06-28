@@ -19,7 +19,7 @@ import config from './config.js';
  *  - retryMaxTimeout: Maximum wait time in ms between retries
  *  - retryRandomize: Whether to add randomization to retry delays
  */
-const createRetryOperation = () => {
+const createRetryOperation = (): retry.RetryOperation => {
   return retry.operation({
     retries: config.retryAttempts,
     factor: config.retryFactor,

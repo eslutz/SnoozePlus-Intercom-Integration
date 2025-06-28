@@ -1,4 +1,4 @@
-import { RequestHandler } from 'express';
+import { RequestHandler, Request, Response } from 'express';
 import logger from '../config/logger-config.js';
 import * as canvasService from '../services/canvas-service.js';
 import * as intercomService from '../services/intercom-service.js';
@@ -9,44 +9,39 @@ import {
   setSnoozeCanceledNote,
 } from '../utilities/snooze-utility.js';
 import { IntercomCanvasRequest } from '../models/intercom-request-canvas-model.js';
+import { asyncHandler, AppError } from '../middleware/error-middleware.js';
 
 const submitLogger = logger.child({ module: 'submit-controller' });
 
 // POST: /submit - Send the next canvas based on submit component id.
-const submit: RequestHandler = async (req, res, next) => {
-  submitLogger.info('Submit request received.');
-  submitLogger.profile('submit');
-  const canvasRequest = req.body as IntercomCanvasRequest;
-  submitLogger.info(`Request type: ${canvasRequest.component_id}`);
-  submitLogger.debug(`POST request body: ${JSON.stringify(req.body)}`);
-  const workspaceId = canvasRequest.workspace_id;
-  submitLogger.debug(`workspace_id: ${workspaceId}`);
-  const conversationId = Number(canvasRequest.conversation.id);
-  submitLogger.debug(`conversation:id: ${conversationId}`);
+const submit: RequestHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    submitLogger.info('Submit request received.');
+    submitLogger.profile('submit');
+    const canvasRequest = req.body as IntercomCanvasRequest;
+    submitLogger.info(`Request type: ${canvasRequest.component_id}`);
+    submitLogger.debug(`POST request body: ${JSON.stringify(req.body)}`);
+    const workspaceId = canvasRequest.workspace_id;
+    submitLogger.debug(`workspace_id: ${workspaceId}`);
+    const conversationId = Number(canvasRequest.conversation.id);
+    submitLogger.debug(`conversation:id: ${conversationId}`);
 
-  // Retrieve user based on workspace_id
-  const user = await workspaceDbService.getWorkspace(workspaceId);
-  if (!user) {
-    submitLogger.error(`User not found. Workspace ID: ${workspaceId}`);
-    res.status(500).send('User not found.');
-    return;
-  }
+    // Retrieve user based on workspace_id
+    const user = await workspaceDbService.getWorkspace(workspaceId);
+    if (!user) {
+      throw new AppError(`User not found. Workspace ID: ${workspaceId}`, 404);
+    }
 
-  if (canvasRequest.component_id === 'submitNumOfSnoozes') {
-    const requestedNumOfSnoozes = canvasRequest.input_values.numOfSnoozes;
-    // Check if the input is a valid number.
-    if (isNaN(requestedNumOfSnoozes)) {
-      submitLogger.error(
-        `Invalid input. The number of snoozes must be a number. Received: ${requestedNumOfSnoozes}`
-      );
-      res
-        .status(400)
-        .send(
-          `Invalid input. The number of snoozes must be a number. Received: ${requestedNumOfSnoozes}`
+    if (canvasRequest.component_id === 'submitNumOfSnoozes') {
+      const requestedNumOfSnoozes = canvasRequest.input_values.numOfSnoozes;
+      // Check if the input is a valid number.
+      if (isNaN(requestedNumOfSnoozes)) {
+        throw new AppError(
+          `Invalid input. The number of snoozes must be a number. Received: ${requestedNumOfSnoozes}`,
+          400
         );
+      }
 
-      return;
-    } else {
       const numOfSnoozes = Number(requestedNumOfSnoozes);
       submitLogger.info(`Number of snoozes requested: ${numOfSnoozes}`);
       submitLogger.info('Building message canvas.');
@@ -54,9 +49,7 @@ const submit: RequestHandler = async (req, res, next) => {
       submitLogger.info('Returning message canvas.');
 
       res.send(messageCanvas);
-    }
-  } else if (canvasRequest.component_id === 'submitSnooze') {
-    try {
+    } else if (canvasRequest.component_id === 'submitSnooze') {
       // Create the snooze request from the input values.
       submitLogger.info('Parsing request for snooze request.');
       submitLogger.profile('createSnoozeRequest');
@@ -130,27 +123,14 @@ const submit: RequestHandler = async (req, res, next) => {
 
       // Send the final canvas.
       res.send(finalCanvas);
-    } catch (err) {
-      submitLogger.error(
-        `An error occurred submitting the snooze request: ${String(err)}`
-      );
-      res
-        .status(500)
-        .send(
-          `An error occurred submitting the snooze request: ${String(err)}`
-        );
-      next(err);
-    }
-  } else if (canvasRequest.component_id === 'cancelSnooze') {
-    submitLogger.info('Cancel snooze request received.');
-    submitLogger.profile('cancelSnooze');
+    } else if (canvasRequest.component_id === 'cancelSnooze') {
+      submitLogger.info('Cancel snooze request received.');
+      submitLogger.profile('cancelSnooze');
 
-    // Archive messages in the database.
-    let messagesArchived = 0;
-    try {
+      // Archive messages in the database.
       submitLogger.info('Archiving messages.');
       submitLogger.profile('archiveMessages');
-      messagesArchived = await messageDbService.archiveMessages(
+      const messagesArchived = await messageDbService.archiveMessages(
         workspaceId,
         conversationId
       );
@@ -161,18 +141,8 @@ const submit: RequestHandler = async (req, res, next) => {
       submitLogger.debug(
         `Messages archived response: ${JSON.stringify(messagesArchived)}`
       );
-    } catch (err) {
-      submitLogger.error(
-        `An error occurred archiving messages: ${String(err)}`
-      );
-      res
-        .status(500)
-        .send(`An error occurred archiving messages: ${String(err)}`);
-      next(err);
-    }
 
-    // Add cancel snooze note to the conversation.
-    try {
+      // Add cancel snooze note to the conversation.
       submitLogger.info('Adding cancelling snooze note.');
       submitLogger.profile('addNote');
       const cancelSnoozeResponse = await intercomService.addNote(
@@ -188,20 +158,8 @@ const submit: RequestHandler = async (req, res, next) => {
       submitLogger.debug(
         `Cancel Snooze response: ${JSON.stringify(cancelSnoozeResponse)}`
       );
-    } catch (err) {
-      submitLogger.error(
-        `An error occurred adding cancelling snooze note: ${String(err)}`
-      );
-      res
-        .status(500)
-        .send(
-          `An error occurred adding cancelling snooze note: ${String(err)}`
-        );
-      next(err);
-    }
 
-    // Cancel the conversation snooze.
-    try {
+      // Cancel the conversation snooze.
       submitLogger.info('Unsnoozing conversation.');
       submitLogger.profile('unsnooze');
       const unsnoozeResponse = await intercomService.cancelSnooze(
@@ -216,41 +174,34 @@ const submit: RequestHandler = async (req, res, next) => {
       submitLogger.debug(
         `Unsnooze response: ${JSON.stringify(unsnoozeResponse)}`
       );
-    } catch (err) {
-      submitLogger.error(
-        `An error occurred unsnoozing conversation: ${String(err)}`
-      );
-      res
-        .status(500)
-        .send(`An error occurred unsnoozing conversation: ${String(err)}`);
-      next(err);
+
+      // Reset to original canvas.
+      submitLogger.info('Resetting to initial canvas.');
+      submitLogger.profile('initialCanvas');
+      const initialCanvas = canvasService.getInitialCanvas();
+      submitLogger.profile('initialCanvas', {
+        level: 'info',
+        message: 'Completed cancel snooze request.',
+      });
+
+      res.send(initialCanvas);
+    } else {
+      // Reset to original canvas.
+      submitLogger.info('Resetting to initial canvas.');
+      submitLogger.profile('initialCanvas');
+      const initialCanvas = canvasService.getInitialCanvas();
+      submitLogger.profile('initialCanvas', {
+        level: 'info',
+        message: 'Completed initial canvas.',
+      });
+      res.send(initialCanvas);
     }
 
-    // Reset to original canvas.
-    submitLogger.info('Resetting to initial canvas.');
-    submitLogger.profile('initialCanvas');
-    const initialCanvas = canvasService.getInitialCanvas();
-    submitLogger.profile('initialCanvas', {
+    submitLogger.profile('submit', {
       level: 'info',
-      message: 'Completed cancel snooze request.',
+      message: 'Completed submit request.',
     });
-
-    res.send(initialCanvas);
-  } else {
-    // Reset to original canvas.
-    submitLogger.info('Resetting to initial canvas.');
-    submitLogger.profile('initialCanvas');
-    const initialCanvas = canvasService.getInitialCanvas();
-    submitLogger.profile('initialCanvas', {
-      level: 'info',
-      message: 'Completed initial canvas.',
-    });
-    res.send(initialCanvas);
   }
-  submitLogger.profile('submit', {
-    level: 'info',
-    message: 'Completed submit request.',
-  });
-};
+);
 
 export { submit };

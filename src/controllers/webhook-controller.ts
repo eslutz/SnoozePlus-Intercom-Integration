@@ -1,53 +1,51 @@
-import { RequestHandler } from 'express';
+import { RequestHandler, Request, Response } from 'express';
 import logger from '../config/logger-config.js';
 import { addNote } from '../services/intercom-service.js';
 import * as messageService from '../services/message-db-service.js';
 import * as workspaceDbService from '../services/user-db-service.js';
 import { setCloseNote } from '../utilities/snooze-utility.js';
 import { IntercomWebhookRequest } from '../models/intercom-request-webhook-model.js';
+import { asyncHandler, AppError } from '../middleware/error-middleware.js';
 
 const webhookLogger = logger.child({
   module: 'webhook-controller',
 });
 
 // HEAD: /webhook - Receive webhook request to validate endpoint.
-const validate: RequestHandler = (req, res) => {
-  try {
+const validate: RequestHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    await Promise.resolve(); // Satisfy linter for async function
     webhookLogger.debug(`HEAD request headers: ${JSON.stringify(req.headers)}`);
     res.status(200).send();
-  } catch (err) {
-    webhookLogger.error(`An error occurred: ${String(err)}`);
-    res.status(500).send();
   }
-};
+);
 
-const receiver: RequestHandler = async (req, res, next) => {
-  webhookLogger.info('Webhook notification received.');
-  webhookLogger.profile('receiver');
-  res.status(200).send('Webhook notification received.');
+const receiver: RequestHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    webhookLogger.info('Webhook notification received.');
+    webhookLogger.profile('receiver');
+    res.status(200).send('Webhook notification received.');
 
-  const webhookRequest = req.body as IntercomWebhookRequest;
-  const fullTopic: string = webhookRequest.topic;
-  webhookLogger.debug(`Webhook notification full topic: ${fullTopic}`);
-  const topic: string = fullTopic.substring(fullTopic.lastIndexOf('.') + 1);
-  webhookLogger.debug(`Webhook notification topic: ${topic}`);
-  const workspaceId: string = webhookRequest.app_id;
-  webhookLogger.debug(`Webhook notification workspace_id: ${workspaceId}`);
-  const conversationId: number = webhookRequest.data.item.id;
-  webhookLogger.debug(
-    `Webhook notification conversation_id: ${conversationId}`
-  );
-  const user = await workspaceDbService.getWorkspace(workspaceId);
-  if (!user) {
-    webhookLogger.error(`User not found. Workspace ID: ${workspaceId}`);
-    res.status(500).send('User not found.');
-    return;
-  }
+    const webhookRequest = req.body as IntercomWebhookRequest;
+    const fullTopic: string = webhookRequest.topic;
+    webhookLogger.debug(`Webhook notification full topic: ${fullTopic}`);
+    const topic: string = fullTopic.substring(fullTopic.lastIndexOf('.') + 1);
+    webhookLogger.debug(`Webhook notification topic: ${topic}`);
+    const workspaceId: string = webhookRequest.app_id;
+    webhookLogger.debug(`Webhook notification workspace_id: ${workspaceId}`);
+    const conversationId: number = webhookRequest.data.item.id;
+    webhookLogger.debug(
+      `Webhook notification conversation_id: ${conversationId}`
+    );
 
-  let messagesArchived = 0;
+    const user = await workspaceDbService.getWorkspace(workspaceId);
+    if (!user) {
+      throw new AppError(`User not found. Workspace ID: ${workspaceId}`, 404);
+    }
 
-  // Determine if the conversation was unsnoozed, closed, or deleted.
-  try {
+    let messagesArchived = 0;
+
+    // Determine if the conversation was unsnoozed, closed, or deleted.
     if (topic === 'unsnoozed' || topic === 'closed' || topic === 'deleted') {
       // Archive messages associated with conversation from database.
       webhookLogger.info(`Conversation has been ${topic}.`);
@@ -72,20 +70,15 @@ const receiver: RequestHandler = async (req, res, next) => {
         `Webhook notification topic ${fullTopic} not recognized.`
       );
     }
-  } catch (err) {
-    webhookLogger.error(`An error occurred: ${String(err)}`);
-    res.status(500).send(`An error occurred: ${String(err)}`);
-    next(err);
-  }
 
-  // Add close note to conversation.
-  webhookLogger.info('Creating closing note for the conversation.');
-  webhookLogger.profile('setCloseNote');
-  webhookLogger.profile('setCloseNote', {
-    level: 'info',
-    message: 'Closing note created.',
-  });
-  try {
+    // Add close note to conversation.
+    webhookLogger.info('Creating closing note for the conversation.');
+    webhookLogger.profile('setCloseNote');
+    webhookLogger.profile('setCloseNote', {
+      level: 'info',
+      message: 'Closing note created.',
+    });
+
     webhookLogger.info('Adding close note to conversation.');
     webhookLogger.profile('addNote');
     const response = await addNote(
@@ -99,15 +92,12 @@ const receiver: RequestHandler = async (req, res, next) => {
       message: 'Close note added to conversation.',
     });
     webhookLogger.debug(`Add Note response: ${JSON.stringify(response)}`);
-  } catch (err) {
-    webhookLogger.error(`An error occurred: ${String(err)}`);
-    res.status(500).send(`An error occurred: ${String(err)}`);
-    next(err);
+
+    webhookLogger.profile('receiver', {
+      level: 'info',
+      message: 'Webhook notification processed.',
+    });
   }
-  webhookLogger.profile('receiver', {
-    level: 'info',
-    message: 'Webhook notification processed.',
-  });
-};
+);
 
 export { validate, receiver };

@@ -21,19 +21,22 @@ const schedulerLogger = logger.child({ module: 'scheduler-utility' });
 const scheduleJobs = async (): Promise<void> => {
   // Schedule the task to run every 6 hours
   try {
-    schedule.scheduleJob('0 */6 * * *', async (scheduledFireDate) => {
-      schedulerLogger.debug(
-        `Scheduled run: ${scheduledFireDate.toISOString()}, Actual run: ${new Date().toISOString()}.`
-      );
-      try {
-        await scheduleMessages();
-      } catch (err) {
-        schedulerLogger.error(`Error running scheduled task: ${String(err)}`);
+    schedule.scheduleJob(
+      '0 */6 * * *',
+      async (scheduledFireDate: Date): Promise<void> => {
+        schedulerLogger.debug(
+          `Scheduled run: ${scheduledFireDate.toISOString()}, Actual run: ${new Date().toISOString()}.`
+        );
+        try {
+          await scheduleMessages();
+        } catch (err) {
+          schedulerLogger.error(`Error running scheduled task: ${String(err)}`);
+        }
+        if (config.isProduction) {
+          await sendHeartbeat();
+        }
       }
-      if (config.isProduction) {
-        await sendHeartbeat();
-      }
-    });
+    );
   } catch (err) {
     schedulerLogger.error(`Error running scheduled task: ${String(err)}`);
     if (config.isProduction) {

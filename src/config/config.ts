@@ -54,7 +54,7 @@ const config: Config = {
  * @throws {Error} Throws an error if any required fields are missing or empty
  * @remarks Empty strings (or strings containing only whitespace) are considered invalid values
  */
-const validateConfig = (config: Config) => {
+const validateConfig = (config: Config): void => {
   const requiredFields = [
     'sessionSecret',
     'pgDatabase',
@@ -67,8 +67,8 @@ const validateConfig = (config: Config) => {
     'encryptionKey',
   ];
 
-  const missingFields: string[] = requiredFields.filter((field) => {
-    const value = config[field];
+  const missingFields: string[] = requiredFields.filter((field: string) => {
+    const value = config[field as keyof Config];
     if (typeof value === 'string') {
       return !value || value.trim() === '';
     }

@@ -52,5 +52,4 @@ export interface Config {
   readonly retryRandomize: boolean;
   readonly sessionSecret: string;
   readonly ipAllowlist: string;
-  readonly [key: string]: string | number | boolean;
 }

@@ -1,4 +1,4 @@
-import { RequestHandler } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger-config.js';
 import SignatureAlgorithm from '../enums/signature-algorithm-enum.js';
 import { signatureValidator } from '../utilities/crypto-utility.js';
@@ -7,9 +7,13 @@ const validateWebhookSignatureLogger = logger.child({
   module: 'validate-signature-webhook-middleware',
 });
 
-const validateSignature: RequestHandler = (req, res, next) => {
+const validateSignature = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   // Retrieve the signature from the headers.
-  let signature = req.headers['x-hub-signature'] as string;
+  const signature = req.headers['x-hub-signature'] as string;
   if (!signature) {
     validateWebhookSignatureLogger.error('Missing X-Hub-Signature header');
     res.status(400).send('Missing X-Hub-Signature header');
@@ -17,8 +21,8 @@ const validateSignature: RequestHandler = (req, res, next) => {
   }
 
   // Extract the actual signature from the header value.
-  signature = signature.split('sha1=')[1];
-  if (!signature) {
+  const signaturePart = signature.split('sha1=')[1];
+  if (!signaturePart) {
     validateWebhookSignatureLogger.error(
       'Invalid X-Hub-Signature header format'
     );
@@ -29,7 +33,7 @@ const validateSignature: RequestHandler = (req, res, next) => {
   // Check if the signature is valid.
   const signatureValid = signatureValidator(
     JSON.stringify(req.body),
-    signature,
+    signaturePart,
     SignatureAlgorithm.WEBHOOK
   );
   if (!signatureValid) {

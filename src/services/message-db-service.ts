@@ -1,12 +1,13 @@
 import pool from '../config/db-config.js';
 import logger from '../config/logger-config.js';
-import createRetryOperation from '../config/retry-config.js';
+import { retryAsyncOperation } from '../utilities/retry-utility.js';
 import { MessageDTO } from '../models/message-dto-model.js';
 import {
   Message,
   mapMessageDTOToMessage,
   mapMessageDTOToMessageWithoutAuth,
 } from '../models/message-model.js';
+import { AppError } from '../middleware/error-middleware.js';
 
 const messageDbLogger = logger.child({ module: 'message-db-service' });
 
@@ -15,9 +16,9 @@ const messageDbLogger = logger.child({ module: 'message-db-service' });
  * Uses retry logic to handle potential database connection issues.
  *
  * @function archiveMessage
- * @param messageId The unique identifier of the message to be archived
+ * @param {string} messageId - The unique identifier of the message to be archived
  * @returns {Promise<number>} A Promise that resolves to the number of rows affected (should be 1 if successful, 0 if message not found)
- * @throws Will throw an error if all retry attempts fail to execute the database query
+ * @throws {Error} Will throw an error if all retry attempts fail to execute the database query
  */
 const archiveMessage = async (messageId: string): Promise<number> => {
   const archiveMessageQuery = `
@@ -26,28 +27,20 @@ const archiveMessage = async (messageId: string): Promise<number> => {
     WHERE id = $1;
   `;
   const archiveParameters = [messageId];
-  const operation = createRetryOperation();
 
-  return new Promise((resolve, reject) => {
-    operation.attempt((currentAttempt) => {
-      pool
-        .query(archiveMessageQuery, archiveParameters)
-        .then((response) => {
-          messageDbLogger.debug(
-            `Messages archived: ${JSON.stringify(response.rowCount)}`
-          );
-          resolve(response.rowCount ?? 0);
-        })
-        .catch((err: Error) => {
-          messageDbLogger.error(
-            `Error executing archive message query on attempt ${currentAttempt}: ${err}`
-          );
-          if (operation.retry(err)) {
-            return;
-          }
-          reject(operation.mainError()!);
-        });
-    });
+  return new Promise<number>((resolve, reject) => {
+    retryAsyncOperation<number>(async () => {
+      const response = await pool.query(archiveMessageQuery, archiveParameters);
+      messageDbLogger.debug(
+        `Messages archived: ${JSON.stringify(response.rowCount)}`
+      );
+      return response.rowCount ?? 0;
+    }, 'archiveMessage')
+      .then(resolve)
+      .catch((err: Error) => {
+        messageDbLogger.error(`Error executing archive message query: ${err}`);
+        reject(err);
+      });
   });
 };
 
@@ -55,10 +48,10 @@ const archiveMessage = async (messageId: string): Promise<number> => {
  * Archives messages in the database for a specific workspace and conversation.
  *
  * @function archiveMessages
- * @param workspaceId The unique identifier of the workspace
- * @param conversationId The numeric identifier of the conversation
+ * @param {string} workspaceId - The unique identifier of the workspace
+ * @param {number} conversationId - The numeric identifier of the conversation
  * @returns {Promise<number>} Promise that resolves to the number of messages archived
- * @throws Error if the database operation fails after all retry attempts
+ * @throws {Error} If the database operation fails after all retry attempts
  */
 const archiveMessages = async (
   workspaceId: string,
@@ -70,28 +63,23 @@ const archiveMessages = async (
     WHERE workspace_id = $1 AND conversation_id = $2;
   `;
   const archiveParameters = [workspaceId, conversationId];
-  const operation = createRetryOperation();
 
-  return new Promise((resolve, reject) => {
-    operation.attempt((currentAttempt) => {
-      pool
-        .query(archiveMessagesQuery, archiveParameters)
-        .then((response) => {
-          messageDbLogger.debug(
-            `Messages archived: ${JSON.stringify(response.rowCount)}`
-          );
-          resolve(response.rowCount ?? 0);
-        })
-        .catch((err: Error) => {
-          messageDbLogger.error(
-            `Error executing archive messages query on attempt ${currentAttempt}: ${err}`
-          );
-          if (operation.retry(err)) {
-            return;
-          }
-          reject(operation.mainError()!);
-        });
-    });
+  return new Promise<number>((resolve, reject) => {
+    retryAsyncOperation<number>(async () => {
+      const response = await pool.query(
+        archiveMessagesQuery,
+        archiveParameters
+      );
+      messageDbLogger.debug(
+        `Messages archived: ${JSON.stringify(response.rowCount)}`
+      );
+      return response.rowCount ?? 0;
+    }, 'archiveMessages')
+      .then(resolve)
+      .catch((err: Error) => {
+        messageDbLogger.error(`Error executing archive messages query: ${err}`);
+        reject(err);
+      });
   });
 };
 
@@ -101,10 +89,10 @@ const archiveMessages = async (
  * Implements retry logic for database operations.
  *
  * @function getMessages
- * @param workspaceId The unique identifier of the workspace
- * @param conversationId The numeric identifier of the conversation
+ * @param {string} workspaceId - The unique identifier of the workspace
+ * @param {number} conversationId - The numeric identifier of the conversation
  * @returns {Promise<Message[]>} Promise resolving to an array of Message objects
- * @throws Will throw an error if database operations fail after all retry attempts
+ * @throws {Error} Will throw an error if database operations fail after all retry attempts
  */
 const getMessages = async (
   workspaceId: string,
@@ -118,31 +106,26 @@ const getMessages = async (
     ORDER BY send_date ASC;
   `;
   const selectParameters = [workspaceId, conversationId];
-  const operation = createRetryOperation();
 
-  return new Promise((resolve, reject) => {
-    operation.attempt((currentAttempt) => {
-      pool
-        .query<MessageDTO>(selectMessages, selectParameters)
-        .then((response) => {
-          const messages: Message[] = response.rows.map((row) =>
-            mapMessageDTOToMessageWithoutAuth(row)
-          );
-          messageDbLogger.debug(
-            `Messages retrieved: ${JSON.stringify(messages.map((m) => m.id))}`
-          );
-          resolve(messages);
-        })
-        .catch((err: Error) => {
-          messageDbLogger.error(
-            `Error executing select messages query on attempt ${currentAttempt}: ${err}`
-          );
-          if (operation.retry(err)) {
-            return;
-          }
-          reject(operation.mainError()!);
-        });
-    });
+  return new Promise<Message[]>((resolve, reject) => {
+    retryAsyncOperation<Message[]>(async () => {
+      const response = await pool.query<MessageDTO>(
+        selectMessages,
+        selectParameters
+      );
+      const messages: Message[] = response.rows.map((row: MessageDTO) =>
+        mapMessageDTOToMessageWithoutAuth(row)
+      );
+      messageDbLogger.debug(
+        `Messages retrieved: ${JSON.stringify(messages.map((m: Message) => m.id))}`
+      );
+      return messages;
+    }, 'getMessages')
+      .then(resolve)
+      .catch((err: Error) => {
+        messageDbLogger.error(`Error executing select messages query: ${err}`);
+        reject(err);
+      });
   });
 };
 
@@ -150,9 +133,9 @@ const getMessages = async (
  * Retrieves the count of unarchived messages for a specific workspace and conversation.
  *
  * @function getRemainingMessageCount
- * @param message The message object containing workspaceId and conversationId
+ * @param {Message} message - The message object containing workspaceId and conversationId
  * @returns {Promise<number>} Promise that resolves to the number of remaining unarchived messages
- * @throws Error if the database query fails after all retry attempts
+ * @throws {AppError|Error} If the database query fails after all retry attempts or if count is undefined
  */
 const getRemainingMessageCount = async (message: Message): Promise<number> => {
   const messageCountQuery = `
@@ -162,27 +145,26 @@ const getRemainingMessageCount = async (message: Message): Promise<number> => {
       AND workspace_id = $1 AND conversation_id = $2;
   `;
   const messageCountParameters = [message.workspaceId, message.conversationId];
-  const operation = createRetryOperation();
 
-  return new Promise((resolve, reject) => {
-    operation.attempt((currentAttempt) => {
-      pool
-        .query<{ count: string }>(messageCountQuery, messageCountParameters)
-        .then((response) => {
-          const remainingMessages = parseInt(response.rows[0].count, 10);
-          messageDbLogger.debug(`Remaining messages: ${remainingMessages}`);
-          resolve(remainingMessages);
-        })
-        .catch((err: Error) => {
-          messageDbLogger.error(
-            `Error executing count messages query on attempt ${currentAttempt}: ${err}`
-          );
-          if (operation.retry(err)) {
-            return;
-          }
-          reject(operation.mainError()!);
-        });
-    });
+  return new Promise<number>((resolve, reject) => {
+    retryAsyncOperation<number>(async () => {
+      const response = await pool.query<{ count: string }>(
+        messageCountQuery,
+        messageCountParameters
+      );
+      const count = response.rows[0]?.count;
+      if (count === undefined) {
+        throw new AppError('Count query returned undefined result', 500);
+      }
+      const remainingMessages = parseInt(count, 10);
+      messageDbLogger.debug(`Remaining messages: ${remainingMessages}`);
+      return remainingMessages;
+    }, 'getRemainingMessageCount')
+      .then(resolve)
+      .catch((err: Error) => {
+        messageDbLogger.error(`Error executing count messages query: ${err}`);
+        reject(err);
+      });
   });
 };
 
@@ -209,33 +191,26 @@ const getTodaysMessages = async (): Promise<Message[]> => {
     WHERE NOT m.archived
       AND m.send_date < CURRENT_DATE + INTERVAL '1 day';
   `;
-  const operation = createRetryOperation();
 
-  return new Promise((resolve, reject) => {
-    operation.attempt((currentAttempt) => {
-      pool
-        .query<MessageDTO & { admin_id: number; access_token: string }>(
-          selectMessages
-        )
-        .then((response) => {
-          const messages = response.rows.map((row) =>
-            mapMessageDTOToMessage(row, row.admin_id, row.access_token)
-          );
-          messageDbLogger.debug(
-            `Messages retrieved: ${JSON.stringify(messages.map((m) => m.id))}`
-          );
-          resolve(messages);
-        })
-        .catch((err: Error) => {
-          messageDbLogger.error(
-            `Error executing select messages query on attempt ${currentAttempt}: ${err}`
-          );
-          if (operation.retry(err)) {
-            return;
-          }
-          reject(operation.mainError()!);
-        });
-    });
+  return new Promise<Message[]>((resolve, reject) => {
+    retryAsyncOperation<Message[]>(async () => {
+      const response = await pool.query<
+        MessageDTO & { admin_id: number; access_token: string }
+      >(selectMessages);
+      const messages = response.rows.map(
+        (row: MessageDTO & { admin_id: number; access_token: string }) =>
+          mapMessageDTOToMessage(row, row.admin_id, row.access_token)
+      );
+      messageDbLogger.debug(
+        `Messages retrieved: ${JSON.stringify(messages.map((m: Message) => m.id))}`
+      );
+      return messages;
+    }, 'getTodaysMessages')
+      .then(resolve)
+      .catch((err: Error) => {
+        messageDbLogger.error(`Error executing select messages query: ${err}`);
+        reject(err);
+      });
   });
 };
 
@@ -244,11 +219,11 @@ const getTodaysMessages = async (): Promise<Message[]> => {
  * Uses retry logic for handling transient database errors.
  *
  * @function saveMessages
- * @param workspaceId The unique identifier of the workspace
- * @param conversationId The numeric identifier of the conversation
- * @param messages Array of Message objects to be saved
+ * @param {string} workspaceId - The unique identifier of the workspace
+ * @param {number} conversationId - The numeric identifier of the conversation
+ * @param {Message[]} messages - Array of Message objects to be saved
  * @returns {Promise<string[]>} Promise resolving to an array of message GUIDs (strings) for the saved messages
- * @throws Will log but not throw if database operations fail after retry attempts
+ * @throws {Error} Will log but not throw if database operations fail after retry attempts
  */
 const saveMessages = async (
   workspaceId: string,
@@ -256,7 +231,6 @@ const saveMessages = async (
   messages: Message[]
 ): Promise<string[]> => {
   let messageGUIDs: string[] = [];
-  const operation = createRetryOperation();
 
   const promises = messages.map((message): Promise<string> => {
     const insertMessage = `
@@ -272,32 +246,21 @@ const saveMessages = async (
       message.closeConversation,
     ];
 
-    return new Promise((resolve, reject) => {
-      operation.attempt((currentAttempt) => {
-        pool
-          .query<{ id: string }>(insertMessage, messageParameters)
-          .then((response) => {
-            const messageGUID: string = response.rows[0].id;
-            messageDbLogger.debug(`Message saved with GUID: ${messageGUID}`);
-            resolve(messageGUID);
-          })
-          .catch((err: Error) => {
-            messageDbLogger.error(
-              `Error executing insert message query on attempt ${currentAttempt}: ${err}`
-            );
-            if (operation.retry(err)) {
-              return;
-            }
-            reject(operation.mainError()!);
-          });
-      });
-    });
+    return retryAsyncOperation<string>(async () => {
+      const response = await pool.query<{ id: string }>(insertMessage, messageParameters);
+      const id = response.rows[0]?.id;
+      if (typeof id !== 'string') {
+        throw new AppError('Insert message query returned invalid or missing id', 500);
+      }
+      return id;
+    }, 'saveMessages');
   });
 
   try {
     messageGUIDs = await Promise.all(promises);
   } catch (err) {
-    messageDbLogger.error(`Error saving messages: ${String(err)}`);
+    const error = err instanceof Error ? err : new Error(String(err));
+    messageDbLogger.error(`Error saving messages: ${error.message}`);
   }
 
   return messageGUIDs;

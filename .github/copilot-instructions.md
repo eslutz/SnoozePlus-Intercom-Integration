@@ -75,3 +75,9 @@ The project requires environment variables defined in `.env.example`:
 ## Formatting and Style Guidelines
 
 - Always follow the formatting and style conventions defined in the project's `.editorconfig` and `.prettierrc` files. This includes indentation, line endings, quote style, trailing commas, and other code style rules.
+- **Always use the `.js` extension on all local (relative) import paths in TypeScript source files.** This is required for ES module compatibility in Node.js and is the established convention for this project. For example:
+  ```typescript
+  import myModule from './my-module.js';
+  ```
+- Do not omit the `.js` extension for local imports, even when importing TypeScript files. The extension must match the compiled JavaScript output for ES modules.
+- Automatically fix all markdown linting errors.

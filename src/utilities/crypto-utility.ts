@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import config from '../config/config.js';
 import SignatureAlgorithm from '../enums/signature-algorithm-enum.js';
+import { AppError } from '../middleware/error-middleware.js';
 
 /**
  * Decrypts an encrypted text using a specified algorithm and key.
@@ -11,9 +12,25 @@ import SignatureAlgorithm from '../enums/signature-algorithm-enum.js';
  * @function decrypt
  * @param encryptedText The encrypted text to decrypt, in the format `ivHex:encrypted`
  * @returns {string} The decrypted text in UTF-8 format
+ * @throws {Error} If the encrypted text format is invalid
  */
 const decrypt = (encryptedText: string): string => {
-  const [ivHex, encrypted] = encryptedText.split(':');
+  const parts = encryptedText.split(':');
+  if (parts.length !== 2) {
+    throw new AppError(
+      'Invalid encrypted text format. Expected format: ivHex:encrypted',
+      400
+    );
+  }
+
+  const [ivHex, encrypted] = parts;
+  if (!ivHex || !encrypted) {
+    throw new AppError(
+      'Invalid encrypted text format. Missing IV or encrypted data',
+      400
+    );
+  }
+
   const cipher = crypto.createDecipheriv(
     config.encryptionAlgorithm,
     Buffer.from(config.encryptionKey, 'hex'),
