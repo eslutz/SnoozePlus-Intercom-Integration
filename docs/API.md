@@ -15,13 +15,14 @@ This application uses OAuth 2.0 with Intercom for authentication. Users must be 
 
 ## API Endpoints
 
-### Health Check
+### Health Check Route
 
 #### GET /healthcheck
 
 Check the health status of the application and its dependencies.
 
 **Response:**
+
 ```json
 {
   "status": "ok",
@@ -33,13 +34,14 @@ Check the health status of the application and its dependencies.
 }
 ```
 
-### Authentication
+### Authentication Routes
 
 #### GET /auth/login
 
 Initiate Intercom OAuth flow.
 
 **Query Parameters:**
+
 - `state` (optional): Return URL after authentication
 
 #### GET /auth/callback
@@ -50,17 +52,18 @@ OAuth callback endpoint for Intercom.
 
 Authentication failure endpoint.
 
-### Canvas Integration
+### Canvas Integration Routes
 
 #### POST /canvas/initialize
 
 Initialize the Intercom canvas for a conversation.
 
 **Request Body:**
+
 ```json
 {
   "canvas_id": "string",
-  "workspace_id": "string", 
+  "workspace_id": "string",
   "admin_id": "string",
   "conversation_id": "string",
   "current_url": "string"
@@ -72,23 +75,25 @@ Initialize the Intercom canvas for a conversation.
 Submit scheduled messages for a conversation.
 
 **Request Body:**
+
 ```json
 {
   "canvas_id": "string",
   "workspace_id": "string",
-  "admin_id": "string", 
+  "admin_id": "string",
   "conversation_id": "string",
   "current_url": "string",
   "input_values": {
     "message1": "First scheduled message",
     "date1": "2024-01-01T12:00:00Z",
-    "message2": "Second scheduled message", 
+    "message2": "Second scheduled message",
     "date2": "2024-01-02T12:00:00Z"
   }
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -97,23 +102,25 @@ Submit scheduled messages for a conversation.
 }
 ```
 
-### Webhooks
+### Webhook Routes
 
 #### POST /webhooks/intercom
 
 Receive webhooks from Intercom.
 
 **Headers:**
+
 - `X-Hub-Signature`: Webhook signature for verification
 
 **Request Body:**
+
 ```json
 {
   "type": "conversation.admin.replied",
   "data": {
     "item": {
       "type": "conversation",
-      "id": "conversation_id",
+      "id": "conversation_id"
       // ... other conversation data
     }
   },
@@ -127,6 +134,7 @@ Receive webhooks from Intercom.
 All endpoints may return the following error responses:
 
 ### 400 Bad Request
+
 ```json
 {
   "error": true,
@@ -138,6 +146,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
   "error": true,
@@ -148,6 +157,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "error": true,
@@ -158,6 +168,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "error": true,
@@ -201,6 +212,7 @@ The API includes security headers via Helmet.js:
 ### CORS
 
 CORS is configured to allow requests from:
+
 - Intercom app origins
 - Development localhost (in non-production environments)
 

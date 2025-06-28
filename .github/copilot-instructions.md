@@ -80,3 +80,4 @@ The project requires environment variables defined in `.env.example`:
   import myModule from './my-module.js';
   ```
 - Do not omit the `.js` extension for local imports, even when importing TypeScript files. The extension must match the compiled JavaScript output for ES modules.
+- Automatically fix all markdown linting errors.

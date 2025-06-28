@@ -1,0 +1,210 @@
+{
+  "info": {
+    "_postman_id": "b7e1e2e2-1c2a-4e2a-9e2a-123456789abc",
+    "name": "SnoozePlus Intercom Integration API",
+    "description": "Postman collection for testing all API endpoints of the SnoozePlus Intercom Integration.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "GET /healthcheck",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/healthcheck",
+              "host": ["{{baseUrl}}"],
+              "path": ["healthcheck"]
+            }
+          }
+        },
+        {
+          "name": "GET /healthcheck/db-healthcheck",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/healthcheck/db-healthcheck",
+              "host": ["{{baseUrl}}"],
+              "path": ["healthcheck", "db-healthcheck"]
+            }
+          }
+        },
+        {
+          "name": "POST /healthcheck/installation-healthcheck",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workspace_id\": \"your_workspace_id\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/healthcheck/installation-healthcheck",
+              "host": ["{{baseUrl}}"],
+              "path": ["healthcheck", "installation-healthcheck"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "GET /auth/intercom",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/intercom",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "intercom"]
+            }
+          }
+        },
+        {
+          "name": "GET /auth/intercom/callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/intercom/callback",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "intercom", "callback"]
+            }
+          }
+        },
+        {
+          "name": "GET /auth/failure",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/failure",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "failure"]
+            }
+          }
+        },
+        {
+          "name": "GET /auth/logout",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Canvas Integration",
+      "item": [
+        {
+          "name": "POST /initialize",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"canvas_id\": \"string\",\n  \"workspace_id\": \"string\",\n  \"admin_id\": \"string\",\n  \"conversation_id\": \"string\",\n  \"current_url\": \"string\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/initialize",
+              "host": ["{{baseUrl}}"],
+              "path": ["initialize"]
+            }
+          }
+        },
+        {
+          "name": "POST /submit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"canvas_id\": \"string\",\n  \"workspace_id\": \"string\",\n  \"admin_id\": \"string\",\n  \"conversation_id\": \"string\",\n  \"current_url\": \"string\",\n  \"input_values\": {\n    \"message1\": \"First scheduled message\",\n    \"date1\": \"2024-01-01T12:00:00Z\",\n    \"message2\": \"Second scheduled message\",\n    \"date2\": \"2024-01-02T12:00:00Z\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["submit"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "HEAD /webhook",
+          "request": {
+            "method": "HEAD",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhook"]
+            }
+          }
+        },
+        {
+          "name": "POST /webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Hub-Signature",
+                "value": "your_signature_here"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"conversation.admin.replied\",\n  \"data\": {\n    \"item\": {\n      \"type\": \"conversation\",\n      \"id\": \"conversation_id\"\n    }\n  },\n  \"created_at\": 1640995200,\n  \"id\": \"webhook_id\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhook"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
