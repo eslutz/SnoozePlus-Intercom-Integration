@@ -20,7 +20,7 @@ services:
     command: npm run dev
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:17-bookworm
     environment:
       POSTGRES_DB: ${PGDATABASE:-snoozeplus_dev}
       POSTGRES_USER: ${PGUSER:-postgres}
@@ -35,5 +35,34 @@ services:
       timeout: 5s
       retries: 5
 
+  flyway:
+    image: flyway/flyway:10-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./database/migrations:/flyway/migrations
+      - ./database/flyway.toml:/flyway/conf/flyway.toml
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/${PGDATABASE:-snoozeplus_dev}
+      FLYWAY_USER: ${PGUSER:-postgres}
+      FLYWAY_PASSWORD: ${PGPASSWORD:-password}
+      FLYWAY_LOCATIONS: filesystem:/flyway/migrations
+      FLYWAY_SCHEMAS: public
+    command: migrate
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '5050:80'
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
 volumes:
   postgres_dev_data:
+  pgadmin_data:

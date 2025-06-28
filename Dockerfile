@@ -1,4 +1,8 @@
-FROM node:22-alpine
+FROM node:24-bookworm
+
+# Update system packages to address vulnerabilities
+USER root
+RUN apt-get update && apt-get upgrade -y && apt-get clean
 
 WORKDIR /app
 
@@ -11,8 +15,8 @@ RUN npm ci
 COPY . .
 
 # Create non-root user for development
-RUN addgroup -g 1001 -S nodejs && \
-  adduser -S nodejs -u 1001
+RUN groupadd -g 1001 nodejs && \
+  useradd -m -u 1001 -g nodejs nodejs
 
 # Give nodejs user ownership of app directory
 RUN chown -R nodejs:nodejs /app

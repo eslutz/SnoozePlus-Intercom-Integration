@@ -24,6 +24,7 @@ Snooze+ is an inbox app for Intercom used to automate sending delayed responses 
 - [Authentication](#authentication)
 - [Required Environment Variables](#required-environment-variables)
 - [Tools and Dependencies](#tools-and-dependencies)
+- [Docker & Dev Container Usage](./DOCKER.md)
 
 ## Local Development
 

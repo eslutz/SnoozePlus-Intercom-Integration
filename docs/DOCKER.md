@@ -1,72 +1,83 @@
-# Docker Usage
+# Local Development with Docker and Dev Containers
 
-This repository includes Docker support for containerized deployment.
+This project uses Docker Compose for local development, including a PostgreSQL database, the main application, and pgAdmin for database management. A VS Code devcontainer is provided for a seamless development experience.
 
-## Docker Scripts
+## Purpose of Containers
 
-The following npm scripts are available for Docker operations:
+- **app**: Runs the Node.js/TypeScript application in development mode (hot reload, local code mounting)
+- **postgres**: Provides a local PostgreSQL database for development
+- **flyway**: Runs database migrations automatically on startup
+- **pgadmin**: Web UI for managing and inspecting the PostgreSQL database
 
-- `npm run docker:build` - Builds the Docker image tagged as `snoozeplus-intercom`
-- `npm run docker:run` - Runs the container with production environment variables
+These containers are for local development and testing only. They are not intended for production use.
 
-## Building the Docker Image
+## Using the Devcontainer (Recommended)
 
-```bash
-npm run docker:build
-```
+The repository includes a [devcontainer](https://containers.dev/) configuration for VS Code:
 
-Or directly with Docker:
+1. **Open the project in VS Code** (locally or in Codespaces)
+2. When prompted, **reopen in container** (or use the Command Palette: "Dev Containers: Reopen in Container")
+3. The devcontainer will automatically use Docker Compose to start all required services
+4. The application source will be mounted at `/workspaces/SnoozePlus-Intercom-Integration`
 
-```bash
-docker build -t snoozeplus-intercom .
-```
+### Benefits
 
-## Running the Container
+- All dependencies and tools are pre-installed
+- Consistent environment for all developers
+- Easy access to all services (app, db, pgadmin)
 
-1. First, create your production environment file:
-   ```bash
-   cp .env.production.example .env.production
-   # Edit .env.production with your actual values
+## Running All Containers Locally (without devcontainer)
+
+1. Ensure Docker and Docker Compose are installed
+2. Copy `.env.local.example` to `.env.local` and fill in required values
+3. Run:
+
+   ```sh
+   docker-compose up --build
    ```
 
-2. Run the container:
-   ```bash
-   npm run docker:run
-   ```
+   This will start the app, postgres, flyway (for migrations), and pgadmin containers.
 
-   Or directly with Docker:
-   ```bash
-   docker run -p 3000:3000 --env-file .env.production snoozeplus-intercom
-   ```
+## Accessing the Application and Database
 
-## Docker Features
+- **App**: [`http://localhost:8706`](http://localhost:8706)
+- **PostgreSQL**: localhost:5432 (user/password from `.env.local`, default: `postgres`/`password`)
+- **pgAdmin**: [`http://localhost:5050`](http://localhost:5050) (login: `admin@admin.com` / `admin`)
+  - Add a new server in pgAdmin:
+    - Host: `postgres` (if inside devcontainer) or `localhost` (from host)
+    - Port: `5432`
+    - Username/Password: as above
 
-- **Multi-stage build** for optimized image size
-- **Non-root user** for enhanced security
-- **Health check** endpoint at `/api/health`
-- **Proper signal handling** for graceful shutdowns
-- **Alpine Linux** base for minimal attack surface
-- **Production optimized** with only runtime dependencies
+### In Codespaces
 
-## Environment Variables
+- Use the **Ports** tab to access forwarded ports (8706 for app, 5050 for pgAdmin)
+- Use the built-in browser or copy the forwarded URL
+- For database tools, connect to `localhost` and the forwarded port
 
-The container expects a `.env.production` file with the following variables:
+## Ensuring All Containers Are Running
 
-- `NODE_ENV=production`
-- `PORT=3000`
-- Database configuration (`PGHOST`, `PGUSER`, `PGPASSWORD`, etc.)
-- Intercom API credentials
-- Security keys and secrets
+- Run `docker-compose ps` to see status
+- All services should be `Up` and healthy
+- The app will wait for the database to be ready before starting
+- Flyway runs migrations automatically on startup
 
-See `.env.production.example` for a complete list of required environment variables.
+## Troubleshooting
 
-## Health Check
+- If the app cannot connect to the database, check that the `postgres` container is healthy
+- If migrations fail, check the `flyway` logs
+- If you cannot access pgAdmin, ensure port 5050 is forwarded (in Codespaces) or not blocked by a firewall
+- For persistent database issues, try `docker-compose down -v` to reset volumes
 
-The container includes a health check that monitors the application's `/api/health` endpoint. The health check runs every 30 seconds and considers the container unhealthy if 3 consecutive checks fail.
+## Credentials and Ports (Defaults)
 
-## Security Considerations
+- **Postgres**: user=`postgres`, password=`password`, db=`snoozeplus_dev`, port=`5432`
+- **pgAdmin**: email=`admin@admin.com`, password=`admin`, port=`5050`
+- **App**: port=`8706`
 
-- The application runs as a non-root user (`nodejs:nodejs`)
-- Only production dependencies are included in the final image
-- Environment variables should be properly secured
-- The container exposes only port 3000
+## See Also
+
+- [README: Local Development & Docker Usage](./README.md#local-development)
+
+---
+
+This document is up to date as of June 2025. For any issues, see the troubleshooting section or contact the project maintainers.
