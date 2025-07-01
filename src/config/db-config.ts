@@ -46,16 +46,19 @@ pool.on('error', (err, client) => {
   });
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by pool event handler interface
 pool.on('connect', (_client) => {
   dbLogger.debug('New database client connected', {
     connection: 'established',
   });
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by pool event handler interface
 pool.on('acquire', (_client) => {
   dbLogger.debug('Database client acquired from pool');
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by pool event handler interface
 pool.on('remove', (_client) => {
   dbLogger.debug('Database client removed from pool');
 });

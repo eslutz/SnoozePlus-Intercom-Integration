@@ -46,7 +46,7 @@ export const enhancedErrorHandler = (
   err: Error | CategorizedError,
   req: Request & { correlationId?: string },
   res: Response,
-  _next: NextFunction
+  _next: NextFunction // eslint-disable-line @typescript-eslint/no-unused-vars -- Required by Express error handler interface
 ) => {
   const correlationId = req.correlationId ?? 'unknown';
 

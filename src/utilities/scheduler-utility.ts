@@ -19,6 +19,7 @@ export class MessageScheduler {
     }, 60000); // Every minute
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await -- Method may need to be async for interface consistency
   async scheduleMessage(
     messageId: string,
     sendDate: Date,
@@ -220,12 +221,12 @@ const scheduleJobs = async (): Promise<void> => {
 };
 
 // Graceful shutdown handler
-process.on('SIGTERM', async () => {
-  await messageScheduler.shutdown();
+process.on('SIGTERM', () => {
+  void messageScheduler.shutdown();
 });
 
-process.on('SIGINT', async () => {
-  await messageScheduler.shutdown();
+process.on('SIGINT', () => {
+  void messageScheduler.shutdown();
 });
 
 export default scheduleJobs;

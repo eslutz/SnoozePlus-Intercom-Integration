@@ -20,11 +20,13 @@ export const metricsMiddleware = (
   const start = Date.now();
   (req as RequestWithMetrics).startTime = start;
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- Express route.path type may be any
   const route = req.route?.path ?? req.path ?? 'unknown';
   const method = req.method;
   const version = getApiVersion(req);
 
   // Increment active requests
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- route variable may be any from Express
   Metrics.httpActiveRequests.inc({ method, route });
 
   res.on('finish', () => {
@@ -33,12 +35,15 @@ export const metricsMiddleware = (
 
     // Record metrics
     Metrics.httpRequestDuration
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- route variable may be any from Express
       .labels(method, route, statusCode, version)
       .observe(duration);
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- route variable may be any from Express
     Metrics.httpRequestTotal.labels(method, route, statusCode, version).inc();
 
     // Decrement active requests
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- route variable may be any from Express
     Metrics.httpActiveRequests.dec({ method, route });
   });
 

@@ -180,5 +180,9 @@ const enhancedGracefulShutdown = (server: Server) => async (signal: string) => {
   }
 };
 
-process.on('SIGTERM', enhancedGracefulShutdown(server));
-process.on('SIGINT', enhancedGracefulShutdown(server));
+process.on('SIGTERM', (signal) => {
+  void enhancedGracefulShutdown(server)(signal);
+});
+process.on('SIGINT', (signal) => {
+  void enhancedGracefulShutdown(server)(signal);
+});
