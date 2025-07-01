@@ -2,14 +2,14 @@ import { injectable, inject } from 'inversify';
 import fetch from 'node-fetch';
 import { Logger } from 'winston';
 import { TYPES } from '../container/types.js';
-import type { 
-  IIntercomService, 
+import type {
+  IIntercomService,
   ICryptoService,
-  SendMessageParams, 
+  SendMessageParams,
   AddNoteParams,
   CancelSnoozeParams,
   SetSnoozeParams,
-  CloseConversationParams
+  CloseConversationParams,
 } from '../container/interfaces.js';
 import { CircuitBreaker } from '../utilities/circuit-breaker.js';
 import { retryAsyncOperation } from '../utilities/retry-utility.js';
@@ -48,8 +48,10 @@ export class IntercomService implements IIntercomService {
         });
 
         // Decrypt the access token
-        const decryptedAccessToken = await this.cryptoService.decrypt(params.accessToken);
-        
+        const decryptedAccessToken = await this.cryptoService.decrypt(
+          params.accessToken
+        );
+
         // For Message objects, we need to decrypt the message content as well
         let messageBody = params.message;
         if (typeof params.message === 'object' && 'message' in params.message) {
@@ -57,25 +59,30 @@ export class IntercomService implements IIntercomService {
           messageBody = await this.cryptoService.decrypt(message.message);
         }
 
-        const response = await fetch(`${this.baseUrl}/conversations/${params.conversationId}/reply`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${decryptedAccessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Intercom-Version': '2.11',
-          },
-          body: JSON.stringify({
-            message_type: 'comment',
-            type: 'admin',
-            admin_id: params.adminId.toString(),
-            body: `<p>${messageBody}</p>`,
-          }),
-        });
+        const response = await fetch(
+          `${this.baseUrl}/conversations/${params.conversationId}/reply`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${decryptedAccessToken}`,
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+              'Intercom-Version': '2.11',
+            },
+            body: JSON.stringify({
+              message_type: 'comment',
+              type: 'admin',
+              admin_id: params.adminId.toString(),
+              body: `<p>${messageBody}</p>`,
+            }),
+          }
+        );
 
         if (!response.ok) {
           const errorBody = await response.text();
-          throw new Error(`Intercom API error: ${response.status} - ${errorBody}`);
+          throw new Error(
+            `Intercom API error: ${response.status} - ${errorBody}`
+          );
         }
 
         if (params.closeConversation) {
@@ -105,27 +112,34 @@ export class IntercomService implements IIntercomService {
         });
 
         // Decrypt the access token
-        const decryptedAccessToken = await this.cryptoService.decrypt(params.accessToken);
+        const decryptedAccessToken = await this.cryptoService.decrypt(
+          params.accessToken
+        );
 
-        const response = await fetch(`${this.baseUrl}/conversations/${params.conversationId}/reply`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${decryptedAccessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Intercom-Version': '2.11',
-          },
-          body: JSON.stringify({
-            message_type: 'note',
-            type: 'admin',
-            admin_id: params.adminId.toString(),
-            body: params.message,
-          }),
-        });
+        const response = await fetch(
+          `${this.baseUrl}/conversations/${params.conversationId}/reply`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${decryptedAccessToken}`,
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+              'Intercom-Version': '2.11',
+            },
+            body: JSON.stringify({
+              message_type: 'note',
+              type: 'admin',
+              admin_id: params.adminId.toString(),
+              body: params.message,
+            }),
+          }
+        );
 
         if (!response.ok) {
           const errorBody = await response.text();
-          throw new Error(`Intercom API error: ${response.status} - ${errorBody}`);
+          throw new Error(
+            `Intercom API error: ${response.status} - ${errorBody}`
+          );
         }
 
         this.logger.info('Note added successfully', {
@@ -147,25 +161,32 @@ export class IntercomService implements IIntercomService {
         });
 
         // Decrypt the access token
-        const decryptedAccessToken = await this.cryptoService.decrypt(params.accessToken);
+        const decryptedAccessToken = await this.cryptoService.decrypt(
+          params.accessToken
+        );
 
-        const response = await fetch(`${this.baseUrl}/conversations/${params.conversationId}/parts`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${decryptedAccessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Intercom-Version': '2.11',
-          },
-          body: JSON.stringify({
-            admin_id: params.adminId,
-            message_type: 'open',
-          }),
-        });
+        const response = await fetch(
+          `${this.baseUrl}/conversations/${params.conversationId}/parts`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${decryptedAccessToken}`,
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+              'Intercom-Version': '2.11',
+            },
+            body: JSON.stringify({
+              admin_id: params.adminId,
+              message_type: 'open',
+            }),
+          }
+        );
 
         if (!response.ok) {
           const errorBody = await response.text();
-          throw new Error(`Intercom API error: ${response.status} - ${errorBody}`);
+          throw new Error(
+            `Intercom API error: ${response.status} - ${errorBody}`
+          );
         }
 
         this.logger.info('Snooze cancelled successfully', {
@@ -188,26 +209,33 @@ export class IntercomService implements IIntercomService {
         });
 
         // Decrypt the access token
-        const decryptedAccessToken = await this.cryptoService.decrypt(params.accessToken);
+        const decryptedAccessToken = await this.cryptoService.decrypt(
+          params.accessToken
+        );
 
-        const response = await fetch(`${this.baseUrl}/conversations/${params.conversationId}/parts`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${decryptedAccessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Intercom-Version': '2.11',
-          },
-          body: JSON.stringify({
-            admin_id: params.adminId,
-            message_type: 'snoozed',
-            snoozed_until: params.unixTimestamp,
-          }),
-        });
+        const response = await fetch(
+          `${this.baseUrl}/conversations/${params.conversationId}/parts`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${decryptedAccessToken}`,
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+              'Intercom-Version': '2.11',
+            },
+            body: JSON.stringify({
+              admin_id: params.adminId,
+              message_type: 'snoozed',
+              snoozed_until: params.unixTimestamp,
+            }),
+          }
+        );
 
         if (!response.ok) {
           const errorBody = await response.text();
-          throw new Error(`Intercom API error: ${response.status} - ${errorBody}`);
+          throw new Error(
+            `Intercom API error: ${response.status} - ${errorBody}`
+          );
         }
 
         this.logger.info('Snooze set successfully', {
@@ -230,26 +258,33 @@ export class IntercomService implements IIntercomService {
         });
 
         // Decrypt the access token
-        const decryptedAccessToken = await this.cryptoService.decrypt(params.accessToken);
+        const decryptedAccessToken = await this.cryptoService.decrypt(
+          params.accessToken
+        );
 
-        const response = await fetch(`${this.baseUrl}/conversations/${params.conversationId}/parts`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${decryptedAccessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Intercom-Version': '2.11',
-          },
-          body: JSON.stringify({
-            admin_id: params.adminId.toString(),
-            message_type: 'close',
-            type: 'admin',
-          }),
-        });
+        const response = await fetch(
+          `${this.baseUrl}/conversations/${params.conversationId}/parts`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${decryptedAccessToken}`,
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+              'Intercom-Version': '2.11',
+            },
+            body: JSON.stringify({
+              admin_id: params.adminId.toString(),
+              message_type: 'close',
+              type: 'admin',
+            }),
+          }
+        );
 
         if (!response.ok) {
           const errorBody = await response.text();
-          throw new Error(`Failed to close conversation: ${response.status} - ${errorBody}`);
+          throw new Error(
+            `Failed to close conversation: ${response.status} - ${errorBody}`
+          );
         }
 
         this.logger.info('Conversation closed successfully', {

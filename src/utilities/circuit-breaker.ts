@@ -23,10 +23,10 @@ export interface CircuitBreakerOptions {
 
 /**
  * Circuit breaker implementation for protecting against external service failures.
- * 
+ *
  * The circuit breaker operates in three states:
  * - CLOSED: Normal operation, calls are allowed through
- * - OPEN: Circuit is open, calls are rejected immediately 
+ * - OPEN: Circuit is open, calls are rejected immediately
  * - HALF_OPEN: Testing if service has recovered, limited calls allowed
  */
 export class CircuitBreaker {
@@ -39,7 +39,7 @@ export class CircuitBreaker {
 
   /**
    * Execute a function with circuit breaker protection
-   * 
+   *
    * @param fn Function to execute
    * @returns Promise resolving to the function result
    * @throws Error if circuit is open or function fails
@@ -51,7 +51,9 @@ export class CircuitBreaker {
         this.state = CircuitState.HALF_OPEN;
         this.successCount = 0;
       } else {
-        throw new Error(`Circuit breaker is OPEN. Retry after ${this.options.resetTimeout}ms`);
+        throw new Error(
+          `Circuit breaker is OPEN. Retry after ${this.options.resetTimeout}ms`
+        );
       }
     }
 
@@ -67,7 +69,7 @@ export class CircuitBreaker {
 
   /**
    * Execute function with timeout protection
-   * 
+   *
    * @param fn Function to execute
    * @returns Promise resolving to function result or timeout error
    */
@@ -75,7 +77,10 @@ export class CircuitBreaker {
     return Promise.race([
       fn(),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Circuit breaker timeout')), this.options.timeout)
+        setTimeout(
+          () => reject(new Error('Circuit breaker timeout')),
+          this.options.timeout
+        )
       ),
     ]);
   }
@@ -85,10 +90,11 @@ export class CircuitBreaker {
    */
   private onSuccess() {
     this.failures = 0;
-    
+
     if (this.state === CircuitState.HALF_OPEN) {
       this.successCount++;
-      if (this.successCount >= 3) { // Require 3 successes to fully close
+      if (this.successCount >= 3) {
+        // Require 3 successes to fully close
         this.state = CircuitState.CLOSED;
       }
     } else {
@@ -102,7 +108,7 @@ export class CircuitBreaker {
   private onFailure() {
     this.failures++;
     this.lastFailureTime = Date.now();
-    
+
     if (this.failures >= this.options.failureThreshold) {
       this.state = CircuitState.OPEN;
     }
@@ -110,7 +116,7 @@ export class CircuitBreaker {
 
   /**
    * Get current circuit breaker state and metrics
-   * 
+   *
    * @returns Object containing current state and metrics
    */
   getState() {

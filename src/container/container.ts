@@ -17,6 +17,9 @@ import { IntercomService } from '../services/intercom-service-new.js';
 import { CryptoService } from '../services/crypto-service.js';
 import { CanvasService } from '../services/canvas-service-new.js';
 
+// Controllers
+import { SubmitController } from '../controllers/submit-controller-new.js';
+
 // Infrastructure
 import pool from '../config/db-config.js';
 import logger from '../config/logger-config.js';
@@ -28,27 +31,35 @@ const container = new Container();
 
 // Infrastructure bindings
 container.bind<Pool>(TYPES.DatabasePool).toConstantValue(pool);
-container.bind<Logger>(TYPES.Logger).toConstantValue(logger.child({ module: 'di-container' }));
+container.bind<Logger>(TYPES.Logger).toConstantValue(logger);
 
 // Service bindings
-container.bind<IMessageService>(TYPES.MessageService)
+container
+  .bind<IMessageService>(TYPES.MessageService)
   .to(MessageService)
   .inSingletonScope();
 
-container.bind<IWorkspaceService>(TYPES.WorkspaceService)
+container
+  .bind<IWorkspaceService>(TYPES.WorkspaceService)
   .to(WorkspaceService)
   .inSingletonScope();
 
-container.bind<IIntercomService>(TYPES.IntercomService)
+container
+  .bind<IIntercomService>(TYPES.IntercomService)
   .to(IntercomService)
   .inSingletonScope();
 
-container.bind<ICryptoService>(TYPES.CryptoService)
+container
+  .bind<ICryptoService>(TYPES.CryptoService)
   .to(CryptoService)
   .inSingletonScope();
 
-container.bind(TYPES.CanvasService)
+container
+  .bind<CanvasService>(TYPES.CanvasService)
   .to(CanvasService)
   .inSingletonScope();
+
+// Controller bindings
+container.bind<SubmitController>(SubmitController).toSelf();
 
 export { container };

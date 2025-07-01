@@ -32,7 +32,7 @@ export class MessageService implements IMessageService {
    */
   async archiveMessage(messageId: string): Promise<number> {
     this.logger.info('Archiving message', { messageId });
-    
+
     const archiveMessageQuery = `
       UPDATE messages
       SET archived = TRUE
@@ -42,18 +42,21 @@ export class MessageService implements IMessageService {
 
     return new Promise<number>((resolve, reject) => {
       retryAsyncOperation<number>(async () => {
-        const response = await this.pool.query(archiveMessageQuery, archiveParameters);
-        this.logger.debug('Message archived', { 
-          messageId, 
-          rowsAffected: response.rowCount 
+        const response = await this.pool.query(
+          archiveMessageQuery,
+          archiveParameters
+        );
+        this.logger.debug('Message archived', {
+          messageId,
+          rowsAffected: response.rowCount,
         });
         return response.rowCount ?? 0;
       }, 'archiveMessage')
         .then(resolve)
         .catch((err: Error) => {
-          this.logger.error('Error executing archive message query', { 
-            messageId, 
-            error: err.message 
+          this.logger.error('Error executing archive message query', {
+            messageId,
+            error: err.message,
           });
           reject(err);
         });
@@ -68,9 +71,12 @@ export class MessageService implements IMessageService {
    * @returns Promise that resolves to the number of messages archived
    * @throws Error if the database operation fails after all retry attempts
    */
-  async archiveMessages(workspaceId: string, conversationId: number): Promise<number> {
+  async archiveMessages(
+    workspaceId: string,
+    conversationId: number
+  ): Promise<number> {
     this.logger.info('Archiving messages', { workspaceId, conversationId });
-    
+
     const archiveMessagesQuery = `
       UPDATE messages
       SET archived = TRUE
@@ -84,19 +90,19 @@ export class MessageService implements IMessageService {
           archiveMessagesQuery,
           archiveParameters
         );
-        this.logger.debug('Messages archived', { 
-          workspaceId, 
+        this.logger.debug('Messages archived', {
+          workspaceId,
           conversationId,
-          rowsAffected: response.rowCount 
+          rowsAffected: response.rowCount,
         });
         return response.rowCount ?? 0;
       }, 'archiveMessages')
         .then(resolve)
         .catch((err: Error) => {
-          this.logger.error('Error executing archive messages query', { 
-            workspaceId, 
+          this.logger.error('Error executing archive messages query', {
+            workspaceId,
             conversationId,
-            error: err.message 
+            error: err.message,
           });
           reject(err);
         });
@@ -113,9 +119,12 @@ export class MessageService implements IMessageService {
    * @returns Promise resolving to an array of Message objects
    * @throws Error if database operations fail after all retry attempts
    */
-  async getMessages(workspaceId: string, conversationId: number): Promise<Message[]> {
+  async getMessages(
+    workspaceId: string,
+    conversationId: number
+  ): Promise<Message[]> {
     this.logger.debug('Getting messages', { workspaceId, conversationId });
-    
+
     const selectMessages = `
       SELECT id, workspace_id, conversation_id, message, send_date, close_conversation, archived
       FROM messages
@@ -134,20 +143,20 @@ export class MessageService implements IMessageService {
         const messages: Message[] = response.rows.map((row: MessageDTO) =>
           mapMessageDTOToMessageWithoutAuth(row)
         );
-        this.logger.debug('Messages retrieved', { 
-          workspaceId, 
+        this.logger.debug('Messages retrieved', {
+          workspaceId,
           conversationId,
           messageCount: messages.length,
-          messageIds: messages.map((m: Message) => m.id)
+          messageIds: messages.map((m: Message) => m.id),
         });
         return messages;
       }, 'getMessages')
         .then(resolve)
         .catch((err: Error) => {
-          this.logger.error('Error executing select messages query', { 
-            workspaceId, 
+          this.logger.error('Error executing select messages query', {
+            workspaceId,
             conversationId,
-            error: err.message 
+            error: err.message,
           });
           reject(err);
         });
@@ -162,18 +171,21 @@ export class MessageService implements IMessageService {
    * @throws AppError|Error if the database query fails after all retry attempts
    */
   async getRemainingMessageCount(message: Message): Promise<number> {
-    this.logger.debug('Getting remaining message count', { 
-      workspaceId: message.workspaceId, 
-      conversationId: message.conversationId 
+    this.logger.debug('Getting remaining message count', {
+      workspaceId: message.workspaceId,
+      conversationId: message.conversationId,
     });
-    
+
     const messageCountQuery = `
       SELECT COUNT(*)
       FROM messages
       WHERE NOT archived
         AND workspace_id = $1 AND conversation_id = $2;
     `;
-    const messageCountParameters = [message.workspaceId, message.conversationId];
+    const messageCountParameters = [
+      message.workspaceId,
+      message.conversationId,
+    ];
 
     return new Promise<number>((resolve, reject) => {
       retryAsyncOperation<number>(async () => {
@@ -186,19 +198,19 @@ export class MessageService implements IMessageService {
           throw new AppError('Count query returned undefined result', 500);
         }
         const remainingMessages = parseInt(count, 10);
-        this.logger.debug('Remaining message count retrieved', { 
-          workspaceId: message.workspaceId, 
+        this.logger.debug('Remaining message count retrieved', {
+          workspaceId: message.workspaceId,
           conversationId: message.conversationId,
-          remainingMessages 
+          remainingMessages,
         });
         return remainingMessages;
       }, 'getRemainingMessageCount')
         .then(resolve)
         .catch((err: Error) => {
-          this.logger.error('Error executing count messages query', { 
-            workspaceId: message.workspaceId, 
+          this.logger.error('Error executing count messages query', {
+            workspaceId: message.workspaceId,
             conversationId: message.conversationId,
-            error: err.message 
+            error: err.message,
           });
           reject(err);
         });
@@ -212,8 +224,8 @@ export class MessageService implements IMessageService {
    * @throws Error if all retry attempts fail when querying the database
    */
   async getTodaysMessages(): Promise<Message[]> {
-    this.logger.debug('Getting today\'s messages');
-    
+    this.logger.debug("Getting today's messages");
+
     const selectMessages = `
       SELECT m.id, m.workspace_id, m.conversation_id, m.message, m.send_date, m.close_conversation, m.archived,
              u.admin_id, u.access_token
@@ -232,16 +244,16 @@ export class MessageService implements IMessageService {
           (row: MessageDTO & { admin_id: number; access_token: string }) =>
             mapMessageDTOToMessage(row, row.admin_id, row.access_token)
         );
-        this.logger.debug('Today\'s messages retrieved', { 
+        this.logger.debug("Today's messages retrieved", {
           messageCount: messages.length,
-          messageIds: messages.map((m: Message) => m.id)
+          messageIds: messages.map((m: Message) => m.id),
         });
         return messages;
       }, 'getTodaysMessages')
         .then(resolve)
         .catch((err: Error) => {
-          this.logger.error('Error executing select messages query', { 
-            error: err.message 
+          this.logger.error('Error executing select messages query', {
+            error: err.message,
           });
           reject(err);
         });
@@ -263,12 +275,12 @@ export class MessageService implements IMessageService {
     conversationId: number,
     messages: Message[]
   ): Promise<string[]> {
-    this.logger.info('Saving messages', { 
-      workspaceId, 
-      conversationId, 
-      messageCount: messages.length 
+    this.logger.info('Saving messages', {
+      workspaceId,
+      conversationId,
+      messageCount: messages.length,
     });
-    
+
     let messageGUIDs: string[] = [];
 
     const promises = messages.map((message): Promise<string> => {
@@ -303,18 +315,18 @@ export class MessageService implements IMessageService {
 
     try {
       messageGUIDs = await Promise.all(promises);
-      this.logger.info('Messages saved successfully', { 
-        workspaceId, 
+      this.logger.info('Messages saved successfully', {
+        workspaceId,
         conversationId,
         messageCount: messageGUIDs.length,
-        messageIds: messageGUIDs
+        messageIds: messageGUIDs,
       });
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
-      this.logger.error('Error saving messages', { 
-        workspaceId, 
+      this.logger.error('Error saving messages', {
+        workspaceId,
         conversationId,
-        error: error.message 
+        error: error.message,
       });
       throw error;
     }

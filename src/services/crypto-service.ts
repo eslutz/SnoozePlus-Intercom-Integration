@@ -105,7 +105,7 @@ export class CryptoService implements ICryptoService {
     const digest = hmac.update(stringifiedRequestBody).digest('hex');
 
     const isValid = digest === signature;
-    
+
     return isValid;
   }
 }

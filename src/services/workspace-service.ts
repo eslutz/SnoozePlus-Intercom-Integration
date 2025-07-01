@@ -30,7 +30,7 @@ export class WorkspaceService implements IWorkspaceService {
    */
   async getWorkspace(workspaceId: string): Promise<Workspace | null> {
     this.logger.debug('Getting workspace', { workspaceId });
-    
+
     const getWorkspaceQuery = `
       SELECT workspace_id, admin_id, access_token
       FROM users
@@ -49,8 +49,8 @@ export class WorkspaceService implements IWorkspaceService {
           throw new AppError('Workspace data is undefined', 500);
         }
         const workspace = mapWorkspaceDTOToWorkspace(workspaceDto);
-        this.logger.debug('Workspace retrieved successfully', { 
-          workspaceId: workspace.workspaceId 
+        this.logger.debug('Workspace retrieved successfully', {
+          workspaceId: workspace.workspaceId,
         });
         return workspace;
       }
@@ -69,11 +69,11 @@ export class WorkspaceService implements IWorkspaceService {
    * @throws AppError|Error if database operations fail after all retry attempts
    */
   async saveWorkspace(workspace: Workspace): Promise<string> {
-    this.logger.info('Saving workspace', { 
-      workspaceId: workspace.workspaceId, 
-      adminId: workspace.adminId 
+    this.logger.info('Saving workspace', {
+      workspaceId: workspace.workspaceId,
+      adminId: workspace.adminId,
     });
-    
+
     const saveWorkspaceQuery = `
       INSERT INTO users (workspace_id, admin_id, access_token, authorization_code)
       VALUES ($1, $2, $3, $4)

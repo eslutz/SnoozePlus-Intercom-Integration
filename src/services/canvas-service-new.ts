@@ -26,7 +26,7 @@ export class CanvasService {
    */
   getInitialCanvas(): CanvasResponse {
     this.logger.debug('Creating initial canvas');
-    
+
     const initialCanvas: CanvasResponse = {
       canvas: {
         content: {
@@ -86,7 +86,7 @@ export class CanvasService {
    */
   getSetSnoozeCanvas(numOfSnoozes: number): CanvasResponse {
     this.logger.debug('Creating set snooze canvas', { numOfSnoozes });
-    
+
     const setSnoozeCanvas: CanvasResponse = {
       canvas: {
         content: {
@@ -120,7 +120,7 @@ export class CanvasService {
         placeholder: `Enter your snooze message ${i}...`,
       });
 
-      // Date input  
+      // Date input
       setSnoozeCanvas.canvas.content.components.push({
         type: 'textarea',
         id: `date_${i}`,
@@ -179,7 +179,9 @@ export class CanvasService {
       }
     );
 
-    this.logger.debug('Set snooze canvas created successfully', { numOfSnoozes });
+    this.logger.debug('Set snooze canvas created successfully', {
+      numOfSnoozes,
+    });
     return setSnoozeCanvas;
   }
 
@@ -191,8 +193,10 @@ export class CanvasService {
    * @returns Canvas showing current snooze status
    */
   async getCurrentSnoozesCanvas(messages: Message[]): Promise<CanvasResponse> {
-    this.logger.debug('Creating current snoozes canvas', { messageCount: messages.length });
-    
+    this.logger.debug('Creating current snoozes canvas', {
+      messageCount: messages.length,
+    });
+
     const currentSnoozeCanvas: CanvasResponse = {
       canvas: {
         content: {
@@ -216,14 +220,19 @@ export class CanvasService {
     for (let i = 0; i < messages.length; i++) {
       const message = messages[i];
       if (!message) {
-        this.logger.warn('Skipping undefined message in current snoozes canvas', { index: i });
+        this.logger.warn(
+          'Skipping undefined message in current snoozes canvas',
+          { index: i }
+        );
         continue;
       }
-      
+
       try {
         // Decrypt the message content
-        const decryptedMessage = await this.cryptoService.decrypt(message.message);
-        
+        const decryptedMessage = await this.cryptoService.decrypt(
+          message.message
+        );
+
         // Calculate days until sending
         const daysUntilSending = calculateDaysUntilSending(message.sendDate);
 
@@ -263,10 +272,13 @@ export class CanvasService {
           );
         }
       } catch (error) {
-        this.logger.error('Error decrypting message in current snoozes canvas', {
-          messageId: message.id,
-          error: error instanceof Error ? error.message : String(error),
-        });
+        this.logger.error(
+          'Error decrypting message in current snoozes canvas',
+          {
+            messageId: message.id,
+            error: error instanceof Error ? error.message : String(error),
+          }
+        );
         throw new AppError('Failed to decrypt message content', 500);
       }
     }
@@ -286,7 +298,9 @@ export class CanvasService {
       }
     );
 
-    this.logger.debug('Current snoozes canvas created successfully', { messageCount: messages.length });
+    this.logger.debug('Current snoozes canvas created successfully', {
+      messageCount: messages.length,
+    });
     return currentSnoozeCanvas;
   }
 
@@ -298,8 +312,10 @@ export class CanvasService {
    * @returns Canvas showing scheduling confirmation
    */
   async getFinalCanvas(messages: Message[]): Promise<CanvasResponse> {
-    this.logger.debug('Creating final canvas', { messageCount: messages.length });
-    
+    this.logger.debug('Creating final canvas', {
+      messageCount: messages.length,
+    });
+
     const finalCanvas: CanvasResponse = {
       canvas: {
         content: {
@@ -323,14 +339,18 @@ export class CanvasService {
     for (let i = 0; i < messages.length; i++) {
       const message = messages[i];
       if (!message) {
-        this.logger.warn('Skipping undefined message in final canvas', { index: i });
+        this.logger.warn('Skipping undefined message in final canvas', {
+          index: i,
+        });
         continue;
       }
-      
+
       try {
         // Decrypt the message content
-        const decryptedMessage = await this.cryptoService.decrypt(message.message);
-        
+        const decryptedMessage = await this.cryptoService.decrypt(
+          message.message
+        );
+
         // Calculate days until sending
         const daysUntilSending = calculateDaysUntilSending(message.sendDate);
 
@@ -378,7 +398,9 @@ export class CanvasService {
       }
     }
 
-    this.logger.debug('Final canvas created successfully', { messageCount: messages.length });
+    this.logger.debug('Final canvas created successfully', {
+      messageCount: messages.length,
+    });
     return finalCanvas;
   }
 }

@@ -5,7 +5,11 @@ import { Workspace } from '../models/workspace-model.js';
  * Interface for message database operations
  */
 export interface IMessageService {
-  saveMessages(workspaceId: string, conversationId: number, messages: Message[]): Promise<string[]>;
+  saveMessages(
+    workspaceId: string,
+    conversationId: number,
+    messages: Message[]
+  ): Promise<string[]>;
   getMessages(workspaceId: string, conversationId: number): Promise<Message[]>;
   archiveMessages(workspaceId: string, conversationId: number): Promise<number>;
   archiveMessage(messageId: string): Promise<number>;
