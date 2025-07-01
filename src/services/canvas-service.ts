@@ -179,7 +179,7 @@ const getSetSnoozeCanvas = (numOfSnoozes: number): CanvasResponse => {
  * @returns {CanvasResponse} A canvas object compatible with Intercom messenger format containing formatted message display
  * @throws AppError if message decryption fails or message/date is invalid
  */
-const getCurrentSnoozesCanvas = (messages: Message[]): CanvasResponse => {
+const getCurrentSnoozesCanvas = async (messages: Message[]): Promise<CanvasResponse> => {
   const currentSnoozeCanvas: CanvasResponse = {
     canvas: {
       content: {
@@ -221,7 +221,7 @@ const getCurrentSnoozesCanvas = (messages: Message[]): CanvasResponse => {
       if (!messages[i]?.message) {
         throw new AppError('Message is undefined or null', 400);
       }
-      decryptedMessage = decrypt(messages[i]!.message);
+      decryptedMessage = await decrypt(messages[i]!.message);
     } catch (err) {
       canvasLogger.error(`Error decrypting message: ${String(err)}`);
       throw new AppError('Failed to decrypt message', 500);
@@ -275,7 +275,7 @@ const getCurrentSnoozesCanvas = (messages: Message[]): CanvasResponse => {
  * @returns {CanvasResponse} A canvas object containing formatted components for display
  * @throws AppError if message decryption fails or message/date is invalid
  */
-const getFinalCanvas = (messages: Message[]): CanvasResponse => {
+const getFinalCanvas = async (messages: Message[]): Promise<CanvasResponse> => {
   const finalCanvas: CanvasResponse = {
     canvas: {
       content: {
@@ -323,7 +323,7 @@ const getFinalCanvas = (messages: Message[]): CanvasResponse => {
       if (!messages[i]?.message) {
         throw new AppError('Message is undefined or null', 400);
       }
-      decryptedMessage = decrypt(messages[i]!.message);
+      decryptedMessage = await decrypt(messages[i]!.message);
     } catch (err) {
       canvasLogger.error(`Error decrypting message: ${String(err)}`);
       throw new AppError('Failed to decrypt message', 500);

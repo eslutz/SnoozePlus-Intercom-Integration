@@ -1,67 +1,104 @@
 import crypto from 'crypto';
+import { promisify } from 'util';
 import config from '../config/config.js';
 import SignatureAlgorithm from '../enums/signature-algorithm-enum.js';
 import { AppError } from '../middleware/error-middleware.js';
 
+const scrypt = promisify(crypto.scrypt);
+
 /**
- * Decrypts an encrypted text using a specified algorithm and key.
- *
- * The encrypted text should be in the format `ivHex:encrypted`, where `ivHex` is the initialization vector
- * in hexadecimal format and `encrypted` is the encrypted data in hexadecimal format.
- *
- * @function decrypt
- * @param encryptedText The encrypted text to decrypt, in the format `ivHex:encrypted`
- * @returns {string} The decrypted text in UTF-8 format
- * @throws {Error} If the encrypted text format is invalid
+ * Secure cryptography service using AES-256-GCM authenticated encryption
+ * with proper key derivation and tamper protection.
  */
-const decrypt = (encryptedText: string): string => {
-  const parts = encryptedText.split(':');
-  if (parts.length !== 2) {
-    throw new AppError(
-      'Invalid encrypted text format. Expected format: ivHex:encrypted',
-      400
-    );
+class CryptoService {
+  private static readonly SALT_LENGTH = 32;
+  private static readonly IV_LENGTH = 16;
+  private static readonly KEY_LENGTH = 32;
+
+  /**
+   * Derives a key from the master key using scrypt
+   */
+  private static async deriveKey(
+    masterKey: string,
+    salt: Buffer
+  ): Promise<Buffer> {
+    return (await scrypt(masterKey, salt, this.KEY_LENGTH)) as Buffer;
   }
 
-  const [ivHex, encrypted] = parts;
-  if (!ivHex || !encrypted) {
-    throw new AppError(
-      'Invalid encrypted text format. Missing IV or encrypted data',
-      400
-    );
+  /**
+   * Encrypts text using AES-256-GCM with authenticated encryption
+   */
+  static async encrypt(text: string, masterKey: string): Promise<string> {
+    const salt = crypto.randomBytes(this.SALT_LENGTH);
+    const iv = crypto.randomBytes(this.IV_LENGTH);
+    const key = await this.deriveKey(masterKey, salt);
+
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+    
+    const encrypted = Buffer.concat([
+      cipher.update(text, 'utf8'),
+      cipher.final()
+    ]);
+    
+    const tag = cipher.getAuthTag();
+
+    // Format: salt:iv:tag:encrypted
+    return [
+      salt.toString('base64'),
+      iv.toString('base64'),
+      tag.toString('base64'),
+      encrypted.toString('base64')
+    ].join(':');
   }
 
-  const cipher = crypto.createDecipheriv(
-    config.encryptionAlgorithm,
-    Buffer.from(config.encryptionKey, 'hex'),
-    Buffer.from(ivHex, 'hex')
-  );
-  let decrypted = cipher.update(encrypted, 'hex', 'utf8');
-  decrypted += cipher.final('utf8');
-  return decrypted;
+  /**
+   * Decrypts text encrypted with encrypt method
+   */
+  static async decrypt(encryptedText: string, masterKey: string): Promise<string> {
+    const parts = encryptedText.split(':');
+    if (parts.length !== 4) {
+      throw new AppError('Invalid encrypted format', 400);
+    }
+
+    const [saltB64, ivB64, tagB64, encryptedB64] = parts;
+    
+    // Allow empty encrypted data (for empty strings) but not other parts
+    if (!saltB64 || !ivB64 || !tagB64 || encryptedB64 === undefined) {
+      throw new AppError('Invalid encrypted format - missing parts', 400);
+    }
+    
+    const salt = Buffer.from(saltB64, 'base64');
+    const iv = Buffer.from(ivB64, 'base64');
+    const tag = Buffer.from(tagB64, 'base64');
+    const encrypted = Buffer.from(encryptedB64, 'base64');
+
+    const key = await this.deriveKey(masterKey, salt);
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAuthTag(tag);
+
+    const decrypted = Buffer.concat([
+      decipher.update(encrypted),
+      decipher.final()
+    ]);
+
+    return decrypted.toString('utf8');
+  }
+}
+
+
+
+/**
+ * Decrypts text using the secure AES-256-GCM format.
+ */
+const decrypt = async (encryptedText: string): Promise<string> => {
+  return await CryptoService.decrypt(encryptedText, config.encryptionKey);
 };
 
 /**
- * Encrypts a given text using the specified algorithm and key.
- *
- * The function generates a random initialization vector (IV) for each encryption,
- * creates a cipher using the algorithm, key, and IV, and then encrypts the text.
- * The resulting encrypted text is returned in the format `iv:encryptedText`.
- *
- * @function encrypt
- * @param text The plaintext string to be encrypted
- * @returns {string} The encrypted text in the format `iv:encryptedText`
+ * Encrypts text using the new secure AES-256-GCM format.
  */
-const encrypt = (text: string): string => {
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv(
-    config.encryptionAlgorithm,
-    Buffer.from(config.encryptionKey, 'hex'),
-    iv
-  );
-  let encrypted = cipher.update(text, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  return `${iv.toString('hex')}:${encrypted}`;
+const encrypt = async (text: string): Promise<string> => {
+  return await CryptoService.encrypt(text, config.encryptionKey);
 };
 
 /**
@@ -85,4 +122,4 @@ const signatureValidator = (
   return digest === signature;
 };
 
-export { encrypt, decrypt, signatureValidator };
+export { encrypt, decrypt, signatureValidator, CryptoService };

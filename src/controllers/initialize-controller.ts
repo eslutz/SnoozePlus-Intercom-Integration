@@ -29,7 +29,7 @@ const initialize: RequestHandler = asyncHandler(
         );
         initializeLogger.profile('currentSnoozesCanvas');
         const currentSnoozesCanvas =
-          canvasService.getCurrentSnoozesCanvas(messages);
+          await canvasService.getCurrentSnoozesCanvas(messages);
         initializeLogger.profile('currentSnoozesCanvas', {
           level: 'info',
           message: 'Completed current snoozes canvas.',
