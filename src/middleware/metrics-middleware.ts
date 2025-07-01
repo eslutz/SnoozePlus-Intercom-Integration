@@ -47,5 +47,7 @@ function getApiVersion(req: Request): string {
   // Extract version from URL path (/api/v1/...) or header
   const pathVersion = (/^\/api\/v(\d+)\//.exec(req.path))?.[1];
   const headerVersion = req.headers['api-version'] as string;
-  return pathVersion ?? headerVersion ?? 'v1';
+  
+  const version = pathVersion ?? headerVersion ?? '1';
+  return version.startsWith('v') ? version : `v${version}`;
 }
