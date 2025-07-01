@@ -12,7 +12,6 @@
  *  - Daily rotating file logs in local development
  *  - Logtail integration for non-local environments
  *  - Exception and rejection handling
- *  - Async transport wrapper for performance optimization
  */
 import winston from 'winston';
 import 'winston-daily-rotate-file';

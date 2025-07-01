@@ -60,7 +60,14 @@ pool.on('remove', (_client) => {
   dbLogger.debug('Database client removed from pool');
 });
 
-// Export pool metrics for monitoring
+/**
+ * Export pool metrics for monitoring.
+ * 
+ * @returns {Object} Pool statistics including total, idle, and waiting connection counts
+ * @property {number} totalCount - Total number of connections in the pool
+ * @property {number} idleCount - Number of idle connections available for use
+ * @property {number} waitingCount - Number of clients waiting for a connection
+ */
 export function getPoolMetrics() {
   return {
     totalCount: pool.totalCount,
@@ -69,7 +76,14 @@ export function getPoolMetrics() {
   };
 }
 
-// Health check with retry logic
+/**
+ * Health check with retry logic.
+ * Attempts to verify database connectivity by executing a simple query.
+ * 
+ * @returns {Promise<boolean>} Promise that resolves to true if database is healthy, false otherwise
+ * @description Performs up to 3 connection attempts with 1-second delays between retries.
+ *              Logs errors after all retries are exhausted.
+ */
 export async function checkDatabaseHealth(): Promise<boolean> {
   let retries = 3;
   while (retries > 0) {
@@ -90,7 +104,13 @@ export async function checkDatabaseHealth(): Promise<boolean> {
   return false;
 }
 
-// Graceful shutdown
+/**
+ * Graceful shutdown of the database connection pool.
+ * Closes all active connections and waits for pending operations to complete.
+ * 
+ * @returns {Promise<void>} Promise that resolves when the pool is successfully closed
+ * @description Logs the shutdown process and ensures clean resource cleanup.
+ */
 export async function closePool(): Promise<void> {
   dbLogger.info('Closing database connection pool...');
   await pool.end();

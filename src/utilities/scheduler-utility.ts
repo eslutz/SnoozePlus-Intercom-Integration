@@ -8,6 +8,7 @@ const schedulerLogger = logger.child({ module: 'scheduler-utility' });
 
 export class MessageScheduler {
   private jobs: Map<string, schedule.Job> = new Map();
+  private timeoutMap: Map<string, NodeJS.Timeout> = new Map();
   private isShuttingDown = false;
   private cleanupInterval: NodeJS.Timeout | null = null;
 
@@ -54,12 +55,14 @@ export class MessageScheduler {
       // Set a timeout to clean up jobs that are far in the future (24h+)
       const timeUntilExecution = sendDate.getTime() - Date.now();
       if (timeUntilExecution > 24 * 60 * 60 * 1000) {
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           if (this.jobs.has(messageId)) {
             schedulerLogger.warn('Cleaning up long-scheduled job', { messageId });
             this.cancelJob(messageId);
           }
+          this.timeoutMap.delete(messageId); // Remove timeout from map after execution
         }, 24 * 60 * 60 * 1000);
+        this.timeoutMap.set(messageId, timeoutId); // Store timeout ID in map
       }
     } else {
       throw new Error(`Failed to schedule job for message: ${messageId}`);
@@ -71,6 +74,14 @@ export class MessageScheduler {
     if (job) {
       job.cancel();
       this.jobs.delete(messageId);
+      
+      // Clear associated timeout if it exists
+      const timeoutId = this.timeoutMap.get(messageId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        this.timeoutMap.delete(messageId);
+      }
+      
       schedulerLogger.debug('Job cancelled', { messageId });
       return true;
     }
@@ -115,7 +126,14 @@ export class MessageScheduler {
       schedulerLogger.debug('Cancelled scheduled job during shutdown', { messageId });
     }
     
+    // Clear all pending timeouts
+    for (const [messageId, timeoutId] of this.timeoutMap) {
+      clearTimeout(timeoutId);
+      schedulerLogger.debug('Cleared timeout during shutdown', { messageId });
+    }
+    
     this.jobs.clear();
+    this.timeoutMap.clear();
     
     // Wait for graceful shutdown
     await schedule.gracefulShutdown();
@@ -163,9 +181,6 @@ export const messageScheduler = new MessageScheduler();
 const scheduleJobs = async (): Promise<void> => {
   // Schedule the task to run every 6 hours using the new scheduler
   try {
-    const nextRun = new Date();
-    nextRun.setHours(nextRun.getHours() + 6);
-    
     const job = schedule.scheduleJob(
       '0 */6 * * *',
       async (scheduledFireDate: Date): Promise<void> => {
