@@ -1,5 +1,5 @@
 /**
- * Version 1 API routes for backward compatibility.
+ * Version 1 API routes - current API version.
  *
  * @module routes/v1/index
  * @route /healthcheck - Health check endpoints
@@ -17,7 +17,7 @@ import initializeRouter from '../initialize-router.js';
 
 const v1Router = Router();
 
-// Version 1 routes - using existing implementations
+// Version 1 routes - current API implementation
 v1Router.use('/healthcheck', healthcheckRouter);
 v1Router.use('/auth', authRouter);
 v1Router.use('/submit', submitRouter);

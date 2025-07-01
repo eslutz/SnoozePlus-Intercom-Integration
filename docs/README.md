@@ -77,7 +77,7 @@ The application includes comprehensive monitoring and observability features for
 ### 🚀 Key Features
 
 - **Prometheus Metrics**: Complete metrics collection for HTTP requests, database operations, business logic, and system resources
-- **API Versioning**: Built-in versioning support (`/api/v1/`, `/api/v2/`) with deprecation warnings
+- **API Versioning**: Built-in versioning support (`/api/v1/`) for the current API state
 - **Request Tracing**: Automatic correlation ID generation for distributed tracing
 - **Enhanced Health Checks**: Kubernetes-ready liveness and readiness probes
 - **Error Categorization**: Structured error handling with severity levels and correlation
@@ -94,9 +94,9 @@ GET /healthcheck/health
 # Kubernetes readiness probe
 GET /healthcheck/ready
 
-# Version 2 API endpoints (recommended)
-GET /api/v2/health
-POST /api/v2/messages
+# Version 1 API endpoints (current)
+GET /api/v1/healthcheck
+POST /api/v1/submit
 ```
 
 ### 🔍 Metrics Available

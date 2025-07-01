@@ -24,16 +24,12 @@ GET /healthcheck
 
 ### API Versioning
 ```bash
-# Version 1 API (deprecated - shows deprecation warnings)
+# Version 1 API (current)
 GET /api/v1/healthcheck
 POST /api/v1/submit
 
-# Version 2 API (recommended)
-GET /api/v2/health
-POST /api/v2/messages
-
 # Version via header
-curl -H "api-version: v2" /healthcheck
+curl -H "api-version: v1" /healthcheck
 ```
 
 ## 📊 Available Metrics
@@ -81,25 +77,20 @@ All error logs include correlation IDs for request tracing across services.
 
 ### Version Detection
 The system detects API versions from:
-1. URL path: `/api/v1/`, `/api/v2/`
-2. Header: `api-version: v2`
-3. Query parameter: `?version=v2`
-4. Default: `v1` (with deprecation warnings)
+1. URL path: `/api/v1/`
+2. Header: `api-version: v1`
+3. Query parameter: `?version=v1`
+4. Default: `v1`
 
-### Deprecation Warnings
-V1 API responses include:
+### API Version Headers
+All API responses include version information:
 ```
-X-API-Deprecation-Warning: API v1 is deprecated. Please migrate to v2 by 2025-12-31.
-X-API-Deprecation-Date: 2025-12-31
-X-API-Migration-Guide: https://docs.snoozeplus.app/migration/v1-to-v2
+X-API-Version: v1
 ```
 
-### Version Mapping
-| V1 Endpoint | V2 Endpoint | Change |
-|-------------|-------------|---------|
-| `/healthcheck` | `/health` | Renamed |
-| `/submit` | `/messages` | Renamed for clarity |
-| `/webhook` | `/webhooks` | Pluralized |
+## 🔄 API Versioning
+
+The SnoozePlus API uses a single version (v1) representing the current state of the API. All endpoints are available under the `/api/v1/` prefix for consistency.
 
 ## 🚨 Error Handling
 

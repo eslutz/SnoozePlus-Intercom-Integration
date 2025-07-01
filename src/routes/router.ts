@@ -1,12 +1,11 @@
 /**
  * Express router configuration for Snooze+ API.
  * Sets up main routing with middleware and sub-routers for different endpoints.
- * Supports API versioning with /api/v1/ and /api/v2/ prefixes.
+ * Supports API versioning with /api/v1/ prefix for the current API version.
  *
  * @module router
  * @route GET / - Welcome message
- * @route /api/v1 - Version 1 API endpoints (deprecated)
- * @route /api/v2 - Version 2 API endpoints
+ * @route /api/v1 - Version 1 API endpoints (current)
  * @route /auth - Authentication related routes (unversioned)
  * @route /healthcheck - Health check endpoints (unversioned for backward compatibility)
  * @remarks
@@ -21,7 +20,6 @@ import initializeRouter from './initialize-router.js';
 import submitRouter from './submit-router.js';
 import webhookRouter from './webhook-router.js';
 import v1Router from './v1/index.js';
-import v2Router from './v2/index.js';
 import logger from '../config/logger-config.js';
 // import validateIp from '../middleware/validate-ip-middleware.js';
 
@@ -55,7 +53,6 @@ router.route('/').get((_req: Request, res: Response) => {
 
 // Versioned API routes
 router.use('/api/v1', v1Router);
-router.use('/api/v2', v2Router);
 
 // Unversioned routes for backward compatibility
 router.use('/auth', authRouter);

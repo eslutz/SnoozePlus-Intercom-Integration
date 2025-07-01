@@ -27,25 +27,6 @@ describe('API Versioning Middleware', () => {
     );
 
     expect(mockResponse.setHeader).toHaveBeenCalledWith('X-API-Version', 'v1');
-    expect(mockResponse.setHeader).toHaveBeenCalledWith(
-      'X-API-Deprecation-Warning',
-      'API v1 is deprecated. Please migrate to v2 by 2025-12-31.'
-    );
-    expect(nextFunction).toHaveBeenCalled();
-  });
-
-  test('should detect v2 API version from path', () => {
-    mockRequest.path = '/api/v2/test';
-    mockRequest.headers = {};
-    mockRequest.query = {};
-
-    apiVersionMiddleware(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
-
-    expect(mockResponse.setHeader).toHaveBeenCalledWith('X-API-Version', 'v2');
     expect(mockResponse.setHeader).not.toHaveBeenCalledWith(
       'X-API-Deprecation-Warning',
       expect.any(String)
@@ -55,7 +36,7 @@ describe('API Versioning Middleware', () => {
 
   test('should detect version from header', () => {
     mockRequest.path = '/test';
-    mockRequest.headers = { 'api-version': 'v2' };
+    mockRequest.headers = { 'api-version': 'v1' };
     mockRequest.query = {};
 
     apiVersionMiddleware(
@@ -64,7 +45,7 @@ describe('API Versioning Middleware', () => {
       nextFunction
     );
 
-    expect(mockResponse.setHeader).toHaveBeenCalledWith('X-API-Version', 'v2');
+    expect(mockResponse.setHeader).toHaveBeenCalledWith('X-API-Version', 'v1');
     expect(nextFunction).toHaveBeenCalled();
   });
 
@@ -80,10 +61,25 @@ describe('API Versioning Middleware', () => {
     );
 
     expect(mockResponse.setHeader).toHaveBeenCalledWith('X-API-Version', 'v1');
-    expect(mockResponse.setHeader).toHaveBeenCalledWith(
+    expect(mockResponse.setHeader).not.toHaveBeenCalledWith(
       'X-API-Deprecation-Warning',
-      'API v1 is deprecated. Please migrate to v2 by 2025-12-31.'
+      expect.any(String)
     );
+    expect(nextFunction).toHaveBeenCalled();
+  });
+
+  test('should detect version from query parameter', () => {
+    mockRequest.path = '/test';
+    mockRequest.headers = {};
+    mockRequest.query = { version: '1' };
+
+    apiVersionMiddleware(
+      mockRequest as Request,
+      mockResponse as Response,
+      nextFunction
+    );
+
+    expect(mockResponse.setHeader).toHaveBeenCalledWith('X-API-Version', 'v1');
     expect(nextFunction).toHaveBeenCalled();
   });
 });
