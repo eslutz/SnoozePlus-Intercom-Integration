@@ -1,8 +1,12 @@
 import { RequestHandler, Request, Response } from 'express';
 import logger from '../config/logger-config.js';
-import { addNote } from '../services/intercom-service.js';
-import * as messageService from '../services/message-db-service.js';
-import * as workspaceDbService from '../services/user-db-service.js';
+import { container } from '../container/container.js';
+import type {
+  IIntercomService,
+  IMessageService,
+  IWorkspaceService,
+} from '../container/interfaces.js';
+import { TYPES } from '../container/types.js';
 import { setCloseNote } from '../utilities/snooze-utility.js';
 import { IntercomWebhookRequest } from '../models/intercom-request-webhook-model.js';
 import { asyncHandler, AppError } from '../middleware/error-middleware.js';
@@ -38,7 +42,16 @@ const receiver: RequestHandler = asyncHandler(
       `Webhook notification conversation_id: ${conversationId}`
     );
 
-    const user = await workspaceDbService.getWorkspace(workspaceId);
+    // Get services from DI container
+    const workspaceService = container.get<IWorkspaceService>(
+      TYPES.WorkspaceService
+    );
+    const messageService = container.get<IMessageService>(TYPES.MessageService);
+    const intercomService = container.get<IIntercomService>(
+      TYPES.IntercomService
+    );
+
+    const user = await workspaceService.getWorkspace(workspaceId);
     if (!user) {
       throw new AppError(`User not found. Workspace ID: ${workspaceId}`, 404);
     }
@@ -81,12 +94,12 @@ const receiver: RequestHandler = asyncHandler(
 
     webhookLogger.info('Adding close note to conversation.');
     webhookLogger.profile('addNote');
-    const response = await addNote(
-      user.adminId,
-      user.accessToken,
-      conversationId,
-      setCloseNote(topic, messagesArchived)
-    );
+    const response = await intercomService.addNote({
+      adminId: user.adminId,
+      accessToken: user.accessToken,
+      conversationId: conversationId,
+      message: setCloseNote(topic, messagesArchived),
+    });
     webhookLogger.profile('addNote', {
       level: 'info',
       message: 'Close note added to conversation.',

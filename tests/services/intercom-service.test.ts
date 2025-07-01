@@ -2,8 +2,11 @@ import 'reflect-metadata';
 import { Container } from 'inversify';
 import { Logger } from 'winston';
 import { TYPES } from '../../src/container/types.js';
-import { IntercomService } from '../../src/services/intercom-service-new.js';
-import type { ICryptoService, SendMessageParams } from '../../src/container/interfaces.js';
+import { IntercomService } from '../../src/services/intercom-service.js';
+import type {
+  ICryptoService,
+  SendMessageParams,
+} from '../../src/container/interfaces.js';
 
 // Mock retry utility to pass through
 jest.mock('../../src/utilities/retry-utility.js', () => ({
@@ -43,7 +46,9 @@ describe('IntercomService Circuit Breaker Integration', () => {
     // Set up container
     container = new Container();
     container.bind<Logger>(TYPES.Logger).toConstantValue(mockLogger);
-    container.bind<ICryptoService>(TYPES.CryptoService).toConstantValue(mockCryptoService);
+    container
+      .bind<ICryptoService>(TYPES.CryptoService)
+      .toConstantValue(mockCryptoService);
     container.bind<IntercomService>(TYPES.IntercomService).to(IntercomService);
 
     // Get service instance
@@ -59,12 +64,12 @@ describe('IntercomService Circuit Breaker Integration', () => {
 
     test('should provide circuit breaker state information', () => {
       const state = intercomService.getCircuitBreakerState();
-      
+
       expect(state).toHaveProperty('state');
       expect(state).toHaveProperty('failures');
       expect(state).toHaveProperty('lastFailureTime');
       expect(state).toHaveProperty('successCount');
-      
+
       expect(['CLOSED', 'OPEN', 'HALF_OPEN']).toContain(state.state);
       expect(typeof state.failures).toBe('number');
       expect(typeof state.lastFailureTime).toBe('number');
@@ -131,7 +136,7 @@ describe('IntercomService Circuit Breaker Integration', () => {
       // Verify we can get instance from container
       const instance1 = container.get<IntercomService>(TYPES.IntercomService);
       const instance2 = container.get<IntercomService>(TYPES.IntercomService);
-      
+
       // Should be singleton
       expect(instance1).toBe(instance2);
       expect(instance1).toBeInstanceOf(IntercomService);

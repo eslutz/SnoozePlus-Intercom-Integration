@@ -1,209 +1,344 @@
+import { injectable, inject } from 'inversify';
 import { RequestHandler, Request, Response } from 'express';
-import logger from '../config/logger-config.js';
-import * as canvasService from '../services/canvas-service.js';
-import * as intercomService from '../services/intercom-service.js';
-import * as messageDbService from '../services/message-db-service.js';
-import * as workspaceDbService from '../services/user-db-service.js';
+import { Logger } from 'winston';
+import { Workspace } from '../models/workspace-model.js';
+import { TYPES } from '../container/types.js';
+import type {
+  IMessageService,
+  IWorkspaceService,
+  IIntercomService,
+} from '../container/interfaces.js';
 import {
   createSnoozeRequest,
   setSnoozeCanceledNote,
 } from '../utilities/snooze-utility.js';
 import { IntercomCanvasRequest } from '../models/intercom-request-canvas-model.js';
 import { asyncHandler, AppError } from '../middleware/error-middleware.js';
+import { CanvasService } from '../services/canvas-service.js';
 
-const submitLogger = logger.child({ module: 'submit-controller' });
+/**
+ * Injectable submit controller for handling canvas submissions
+ */
+@injectable()
+export class SubmitController {
+  constructor(
+    @inject(TYPES.MessageService) private messageService: IMessageService,
+    @inject(TYPES.WorkspaceService) private workspaceService: IWorkspaceService,
+    @inject(TYPES.IntercomService) private intercomService: IIntercomService,
+    @inject(TYPES.CanvasService) private canvasService: CanvasService,
+    @inject(TYPES.Logger) private logger: Logger
+  ) {}
 
-// POST: /submit - Send the next canvas based on submit component id.
-const submit: RequestHandler = asyncHandler(
-  async (req: Request, res: Response) => {
-    submitLogger.info('Submit request received.');
-    submitLogger.profile('submit');
-    const canvasRequest = req.body as IntercomCanvasRequest;
-    submitLogger.info(`Request type: ${canvasRequest.component_id}`);
-    submitLogger.debug(`POST request body: ${JSON.stringify(req.body)}`);
-    const workspaceId = canvasRequest.workspace_id;
-    submitLogger.debug(`workspace_id: ${workspaceId}`);
-    const conversationId = Number(canvasRequest.conversation.id);
-    submitLogger.debug(`conversation:id: ${conversationId}`);
+  /**
+   * Handle canvas submit requests from Intercom.
+   * Processes different types of canvas submissions (snooze, cancel) and
+   * coordinates with services to handle the requested actions.
+   *
+   * @param req - Express request object containing canvas submission data
+   * @param res - Express response object for sending response canvas
+   * @returns Promise that resolves when the submission is processed
+   * @throws {AppError} When validation fails or processing encounters errors
+   */
+  public submit: RequestHandler = asyncHandler(
+    async (req: Request, res: Response) => {
+      const logger = this.logger.child({ module: 'submit-controller' });
 
-    // Retrieve user based on workspace_id
-    const user = await workspaceDbService.getWorkspace(workspaceId);
-    if (!user) {
-      throw new AppError(`User not found. Workspace ID: ${workspaceId}`, 404);
+      logger.info('Submit request received.');
+      logger.profile('submit');
+
+      const canvasRequest = req.body as IntercomCanvasRequest;
+      logger.info(`Request type: ${canvasRequest.component_id}`);
+      logger.debug(`POST request body: ${JSON.stringify(req.body)}`);
+
+      const workspaceId = canvasRequest.workspace_id;
+      logger.debug(`workspace_id: ${workspaceId}`);
+      const conversationId = Number(canvasRequest.conversation.id);
+      logger.debug(`conversation:id: ${conversationId}`);
+
+      try {
+        // Retrieve user based on workspace_id
+        const user = await this.workspaceService.getWorkspace(workspaceId);
+        if (!user) {
+          throw new AppError(
+            `User not found. Workspace ID: ${workspaceId}`,
+            404
+          );
+        }
+
+        logger.debug(`User found: ${JSON.stringify(user)}`);
+
+        // Process different submission types
+        switch (canvasRequest.component_id) {
+          case 'set_snoozes':
+            this.handleSetSnoozes(canvasRequest, logger, res);
+            break;
+
+          case 'submit_snoozes':
+            await this.handleSubmitSnoozes(
+              canvasRequest,
+              workspaceId,
+              conversationId,
+              user,
+              logger,
+              res
+            );
+            break;
+
+          case 'cancel':
+          case 'cancel_snoozes':
+            await this.handleCancelSnoozes(
+              workspaceId,
+              conversationId,
+              user,
+              logger,
+              res
+            );
+            break;
+
+          default:
+            logger.warn(`Unknown component_id: ${canvasRequest.component_id}`);
+            throw new AppError(
+              `Unknown component_id: ${canvasRequest.component_id}`,
+              400
+            );
+        }
+
+        logger.profile('submit', {
+          level: 'info',
+          message: 'Completed submit request.',
+        });
+      } catch (error) {
+        logger.error('Submit request failed', {
+          workspaceId,
+          conversationId,
+          componentId: canvasRequest.component_id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+      }
+    }
+  );
+
+  /**
+   * Handle setting snoozes - show canvas for message input
+   *
+   * @param canvasRequest - The validated canvas request from Intercom
+   * @param logger - Logger instance for request tracking
+   * @param res - Express response object
+   * @returns void - Synchronously sends the canvas response
+   * @throws {AppError} When number of snoozes is invalid or canvas generation fails
+   */
+  private handleSetSnoozes(
+    canvasRequest: IntercomCanvasRequest,
+    logger: Logger,
+    res: Response
+  ): void {
+    logger.info('Handling set snoozes request');
+
+    const numOfSnoozes = parseInt(
+      String(canvasRequest.input_values?.numOfSnoozes || '1'),
+      10
+    );
+    logger.debug(`Number of snoozes: ${numOfSnoozes}`);
+
+    if (numOfSnoozes < 1 || numOfSnoozes > 5) {
+      throw new AppError(
+        'Invalid number of snoozes. Must be between 1 and 5.',
+        400
+      );
     }
 
-    if (canvasRequest.component_id === 'submitNumOfSnoozes') {
-      const requestedNumOfSnoozes = canvasRequest.input_values.numOfSnoozes;
-      // Check if the input is a valid number.
-      if (isNaN(requestedNumOfSnoozes)) {
-        throw new AppError(
-          `Invalid input. The number of snoozes must be a number. Received: ${requestedNumOfSnoozes}`,
-          400
-        );
-      }
+    logger.info('Building set snooze canvas.');
+    logger.profile('setSnoozeCanvas');
 
-      const numOfSnoozes = Number(requestedNumOfSnoozes);
-      submitLogger.info(`Number of snoozes requested: ${numOfSnoozes}`);
-      submitLogger.info('Building message canvas.');
-      const messageCanvas = canvasService.getSetSnoozeCanvas(numOfSnoozes);
-      submitLogger.info('Returning message canvas.');
+    const setSnoozeCanvas = this.canvasService.getSetSnoozeCanvas(numOfSnoozes);
 
-      res.send(messageCanvas);
-    } else if (canvasRequest.component_id === 'submitSnooze') {
-      // Create the snooze request from the input values.
-      submitLogger.info('Parsing request for snooze request.');
-      submitLogger.profile('createSnoozeRequest');
-      const snoozeRequest = await createSnoozeRequest(
-        canvasRequest.input_values
+    logger.profile('setSnoozeCanvas', {
+      level: 'info',
+      message: 'Completed set snooze canvas.',
+    });
+    logger.debug(`Set snooze canvas: ${JSON.stringify(setSnoozeCanvas)}`);
+
+    res.send(setSnoozeCanvas);
+  }
+
+  /**
+   * Handle submitting snoozes - save messages and schedule them
+   *
+   * @param canvasRequest - The validated canvas request from Intercom
+   * @param workspaceId - The workspace identifier
+   * @param conversationId - The conversation identifier
+   * @param user - The workspace configuration with authentication details
+   * @param logger - Logger instance for request tracking
+   * @param res - Express response object
+   * @returns Promise that resolves when the snooze request is processed
+   */
+  private async handleSubmitSnoozes(
+    canvasRequest: IntercomCanvasRequest,
+    workspaceId: string,
+    conversationId: number,
+    user: Workspace,
+    logger: Logger,
+    res: Response
+  ): Promise<void> {
+    logger.info('Handling submit snoozes request');
+
+    // Create snooze request from canvas input
+    logger.info('Creating snooze request.');
+    logger.profile('createSnoozeRequest');
+
+    const snoozeRequest = await createSnoozeRequest(
+      canvasRequest.input_values || {}
+    );
+
+    logger.profile('createSnoozeRequest', {
+      level: 'info',
+      message: 'Snooze request created.',
+    });
+    logger.debug(`Snooze request: ${JSON.stringify(snoozeRequest)}`);
+
+    // Save messages to database
+    logger.info('Saving messages to database.');
+    logger.profile('saveMessages');
+
+    const messageResponse = await this.messageService.saveMessages(
+      workspaceId,
+      conversationId,
+      snoozeRequest.messages
+    );
+
+    logger.profile('saveMessages', {
+      level: 'info',
+      message: 'Messages saved to the database.',
+    });
+    logger.debug(`Save Messages response: ${JSON.stringify(messageResponse)}`);
+
+    // Build final canvas with summary
+    logger.info('Building final canvas.');
+    logger.profile('finalCanvas');
+
+    const messages = await this.messageService.getMessages(
+      workspaceId,
+      conversationId
+    );
+    const finalCanvas = await this.canvasService.getFinalCanvas(messages);
+
+    logger.profile('finalCanvas', {
+      level: 'info',
+      message: 'Completed final canvas.',
+    });
+    logger.debug(`Final canvas: ${JSON.stringify(finalCanvas)}`);
+
+    // Add a note to the conversation with summary
+    logger.info('Adding snooze summary note to conversation.');
+    logger.profile('addNote');
+
+    const noteMessage = `📝 Snooze+ Summary: ${messages.length} message${messages.length === 1 ? '' : 's'} scheduled for this conversation.`;
+
+    await this.intercomService.addNote({
+      adminId: user.adminId,
+      accessToken: user.accessToken,
+      conversationId: conversationId,
+      message: noteMessage,
+    });
+
+    logger.profile('addNote', {
+      level: 'info',
+      message: 'Note added to conversation.',
+    });
+
+    res.send(finalCanvas);
+  }
+
+  /**
+   * Handle cancelling snoozes - archive messages and reset to initial state
+   *
+   * @param workspaceId - The workspace identifier
+   * @param conversationId - The conversation identifier
+   * @param user - The workspace configuration with authentication details
+   * @param logger - Logger instance for request tracking
+   * @param res - Express response object
+   * @returns Promise that resolves when the snooze cancellation is processed
+   */
+  private async handleCancelSnoozes(
+    workspaceId: string,
+    conversationId: number,
+    user: Workspace,
+    logger: Logger,
+    res: Response
+  ): Promise<void> {
+    logger.info('Handling cancel snoozes request');
+
+    // Check if there are messages to cancel
+    const messages = await this.messageService.getMessages(
+      workspaceId,
+      conversationId
+    );
+
+    if (messages.length > 0) {
+      // Archive messages associated with conversation
+      logger.info(
+        'Archiving messages associated with conversation from database.'
       );
-      submitLogger.profile('createSnoozeRequest', {
-        level: 'info',
-        message: 'Snooze request created.',
-      });
+      logger.profile('archiveMessages');
 
-      // Save messages to the database.
-      submitLogger.info('Saving messages to the database.');
-      submitLogger.profile('saveMessages');
-      const messageResponse = await messageDbService.saveMessages(
-        workspaceId,
-        conversationId,
-        snoozeRequest.messages
-      );
-      submitLogger.profile('saveMessages', {
-        level: 'info',
-        message: 'Messages saved to the database.',
-      });
-      submitLogger.debug(
-        `Save Messages response: ${JSON.stringify(messageResponse)}`
-      );
-
-      // Fill the finalCanvas with a summary of the set snoozes.
-      submitLogger.info('Building final canvas.');
-      submitLogger.profile('finalCanvas');
-      const messages = await messageDbService.getMessages(
+      const messagesArchived = await this.messageService.archiveMessages(
         workspaceId,
         conversationId
       );
-      const finalCanvas = await canvasService.getFinalCanvas(messages);
-      submitLogger.profile('finalCanvas', {
-        level: 'info',
-        message: 'Completed final canvas.',
-      });
-      submitLogger.debug(`Final canvas: ${JSON.stringify(finalCanvas)}`);
 
-      // Add a note to the conversation with a summary of the set snoozes.
-      submitLogger.info('Adding snooze summary note to conversation.');
-      submitLogger.profile('addNote');
-      const noteResponse = await intercomService.addNote(
-        user.adminId,
-        user.accessToken,
-        conversationId,
-        snoozeRequest.note
-      );
-      submitLogger.profile('addNote', {
-        level: 'info',
-        message: 'Snooze summary note added to conversation.',
-      });
-      submitLogger.debug(`Add Note response: ${JSON.stringify(noteResponse)}`);
-
-      // Set the conversation snooze.
-      submitLogger.info('Setting conversation snooze.');
-      submitLogger.profile('setSnooze');
-      const snoozeResponse = await intercomService.setSnooze(
-        user.adminId,
-        user.accessToken,
-        conversationId,
-        snoozeRequest.snoozeUntilUnixTimestamp
-      );
-      submitLogger.profile('setSnooze', {
-        level: 'info',
-        message: 'Conversation snooze set.',
-      });
-      submitLogger.debug(
-        `Set Snooze response: ${JSON.stringify(snoozeResponse)}`
-      );
-
-      // Send the final canvas.
-      res.send(finalCanvas);
-    } else if (canvasRequest.component_id === 'cancelSnooze') {
-      submitLogger.info('Cancel snooze request received.');
-      submitLogger.profile('cancelSnooze');
-
-      // Archive messages in the database.
-      submitLogger.info('Archiving messages.');
-      submitLogger.profile('archiveMessages');
-      const messagesArchived = await messageDbService.archiveMessages(
-        workspaceId,
-        conversationId
-      );
-      submitLogger.profile('archiveMessages', {
+      logger.profile('archiveMessages', {
         level: 'info',
         message: `Messages archived: ${messagesArchived}`,
       });
-      submitLogger.debug(
+      logger.debug(
         `Messages archived response: ${JSON.stringify(messagesArchived)}`
       );
 
-      // Add cancel snooze note to the conversation.
-      submitLogger.info('Adding cancelling snooze note.');
-      submitLogger.profile('addNote');
-      const cancelSnoozeResponse = await intercomService.addNote(
-        user.adminId,
-        user.accessToken,
-        conversationId,
-        setSnoozeCanceledNote(messagesArchived)
-      );
-      submitLogger.profile('addNote', {
-        level: 'info',
-        message: 'Cancelling snooze note added.',
-      });
-      submitLogger.debug(
-        `Cancel Snooze response: ${JSON.stringify(cancelSnoozeResponse)}`
-      );
+      // Cancel snooze in Intercom if conversation was snoozed
+      logger.info('Unsnoozing conversation.');
+      logger.profile('unsnooze');
 
-      // Cancel the conversation snooze.
-      submitLogger.info('Unsnoozing conversation.');
-      submitLogger.profile('unsnooze');
-      const unsnoozeResponse = await intercomService.cancelSnooze(
-        user.adminId,
-        user.accessToken,
-        conversationId
-      );
-      submitLogger.profile('unsnooze', {
+      await this.intercomService.cancelSnooze({
+        adminId: user.adminId,
+        accessToken: user.accessToken,
+        conversationId: conversationId,
+      });
+
+      logger.profile('unsnooze', {
         level: 'info',
         message: 'Conversation unsnoozed.',
       });
-      submitLogger.debug(
-        `Unsnooze response: ${JSON.stringify(unsnoozeResponse)}`
-      );
 
-      // Reset to original canvas.
-      submitLogger.info('Resetting to initial canvas.');
-      submitLogger.profile('initialCanvas');
-      const initialCanvas = canvasService.getInitialCanvas();
-      submitLogger.profile('initialCanvas', {
-        level: 'info',
-        message: 'Completed cancel snooze request.',
+      // Add cancellation note to conversation
+      logger.info('Creating cancellation note for the conversation.');
+      logger.profile('setCanceledNote');
+
+      const cancelNote = setSnoozeCanceledNote(messagesArchived);
+      await this.intercomService.addNote({
+        adminId: user.adminId,
+        accessToken: user.accessToken,
+        conversationId: conversationId,
+        message: cancelNote,
       });
 
-      res.send(initialCanvas);
-    } else {
-      // Reset to original canvas.
-      submitLogger.info('Resetting to initial canvas.');
-      submitLogger.profile('initialCanvas');
-      const initialCanvas = canvasService.getInitialCanvas();
-      submitLogger.profile('initialCanvas', {
+      logger.profile('setCanceledNote', {
         level: 'info',
-        message: 'Completed initial canvas.',
+        message: 'Cancellation note added.',
       });
-      res.send(initialCanvas);
     }
 
-    submitLogger.profile('submit', {
-      level: 'info',
-      message: 'Completed submit request.',
-    });
-  }
-);
+    // Reset to original canvas
+    logger.info('Resetting to initial canvas.');
+    logger.profile('initialCanvas');
 
-export { submit };
+    const initialCanvas = this.canvasService.getInitialCanvas();
+
+    logger.profile('initialCanvas', {
+      level: 'info',
+      message: 'Completed cancel snooze request.',
+    });
+
+    res.send(initialCanvas);
+  }
+}

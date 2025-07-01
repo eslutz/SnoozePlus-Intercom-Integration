@@ -30,7 +30,7 @@
   "scripts": {
     "start": "node --env-file=.env dist/app.js",
     "dev": "tsx --env-file=.env.local --watch src/app.ts",
-    "build": "npm run clean && tsc && npm run copy-files",
+    "build": "npm run clean && tsc && eslint ./src && npm run copy-files",
     "clean": "rimraf dist coverage",
     "copy-files": "cp package.json dist/package.json && cp -rp scripts/ dist/",
     "lint": "prettier ./src --write && eslint ./src --fix",

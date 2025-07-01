@@ -1,13 +1,13 @@
 import 'reflect-metadata';
 import { Container } from 'inversify';
 import { TYPES } from '../../src/container/types.js';
-import { SubmitController } from '../../src/controllers/submit-controller-new.js';
-import type { 
-  IMessageService, 
-  IWorkspaceService, 
-  IIntercomService 
+import { SubmitController } from '../../src/controllers/submit-controller.js';
+import type {
+  IMessageService,
+  IWorkspaceService,
+  IIntercomService,
 } from '../../src/container/interfaces.js';
-import { CanvasService } from '../../src/services/canvas-service-new.js';
+import { CanvasService } from '../../src/services/canvas-service.js';
 
 describe('DI Container Integration Demo', () => {
   let container: Container;
@@ -52,10 +52,18 @@ describe('DI Container Integration Demo', () => {
     };
 
     const mockCanvasService = {
-      getInitialCanvas: jest.fn().mockReturnValue({ canvas: { content: { components: [] } } }),
-      getSetSnoozeCanvas: jest.fn().mockReturnValue({ canvas: { content: { components: [] } } }),
-      getCurrentSnoozesCanvas: jest.fn().mockResolvedValue({ canvas: { content: { components: [] } } }),
-      getFinalCanvas: jest.fn().mockResolvedValue({ canvas: { content: { components: [] } } }),
+      getInitialCanvas: jest
+        .fn()
+        .mockReturnValue({ canvas: { content: { components: [] } } }),
+      getSetSnoozeCanvas: jest
+        .fn()
+        .mockReturnValue({ canvas: { content: { components: [] } } }),
+      getCurrentSnoozesCanvas: jest
+        .fn()
+        .mockResolvedValue({ canvas: { content: { components: [] } } }),
+      getFinalCanvas: jest
+        .fn()
+        .mockResolvedValue({ canvas: { content: { components: [] } } }),
     };
 
     const mockLogger = {
@@ -68,10 +76,18 @@ describe('DI Container Integration Demo', () => {
     };
 
     // Bind mocks to container
-    container.bind<IMessageService>(TYPES.MessageService).toConstantValue(mockMessageService);
-    container.bind<IWorkspaceService>(TYPES.WorkspaceService).toConstantValue(mockWorkspaceService);
-    container.bind<IIntercomService>(TYPES.IntercomService).toConstantValue(mockIntercomService);
-    container.bind<CanvasService>(TYPES.CanvasService).toConstantValue(mockCanvasService as any);
+    container
+      .bind<IMessageService>(TYPES.MessageService)
+      .toConstantValue(mockMessageService);
+    container
+      .bind<IWorkspaceService>(TYPES.WorkspaceService)
+      .toConstantValue(mockWorkspaceService);
+    container
+      .bind<IIntercomService>(TYPES.IntercomService)
+      .toConstantValue(mockIntercomService);
+    container
+      .bind<CanvasService>(TYPES.CanvasService)
+      .toConstantValue(mockCanvasService as any);
     container.bind(TYPES.Logger).toConstantValue(mockLogger as any);
 
     // Bind controller
@@ -98,30 +114,27 @@ describe('DI Container Integration Demo', () => {
 
     const messageServiceMethods = [
       'saveMessages',
-      'getMessages', 
+      'getMessages',
       'archiveMessages',
       'archiveMessage',
       'getTodaysMessages',
-      'getRemainingMessageCount'
+      'getRemainingMessageCount',
     ];
 
-    const workspaceServiceMethods = [
-      'getWorkspace',
-      'saveWorkspace'
-    ];
+    const workspaceServiceMethods = ['getWorkspace', 'saveWorkspace'];
 
     const intercomServiceMethods = [
       'sendMessage',
       'addNote',
-      'cancelSnooze', 
+      'cancelSnooze',
       'setSnooze',
       'closeConversation',
-      'getCircuitBreakerState'
+      'getCircuitBreakerState',
     ];
 
     // Verify all required methods are defined in interfaces
     expect(messageServiceMethods).toHaveLength(6);
-    expect(workspaceServiceMethods).toHaveLength(2); 
+    expect(workspaceServiceMethods).toHaveLength(2);
     expect(intercomServiceMethods).toHaveLength(6);
 
     // This would fail at compile time if interfaces were incomplete

@@ -1,7 +1,9 @@
 import { RequestHandler, Request, Response } from 'express';
 import logger from '../config/logger-config.js';
-import * as canvasService from '../services/canvas-service.js';
-import { getMessages } from '../services/message-db-service.js';
+import { container } from '../container/container.js';
+import { CanvasService } from '../services/canvas-service.js';
+import type { IMessageService } from '../container/interfaces.js';
+import { TYPES } from '../container/types.js';
 import { IntercomCanvasRequest } from '../models/intercom-request-canvas-model.js';
 import { asyncHandler } from '../middleware/error-middleware.js';
 
@@ -20,9 +22,16 @@ const initialize: RequestHandler = asyncHandler(
     const conversationId = canvasRequest.conversation?.id;
     initializeLogger.debug(`conversation_id: ${conversationId}`);
 
+    // Get services from DI container
+    const messageService = container.get<IMessageService>(TYPES.MessageService);
+    const canvasService = container.get<CanvasService>(TYPES.CanvasService);
+
     if (conversationId !== undefined) {
       // Get all messages for the conversation that are not archived, sorted by send_date.
-      const messages = await getMessages(workspaceId, Number(conversationId));
+      const messages = await messageService.getMessages(
+        workspaceId,
+        Number(conversationId)
+      );
       if (messages.length > 0) {
         initializeLogger.info(
           'Messages found. Building current snoozes canvas.'

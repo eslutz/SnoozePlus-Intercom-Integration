@@ -8,8 +8,10 @@
  * @middleware requestSizeLimits.canvas - Request size limiting
  * @middleware validateSchema - Enhanced input validation with XSS protection
  */
+import 'reflect-metadata';
 import express from 'express';
-import * as submitController from '../controllers/submit-controller.js';
+import { container } from '../container/container.js';
+import { SubmitController } from '../controllers/submit-controller.js';
 import validateSignature from '../middleware/validate-signature-canvas-middleware.js';
 import { rateLimitConfigs } from '../middleware/advanced-rate-limiting.js';
 import { requestSizeLimits } from '../middleware/request-size-limiting.js';
@@ -103,6 +105,9 @@ submitRouter.use(validateSchema(enhancedSchemas.canvasSubmission, 'body')); // E
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-submitRouter.route('/').post(submitController.submit);
+submitRouter.route('/').post((req, res, next) => {
+  const submitController = container.get<SubmitController>(SubmitController);
+  void submitController.submit(req, res, next);
+});
 
 export default submitRouter;

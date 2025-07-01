@@ -1,10 +1,10 @@
 import schedule from 'node-schedule';
-import { addNote, closeConversation, sendMessage } from './intercom-service.js';
-import {
-  archiveMessage,
-  getRemainingMessageCount,
-  getTodaysMessages,
-} from './message-db-service.js';
+import { container } from '../container/container.js';
+import type {
+  IIntercomService,
+  IMessageService,
+} from '../container/interfaces.js';
+import { TYPES } from '../container/types.js';
 import logger from '../config/logger-config.js';
 import { Message } from '../models/message-model.js';
 import {
@@ -15,6 +15,130 @@ import {
 const scheduleMessageLogger = logger.child({
   module: 'schedule-message-service',
 });
+
+/**
+ * Helper function to send a scheduled message
+ */
+const sendScheduledMessage = async (
+  message: Message,
+  messageFireDate: Date
+): Promise<void> => {
+  // Get services from DI container for each scheduled execution
+  const messageService = container.get<IMessageService>(TYPES.MessageService);
+  const intercomService = container.get<IIntercomService>(
+    TYPES.IntercomService
+  );
+
+  scheduleMessageLogger.debug(
+    `Scheduled run: ${messageFireDate.toISOString()}, Actual run: ${new Date().toISOString()}.`
+  );
+
+  try {
+    scheduleMessageLogger.info(`Sending message ${message.id}`);
+    scheduleMessageLogger.profile('sendMessage');
+    const messageResponse = await intercomService.sendMessage({
+      adminId: message.adminId,
+      accessToken: message.accessToken,
+      conversationId: message.conversationId,
+      message: message.message,
+      closeConversation: message.closeConversation,
+    });
+    scheduleMessageLogger.profile('sendMessage', {
+      level: 'info',
+      message: `Scheduled message ${message.id} to be sent at ${message.sendDate.toISOString()}`,
+    });
+    scheduleMessageLogger.debug(
+      `Send Messages response: ${JSON.stringify(messageResponse)}`
+    );
+  } catch (err) {
+    scheduleMessageLogger.error(
+      `Error sending message ${message.id}: ${String(err)}`
+    );
+  }
+
+  // Archive the message from the database after it has been sent.
+  try {
+    scheduleMessageLogger.info(`Archiving message ${message.id}`);
+    scheduleMessageLogger.profile('archiveMessage');
+    const archivedMessage = await messageService.archiveMessage(message.id);
+    scheduleMessageLogger.profile('archiveMessage', {
+      level: 'info',
+      message: `Archived ${archivedMessage} message with GUID ${message.id}`,
+    });
+  } catch (err) {
+    scheduleMessageLogger.error(`Error deleting message: ${String(err)}`);
+  }
+
+  // Add note that the message has been sent and how many messages are remaining.
+  try {
+    scheduleMessageLogger.info(
+      `Adding note that message ${message.id} has been sent.`
+    );
+    scheduleMessageLogger.profile('addNote');
+    const remainingMessages =
+      await messageService.getRemainingMessageCount(message);
+    const noteResponse = await intercomService.addNote({
+      adminId: message.adminId,
+      accessToken: message.accessToken,
+      conversationId: message.conversationId,
+      message: setSendMessageNote(remainingMessages),
+    });
+    scheduleMessageLogger.profile('addNote', {
+      level: 'info',
+      message: `Note added to conversation ${message.conversationId} that message ${message.id} has been sent.`,
+    });
+    scheduleMessageLogger.debug(
+      `Add Note response: ${JSON.stringify(noteResponse)}`
+    );
+  } catch (err) {
+    scheduleMessageLogger.error(
+      `Error adding note to conversation ${message.conversationId}: ${String(err)}`
+    );
+  }
+
+  // Close the conversation if the last message is set to close.
+  if (message.closeConversation) {
+    try {
+      scheduleMessageLogger.info(
+        'Adding note that the conversation has been closed.'
+      );
+      scheduleMessageLogger.profile('addNote');
+      const noteResponse = await intercomService.addNote({
+        adminId: message.adminId,
+        accessToken: message.accessToken,
+        conversationId: message.conversationId,
+        message: setLastMessageCloseNote(),
+      });
+      scheduleMessageLogger.profile('addNote', {
+        level: 'info',
+        message: `Note added to conversation ${message.conversationId} that the conversation has been closed.`,
+      });
+      scheduleMessageLogger.debug(
+        `Add Note response: ${JSON.stringify(noteResponse)}`
+      );
+      scheduleMessageLogger.info(
+        `Closing conversation ${message.id}:${message.conversationId}`
+      );
+      scheduleMessageLogger.profile('closeConversation');
+      const closeResponse = await intercomService.closeConversation({
+        adminId: message.adminId,
+        accessToken: message.accessToken,
+        conversationId: message.conversationId,
+      });
+      scheduleMessageLogger.profile('closeConversation', {
+        level: 'info',
+        message: `Closed conversation ${message.id}:${message.conversationId}`,
+      });
+      scheduleMessageLogger.debug(
+        `Close conversation response: ${JSON.stringify(closeResponse)}`
+      );
+    } catch (err) {
+      scheduleMessageLogger.error(
+        `Error closing conversation ${message.id}: ${String(err)}`
+      );
+    }
+  }
+};
 
 /**
  * Schedules and processes messages for automated sending through the system.
@@ -38,13 +162,16 @@ const scheduleMessageLogger = logger.child({
  * @returns {Promise<void>} Resolves when all messages have been scheduled
  */
 const scheduleMessages = async (): Promise<void> => {
+  // Get services from DI container
+  const messageService = container.get<IMessageService>(TYPES.MessageService);
+
   let messages: Message[] = [];
   try {
     scheduleMessageLogger.info(
       "Running scheduled task to retrieve today's messages."
     );
     scheduleMessageLogger.profile('getTodaysMessages');
-    messages = await getTodaysMessages();
+    messages = await messageService.getTodaysMessages();
     scheduleMessageLogger.profile('getTodaysMessages', {
       level: 'info',
       message: `Retrieved ${messages.length} message(s) to send.`,
@@ -71,109 +198,7 @@ const scheduleMessages = async (): Promise<void> => {
       schedule.scheduleJob(
         sendDate,
         async (messageFireDate: Date): Promise<void> => {
-          scheduleMessageLogger.debug(
-            `Scheduled run: ${messageFireDate.toISOString()}, Actual run: ${new Date().toISOString()}.`
-          );
-          try {
-            scheduleMessageLogger.info(`Sending message ${message.id}`);
-            scheduleMessageLogger.profile('sendMessage');
-            const messageResponse = await sendMessage(message);
-            scheduleMessageLogger.profile('sendMessage', {
-              level: 'info',
-              message: `Scheduled message ${message.id} to be sent at ${message.sendDate.toISOString()}`,
-            });
-            scheduleMessageLogger.debug(
-              `Send Messages response: ${JSON.stringify(messageResponse)}`
-            );
-          } catch (err) {
-            scheduleMessageLogger.error(
-              `Error sending message ${message.id}: ${String(err)}`
-            );
-          }
-
-          // Archive the message from the database after it has been sent.
-          try {
-            scheduleMessageLogger.info(`Archiving message ${message.id}`);
-            scheduleMessageLogger.profile('archiveMessage');
-            const archivedMessage = await archiveMessage(message.id);
-            scheduleMessageLogger.profile('archiveMessage', {
-              level: 'info',
-              message: `Archived ${archivedMessage} message with GUID ${message.id}`,
-            });
-          } catch (err) {
-            scheduleMessageLogger.error(
-              `Error deleting message: ${String(err)}`
-            );
-          }
-
-          // Add note that the message has been sent and how many messages are remaining.
-          try {
-            scheduleMessageLogger.info(
-              `Adding note that message ${message.id} has been sent.`
-            );
-            scheduleMessageLogger.profile('addNote');
-            const remainingMessages = await getRemainingMessageCount(message);
-            const noteResponse = await addNote(
-              message.adminId,
-              message.accessToken,
-              message.conversationId,
-              setSendMessageNote(remainingMessages)
-            );
-            scheduleMessageLogger.profile('addNote', {
-              level: 'info',
-              message: `Note added to conversation ${message.conversationId} that message ${message.id} has been sent.`,
-            });
-            scheduleMessageLogger.debug(
-              `Add Note response: ${JSON.stringify(noteResponse)}`
-            );
-          } catch (err) {
-            scheduleMessageLogger.error(
-              `Error adding note to conversation ${message.conversationId}: ${String(err)}`
-            );
-          }
-
-          // Close the conversation if the last message is set to close.
-          if (message.closeConversation) {
-            try {
-              scheduleMessageLogger.info(
-                'Adding note that the conversation has been closed.'
-              );
-              scheduleMessageLogger.profile('addNote');
-              const noteResponse = await addNote(
-                message.adminId,
-                message.accessToken,
-                message.conversationId,
-                setLastMessageCloseNote()
-              );
-              scheduleMessageLogger.profile('addNote', {
-                level: 'info',
-                message: `Note added to conversation ${message.conversationId} that the conversation has been closed.`,
-              });
-              scheduleMessageLogger.debug(
-                `Add Note response: ${JSON.stringify(noteResponse)}`
-              );
-              scheduleMessageLogger.info(
-                `Closing conversation ${message.id}:${message.conversationId}`
-              );
-              scheduleMessageLogger.profile('closeConversation');
-              const closeResponse = await closeConversation(
-                message.adminId,
-                message.accessToken,
-                message.conversationId
-              );
-              scheduleMessageLogger.profile('closeConversation', {
-                level: 'info',
-                message: `Closed conversation ${message.id}:${message.conversationId}`,
-              });
-              scheduleMessageLogger.debug(
-                `Close conversation response: ${JSON.stringify(closeResponse)}`
-              );
-            } catch (err) {
-              scheduleMessageLogger.error(
-                `Error closing conversation ${message.id}: ${String(err)}`
-              );
-            }
-          }
+          await sendScheduledMessage(message, messageFireDate);
         }
       );
       messagesScheduled++;

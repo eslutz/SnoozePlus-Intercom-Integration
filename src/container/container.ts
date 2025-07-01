@@ -13,12 +13,12 @@ import {
 // Service implementations
 import { MessageService } from '../services/message-service.js';
 import { WorkspaceService } from '../services/workspace-service.js';
-import { IntercomService } from '../services/intercom-service-new.js';
+import { IntercomService } from '../services/intercom-service.js';
 import { CryptoService } from '../services/crypto-service.js';
-import { CanvasService } from '../services/canvas-service-new.js';
+import { CanvasService } from '../services/canvas-service.js';
 
 // Controllers
-import { SubmitController } from '../controllers/submit-controller-new.js';
+import { SubmitController } from '../controllers/submit-controller.js';
 
 // Infrastructure
 import pool from '../config/db-config.js';

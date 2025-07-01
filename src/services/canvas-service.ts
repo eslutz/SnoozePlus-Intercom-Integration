@@ -1,377 +1,406 @@
-import logger from '../config/logger-config.js';
+import { injectable, inject } from 'inversify';
+import { Logger } from 'winston';
+import { TYPES } from '../container/types.js';
+import type { ICryptoService } from '../container/interfaces.js';
 import { Message } from '../models/message-model.js';
 import { CanvasResponse } from '../models/intercom-canvas-model.js';
-import { decrypt } from '../utilities/crypto-utility.js';
 import { calculateDaysUntilSending } from '../utilities/snooze-utility.js';
 import { AppError } from '../middleware/error-middleware.js';
 
-const canvasLogger = logger.child({ module: 'canvas-service' });
-
 /**
- * Creates and returns the initial canvas configuration for the Snooze+ Intercom integration.
- * This canvas is displayed when the app first initializes and presents the user with options
- * to select the number of conversation snoozes.
- *
- * The canvas includes:
- * - A welcome header
- * - Instructional text
- * - A dropdown to select number of snoozes (1-5)
- * - A submit button to proceed
- *
- * @function getInitialCanvas
- * @returns {CanvasResponse} An Intercom canvas configuration object containing the initial UI components
+ * Injectable canvas service for creating Intercom canvas responses
  */
-const getInitialCanvas = (): CanvasResponse => {
-  const initialCanvas: CanvasResponse = {
-    canvas: {
-      content: {
-        components: [
-          {
-            type: 'text',
-            text: 'Welcome to Snooze+',
-            style: 'header',
-          },
-          {
-            type: 'text',
-            text: 'To get started, first select how many times you would like to bump the conversation.',
-            style: 'muted',
-          },
-          {
-            type: 'spacer',
-            size: 's',
-          },
-          {
-            type: 'dropdown',
-            id: 'numOfSnoozes',
-            label: 'How many snoozes?',
-            options: [
-              { type: 'option', id: '1', text: '1 snooze 😴' },
-              { type: 'option', id: '2', text: '2 snoozes 😴😴' },
-              { type: 'option', id: '3', text: '3 snoozes 😴😴😴' },
-              { type: 'option', id: '4', text: '4 snoozes 😴😴😴😴' },
-              { type: 'option', id: '5', text: '5 snoozes 😴😴😴😴😴' },
-            ],
-          },
-          {
-            type: 'spacer',
-            size: 'xl',
-          },
-          {
-            type: 'button',
-            id: 'submitNumOfSnoozes',
-            label: 'Next >',
-            style: 'secondary',
-            action: { type: 'submit' },
-          },
-        ],
-      },
-    },
-  };
+@injectable()
+export class CanvasService {
+  constructor(
+    @inject(TYPES.Logger) private logger: Logger,
+    @inject(TYPES.CryptoService) private cryptoService: ICryptoService
+  ) {}
 
-  return initialCanvas;
-};
+  /**
+   * Creates and returns the initial canvas configuration for the Snooze+ Intercom integration.
+   * This canvas is displayed when the app first initializes and presents the user with options
+   * to select the number of conversation snoozes.
+   *
+   * @returns Intercom canvas configuration object containing the initial UI components
+   */
+  getInitialCanvas(): CanvasResponse {
+    this.logger.debug('Creating initial canvas');
 
-/**
- * Generates a canvas configuration object for the snooze feature interface.
- * The canvas includes dropdown menus for snooze duration and text areas for messages,
- * with the number of input sets determined by the numOfSnoozes parameter.
- * Each set of inputs includes a duration dropdown and message textarea, separated by dividers.
- * The canvas also includes a final action selector and submit button.
- *
- * @function getSetSnoozeCanvas
- * @param numOfSnoozes The number of sequential snooze periods to configure
- * @returns {CanvasResponse} A canvas configuration object containing the complete interface structure
- */
-const getSetSnoozeCanvas = (numOfSnoozes: number): CanvasResponse => {
-  const setSnoozeCanvas: CanvasResponse = {
-    canvas: {
-      content: {
-        components: [
-          {
-            type: 'text',
-            text: 'Set Messages',
-            style: 'header',
-          },
-          {
-            type: 'spacer',
-            size: 's',
-          },
-          {
-            type: 'single-select',
-            id: 'then',
-            label: 'Then:',
-            options: [
-              {
-                type: 'option',
-                id: 'open',
-                text: 'Open conversation',
-              },
-              {
-                type: 'option',
-                id: 'close',
-                text: 'Close conversation',
-              },
-            ],
-          },
-          {
-            type: 'spacer',
-            size: 'xl',
-          },
-          {
-            type: 'button',
-            id: 'submitSnooze',
-            label: 'Start Snoozing 😴',
-            style: 'primary',
-            action: {
-              type: 'submit',
+    const initialCanvas: CanvasResponse = {
+      canvas: {
+        content: {
+          components: [
+            {
+              type: 'text',
+              text: 'Welcome to Snooze+',
+              style: 'header',
             },
-          },
-        ],
+            {
+              type: 'text',
+              text: 'To get started, first select how many times you would like to bump the conversation.',
+              style: 'muted',
+            },
+            {
+              type: 'spacer',
+              size: 's',
+            },
+            {
+              type: 'dropdown',
+              id: 'numOfSnoozes',
+              label: 'How many snoozes?',
+              options: [
+                { type: 'option', id: '1', text: '1 snooze 😴' },
+                { type: 'option', id: '2', text: '2 snoozes 😴😴' },
+                { type: 'option', id: '3', text: '3 snoozes 😴😴😴' },
+                { type: 'option', id: '4', text: '4 snoozes 😴😴😴😴' },
+                { type: 'option', id: '5', text: '5 snoozes 😴😴😴😴😴' },
+              ],
+            },
+            {
+              type: 'spacer',
+              size: 's',
+            },
+            {
+              type: 'button',
+              id: 'set_snoozes',
+              label: 'Set snoozes',
+              style: 'primary',
+              action: { type: 'submit' },
+            },
+          ],
+        },
       },
-    },
-  };
+    };
 
-  // Build the canvas component array based on the number of snoozes selected.
-  for (let i = numOfSnoozes; i >= 1; i--) {
-    setSnoozeCanvas.canvas.content.components.splice(2, 0, {
-      type: 'dropdown',
-      id: `snoozeDuration${i}`,
-      label: 'Snooze for:',
-      options: [
-        { type: 'option', id: '1', text: '1 day' },
-        { type: 'option', id: '2', text: '2 days' },
-        { type: 'option', id: '3', text: '3 days' },
-        { type: 'option', id: '4', text: '4 days' },
-        { type: 'option', id: '5', text: '5 days' },
-        { type: 'option', id: '6', text: '6 days' },
-        { type: 'option', id: '7', text: '1 week' },
-        { type: 'option', id: '14', text: '2 weeks' },
-        { type: 'option', id: '30', text: '1 month' },
-      ],
-    });
-    setSnoozeCanvas.canvas.content.components.splice(3, 0, {
-      type: 'textarea',
-      id: `message${i}`,
-      label: 'With message:',
-      placeholder: 'Enter message to send at end of snooze...',
-    });
-    if (i < numOfSnoozes) {
-      setSnoozeCanvas.canvas.content.components.splice(4, 0, {
-        type: 'spacer',
-        size: 'm',
-      });
-      setSnoozeCanvas.canvas.content.components.splice(5, 0, {
-        type: 'divider',
-      });
-    }
+    this.logger.debug('Initial canvas created successfully');
+    return initialCanvas;
   }
 
-  return setSnoozeCanvas;
-};
+  /**
+   * Creates canvas for setting snooze messages based on the number of snoozes selected.
+   * Dynamically generates input fields for each snooze message and date.
+   *
+   * @param numOfSnoozes Number of snoozes to create inputs for
+   * @returns Canvas configuration for message input
+   */
+  getSetSnoozeCanvas(numOfSnoozes: number): CanvasResponse {
+    this.logger.debug('Creating set snooze canvas', { numOfSnoozes });
 
-/**
- * Generates a canvas object displaying current snooze messages in Intercom messenger.
- * The canvas includes the message content, sending date, and a button to cancel snoozes.
- * Messages are displayed in reverse chronological order (newest first).
- *
- * @function getCurrentSnoozesCanvas
- * @param messages Array of Message objects containing encrypted message content and send dates
- * @returns {CanvasResponse} A canvas object compatible with Intercom messenger format containing formatted message display
- * @throws AppError if message decryption fails or message/date is invalid
- */
-const getCurrentSnoozesCanvas = async (
-  messages: Message[]
-): Promise<CanvasResponse> => {
-  const currentSnoozeCanvas: CanvasResponse = {
-    canvas: {
-      content: {
-        components: [
-          {
-            type: 'text',
-            text: 'Current Snooze Messages',
-            style: 'header',
-          },
-          {
-            type: 'spacer',
-            size: 'l',
-          },
-          {
-            type: 'spacer',
-            size: 'xl',
-          },
-          {
-            type: 'button',
-            id: 'cancelSnooze',
-            label: 'Cancel Snoozes',
-            style: 'primary',
-            action: {
-              type: 'submit',
+    const setSnoozeCanvas: CanvasResponse = {
+      canvas: {
+        content: {
+          components: [
+            {
+              type: 'text',
+              text: 'Set your snooze messages and dates',
+              style: 'header',
             },
-          },
-        ],
+            {
+              type: 'text',
+              text: `Please enter the messages and dates for your ${numOfSnoozes} snooze${numOfSnoozes > 1 ? 's' : ''}:`,
+              style: 'muted',
+            },
+            {
+              type: 'spacer',
+              size: 's',
+            },
+          ],
+        },
       },
-    },
-  };
+    };
 
-  // Process messages in reverse order so newest are shown first.
-  for (let i = messages.length - 1; i >= 0; i--) {
-    // Decrypt the message before sending.
-    let decryptedMessage: string;
-    canvasLogger.debug('Decrypting message.');
-    canvasLogger.profile('decrypt');
-    try {
-      if (!messages[i]?.message) {
-        throw new AppError('Message is undefined or null', 400);
+    // Add input fields for each snooze
+    for (let i = 1; i <= numOfSnoozes; i++) {
+      // Message input
+      setSnoozeCanvas.canvas.content.components.push({
+        type: 'textarea',
+        id: `message_${i}`,
+        label: `Message ${i}`,
+        placeholder: `Enter your snooze message ${i}...`,
+      });
+
+      // Date input
+      setSnoozeCanvas.canvas.content.components.push({
+        type: 'textarea',
+        id: `date_${i}`,
+        label: `Send Date ${i}`,
+        placeholder: 'YYYY-MM-DD HH:MM',
+      });
+
+      // Spacer between snoozes (except after the last one)
+      if (i < numOfSnoozes) {
+        setSnoozeCanvas.canvas.content.components.push({
+          type: 'spacer',
+          size: 'm',
+        });
+        setSnoozeCanvas.canvas.content.components.push({
+          type: 'divider',
+        });
+        setSnoozeCanvas.canvas.content.components.push({
+          type: 'spacer',
+          size: 'm',
+        });
       }
-      decryptedMessage = await decrypt(messages[i]!.message);
-    } catch (err) {
-      canvasLogger.error(`Error decrypting message: ${String(err)}`);
-      throw new AppError('Failed to decrypt message', 500);
     }
-    canvasLogger.profile('decrypt', {
-      level: 'debug',
-      message: 'Message decrypted.',
-    });
 
-    if (!messages[i]?.sendDate) {
-      throw new AppError('Send date is undefined or null', 400);
-    }
-    const sendDate = new Date(messages[i]!.sendDate);
-    const daysUntilSending = calculateDaysUntilSending(sendDate);
-    currentSnoozeCanvas.canvas.content.components.splice(2, 0, {
-      type: 'text',
-      text: `Message ${i + 1}:`,
-      style: 'header',
-    });
-    currentSnoozeCanvas.canvas.content.components.splice(3, 0, {
-      type: 'text',
-      text: decryptedMessage,
-      style: 'paragraph',
-    });
-    currentSnoozeCanvas.canvas.content.components.splice(4, 0, {
-      type: 'text',
-      text: `Sending in ${daysUntilSending} day${daysUntilSending === 1 ? '' : 's'}.`,
-      style: 'muted',
-    });
-    if (i < messages.length - 1) {
-      currentSnoozeCanvas.canvas.content.components.splice(5, 0, {
+    // Add final spacer and buttons
+    setSnoozeCanvas.canvas.content.components.push(
+      {
         type: 'spacer',
-        size: 'm',
-      });
-      currentSnoozeCanvas.canvas.content.components.splice(6, 0, {
-        type: 'divider',
-      });
-    }
+        size: 's',
+      },
+      {
+        type: 'dropdown',
+        id: 'close_conversation',
+        label: 'Close conversation after last message',
+        options: [
+          { type: 'option', id: 'true', text: 'Yes' },
+          { type: 'option', id: 'false', text: 'No' },
+        ],
+      },
+      {
+        type: 'spacer',
+        size: 's',
+      },
+      {
+        type: 'button',
+        id: 'submit_snoozes',
+        label: 'Schedule messages',
+        style: 'primary',
+        action: { type: 'submit' },
+      },
+      {
+        type: 'button',
+        id: 'cancel',
+        label: 'Cancel',
+        style: 'secondary',
+        action: { type: 'submit' },
+      }
+    );
+
+    this.logger.debug('Set snooze canvas created successfully', {
+      numOfSnoozes,
+    });
+    return setSnoozeCanvas;
   }
 
-  return currentSnoozeCanvas;
-};
+  /**
+   * Creates a canvas showing current snoozes for a conversation.
+   * Displays all active messages with their send dates and days until sending.
+   *
+   * @param messages Array of messages to display
+   * @returns Canvas showing current snooze status
+   */
+  async getCurrentSnoozesCanvas(messages: Message[]): Promise<CanvasResponse> {
+    this.logger.debug('Creating current snoozes canvas', {
+      messageCount: messages.length,
+    });
 
-/**
- * Generates a canvas object for displaying snoozed messages with their send dates.
- * The canvas includes a header, message details, and a cancel button.
- * Messages are displayed in reverse chronological order (newest first).
- *
- * @function getFinalCanvas
- * @param messages An array of Message objects containing encrypted messages and send dates
- * @returns {CanvasResponse} A canvas object containing formatted components for display
- * @throws AppError if message decryption fails or message/date is invalid
- */
-const getFinalCanvas = async (messages: Message[]): Promise<CanvasResponse> => {
-  const finalCanvas: CanvasResponse = {
-    canvas: {
-      content: {
-        components: [
+    const currentSnoozeCanvas: CanvasResponse = {
+      canvas: {
+        content: {
+          components: [
+            {
+              type: 'text',
+              text: 'Current Snoozes',
+              style: 'header',
+            },
+            {
+              type: 'text',
+              text: `You have ${messages.length} message${messages.length === 1 ? '' : 's'} scheduled:`,
+              style: 'muted',
+            },
+          ],
+        },
+      },
+    };
+
+    // Process each message
+    for (let i = 0; i < messages.length; i++) {
+      const message = messages[i];
+      if (!message) {
+        this.logger.warn(
+          'Skipping undefined message in current snoozes canvas',
+          { index: i }
+        );
+        continue;
+      }
+
+      try {
+        // Decrypt the message content
+        const decryptedMessage = await this.cryptoService.decrypt(
+          message.message
+        );
+
+        // Calculate days until sending
+        const daysUntilSending = calculateDaysUntilSending(message.sendDate);
+
+        // Add message components
+        currentSnoozeCanvas.canvas.content.components.push(
+          {
+            type: 'spacer',
+            size: 'm',
+          },
           {
             type: 'text',
-            id: 'thanks',
-            text: 'Snooze Submitted!',
+            text: `Message ${i + 1}:`,
             style: 'header',
           },
           {
             type: 'text',
-            text: 'The snooze request has been submitted.',
+            text: decryptedMessage,
             style: 'paragraph',
           },
           {
-            type: 'spacer',
-            size: 'l',
-          },
-          {
-            type: 'spacer',
-            size: 'xl',
-          },
-          {
-            type: 'button',
-            id: 'cancelSnooze',
-            label: 'Cancel Snoozes',
-            style: 'primary',
-            action: {
-              type: 'submit',
+            type: 'text',
+            text: `Sending in ${daysUntilSending} day${daysUntilSending === 1 ? '' : 's'}.`,
+            style: 'muted',
+          }
+        );
+
+        // Add divider between messages (except after the last one)
+        if (i < messages.length - 1) {
+          currentSnoozeCanvas.canvas.content.components.push(
+            {
+              type: 'spacer',
+              size: 'm',
             },
-          },
-        ],
-      },
-    },
-  };
-
-  // Process messages in reverse order so newest are shown first
-  for (let i = messages.length - 1; i >= 0; i--) {
-    // Decrypt the message before sending.
-    let decryptedMessage: string;
-    canvasLogger.debug('Decrypting message.');
-    canvasLogger.profile('decrypt');
-    try {
-      if (!messages[i]?.message) {
-        throw new AppError('Message is undefined or null', 400);
+            {
+              type: 'divider',
+            }
+          );
+        }
+      } catch (error) {
+        this.logger.error(
+          'Error decrypting message in current snoozes canvas',
+          {
+            messageId: message.id,
+            error: error instanceof Error ? error.message : String(error),
+          }
+        );
+        throw new AppError('Failed to decrypt message content', 500);
       }
-      decryptedMessage = await decrypt(messages[i]!.message);
-    } catch (err) {
-      canvasLogger.error(`Error decrypting message: ${String(err)}`);
-      throw new AppError('Failed to decrypt message', 500);
     }
-    canvasLogger.profile('decrypt', {
-      level: 'debug',
-      message: 'Message decrypted.',
-    });
 
-    if (!messages[i]?.sendDate) {
-      throw new AppError('Send date is undefined or null', 400);
-    }
-    const sendDate = new Date(messages[i]!.sendDate);
-    const daysUntilSending = calculateDaysUntilSending(sendDate);
-    finalCanvas.canvas.content.components.splice(3, 0, {
-      type: 'text',
-      text: `Message ${i + 1}:`,
-      style: 'header',
-    });
-    finalCanvas.canvas.content.components.splice(4, 0, {
-      type: 'text',
-      text: decryptedMessage,
-      style: 'paragraph',
-    });
-    finalCanvas.canvas.content.components.splice(5, 0, {
-      type: 'text',
-      text: `Sending in ${daysUntilSending} day${daysUntilSending === 1 ? '' : 's'}.`,
-      style: 'muted',
-    });
-    if (i < messages.length - 1) {
-      finalCanvas.canvas.content.components.splice(6, 0, {
+    // Add cancel button
+    currentSnoozeCanvas.canvas.content.components.push(
+      {
         type: 'spacer',
-        size: 'm',
-      });
-      finalCanvas.canvas.content.components.splice(7, 0, {
-        type: 'divider',
-      });
-    }
+        size: 'l',
+      },
+      {
+        type: 'button',
+        id: 'cancel_snoozes',
+        label: 'Cancel all snoozes',
+        style: 'secondary',
+        action: { type: 'submit' },
+      }
+    );
+
+    this.logger.debug('Current snoozes canvas created successfully', {
+      messageCount: messages.length,
+    });
+    return currentSnoozeCanvas;
   }
 
-  return finalCanvas;
-};
+  /**
+   * Creates a final canvas showing the summary of scheduled messages.
+   * Displays confirmation that messages have been scheduled.
+   *
+   * @param messages Array of scheduled messages
+   * @returns Canvas showing scheduling confirmation
+   */
+  async getFinalCanvas(messages: Message[]): Promise<CanvasResponse> {
+    this.logger.debug('Creating final canvas', {
+      messageCount: messages.length,
+    });
 
-export {
-  getCurrentSnoozesCanvas,
-  getInitialCanvas,
-  getSetSnoozeCanvas,
-  getFinalCanvas,
-};
+    const finalCanvas: CanvasResponse = {
+      canvas: {
+        content: {
+          components: [
+            {
+              type: 'text',
+              text: 'Snoozes Scheduled Successfully! 🎉',
+              style: 'header',
+            },
+            {
+              type: 'text',
+              text: `${messages.length} message${messages.length === 1 ? '' : 's'} have been scheduled:`,
+              style: 'muted',
+            },
+          ],
+        },
+      },
+    };
+
+    // Process each message
+    for (let i = 0; i < messages.length; i++) {
+      const message = messages[i];
+      if (!message) {
+        this.logger.warn('Skipping undefined message in final canvas', {
+          index: i,
+        });
+        continue;
+      }
+
+      try {
+        // Decrypt the message content
+        const decryptedMessage = await this.cryptoService.decrypt(
+          message.message
+        );
+
+        // Calculate days until sending
+        const daysUntilSending = calculateDaysUntilSending(message.sendDate);
+
+        // Add message components
+        finalCanvas.canvas.content.components.push(
+          {
+            type: 'spacer',
+            size: 'm',
+          },
+          {
+            type: 'text',
+            text: `Message ${i + 1}:`,
+            style: 'header',
+          },
+          {
+            type: 'text',
+            text: decryptedMessage,
+            style: 'paragraph',
+          },
+          {
+            type: 'text',
+            text: `Sending in ${daysUntilSending} day${daysUntilSending === 1 ? '' : 's'}.`,
+            style: 'muted',
+          }
+        );
+
+        // Add divider between messages (except after the last one)
+        if (i < messages.length - 1) {
+          finalCanvas.canvas.content.components.push(
+            {
+              type: 'spacer',
+              size: 'm',
+            },
+            {
+              type: 'divider',
+            }
+          );
+        }
+      } catch (error) {
+        this.logger.error('Error decrypting message in final canvas', {
+          messageId: message.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        throw new AppError('Failed to decrypt message content', 500);
+      }
+    }
+
+    this.logger.debug('Final canvas created successfully', {
+      messageCount: messages.length,
+    });
+    return finalCanvas;
+  }
+}
