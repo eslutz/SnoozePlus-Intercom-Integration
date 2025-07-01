@@ -11,7 +11,7 @@ const PgSession = connectPgSimple(session);
 
 /**
  * Secure session configuration with PostgreSQL storage
- * 
+ *
  * Features:
  * - PostgreSQL-backed session storage (persistent across restarts)
  * - Secure cookie settings based on environment
@@ -32,9 +32,9 @@ export const sessionConfig: session.SessionOptions = {
     errorLog: (error: Error) => {
       sessionLogger.error('Session store error', {
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
-    }
+    },
   }),
   secret: config.sessionSecret,
   resave: false, // Don't save session if unmodified
@@ -59,7 +59,7 @@ sessionLogger.info('Session configuration initialized', {
   secureCookies: config.isProduction,
   cookieMaxAge: '24 hours',
   rolling: true,
-  sameSite: config.isProduction ? 'strict' : 'lax'
+  sameSite: config.isProduction ? 'strict' : 'lax',
 });
 
 export default sessionConfig;

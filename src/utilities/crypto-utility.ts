@@ -34,12 +34,12 @@ class CryptoService {
     const key = await this.deriveKey(masterKey, salt);
 
     const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-    
+
     const encrypted = Buffer.concat([
       cipher.update(text, 'utf8'),
-      cipher.final()
+      cipher.final(),
     ]);
-    
+
     const tag = cipher.getAuthTag();
 
     // Format: salt:iv:tag:encrypted
@@ -47,26 +47,29 @@ class CryptoService {
       salt.toString('base64'),
       iv.toString('base64'),
       tag.toString('base64'),
-      encrypted.toString('base64')
+      encrypted.toString('base64'),
     ].join(':');
   }
 
   /**
    * Decrypts text encrypted with encrypt method
    */
-  static async decrypt(encryptedText: string, masterKey: string): Promise<string> {
+  static async decrypt(
+    encryptedText: string,
+    masterKey: string
+  ): Promise<string> {
     const parts = encryptedText.split(':');
     if (parts.length !== 4) {
       throw new AppError('Invalid encrypted format', 400);
     }
 
     const [saltB64, ivB64, tagB64, encryptedB64] = parts;
-    
+
     // Allow empty encrypted data (for empty strings) but not other parts
     if (!saltB64 || !ivB64 || !tagB64 || encryptedB64 === undefined) {
       throw new AppError('Invalid encrypted format - missing parts', 400);
     }
-    
+
     const salt = Buffer.from(saltB64, 'base64');
     const iv = Buffer.from(ivB64, 'base64');
     const tag = Buffer.from(tagB64, 'base64');
@@ -78,14 +81,12 @@ class CryptoService {
 
     const decrypted = Buffer.concat([
       decipher.update(encrypted),
-      decipher.final()
+      decipher.final(),
     ]);
 
     return decrypted.toString('utf8');
   }
 }
-
-
 
 /**
  * Decrypts text using the secure AES-256-GCM format.

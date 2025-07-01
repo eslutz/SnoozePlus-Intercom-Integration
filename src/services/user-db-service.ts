@@ -73,7 +73,10 @@ const saveWorkspace = async (user: Workspace): Promise<string> => {
   ];
 
   return retryAsyncOperation<string>(async () => {
-    const res = await pool.query<WorkspaceDTO>(saveWorkspaceQuery, saveParameters);
+    const res = await pool.query<WorkspaceDTO>(
+      saveWorkspaceQuery,
+      saveParameters
+    );
     const workspaceId = res.rows[0]?.workspace_id;
     if (workspaceId === undefined) {
       throw new AppError(
@@ -81,9 +84,7 @@ const saveWorkspace = async (user: Workspace): Promise<string> => {
         500
       );
     }
-    workspaceDbLogger.debug(
-      `User saved with Workspace ID: ${workspaceId}`
-    );
+    workspaceDbLogger.debug(`User saved with Workspace ID: ${workspaceId}`);
     return workspaceId;
   }, 'saveWorkspace');
 };

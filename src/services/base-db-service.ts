@@ -7,7 +7,7 @@ const baseDbLogger = logger.child({ module: 'base-db-service' });
 
 /**
  * Base database service providing transaction management and common database operations.
- * 
+ *
  * This abstract class provides:
  * - Automatic transaction management with rollback on errors
  * - Connection pooling and error handling
@@ -19,7 +19,7 @@ export abstract class BaseDbService {
 
   /**
    * Execute a transaction with automatic rollback on error
-   * 
+   *
    * @param callback Function to execute within the transaction
    * @returns Promise resolving to the callback result
    * @throws {AppError} If transaction fails or callback throws
@@ -29,38 +29,44 @@ export abstract class BaseDbService {
   ): Promise<T> {
     const client = await this.pool.connect();
     const transactionId = Math.random().toString(36).substr(2, 9);
-    
+
     baseDbLogger.debug(`Starting transaction ${transactionId}`);
-    
+
     try {
       await client.query('BEGIN');
       baseDbLogger.debug(`Transaction ${transactionId} began`);
-      
+
       const result = await callback(client);
-      
+
       await client.query('COMMIT');
       baseDbLogger.debug(`Transaction ${transactionId} committed`);
-      
+
       return result;
     } catch (error) {
       baseDbLogger.warn(`Rolling back transaction ${transactionId}`, {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
-      
+
       try {
         await client.query('ROLLBACK');
         baseDbLogger.debug(`Transaction ${transactionId} rolled back`);
       } catch (rollbackError) {
         baseDbLogger.error(`Failed to rollback transaction ${transactionId}`, {
-          error: rollbackError instanceof Error ? rollbackError.message : String(rollbackError)
+          error:
+            rollbackError instanceof Error
+              ? rollbackError.message
+              : String(rollbackError),
         });
       }
-      
+
       // Re-throw original error
       if (error instanceof AppError) {
         throw error;
       } else if (error instanceof Error) {
-        throw new AppError(`Database transaction failed: ${error.message}`, 500);
+        throw new AppError(
+          `Database transaction failed: ${error.message}`,
+          500
+        );
       } else {
         throw new AppError('Database transaction failed', 500);
       }
@@ -72,7 +78,7 @@ export abstract class BaseDbService {
 
   /**
    * Execute a safe query with error handling and logging
-   * 
+   *
    * @param client Database client to use
    * @param query SQL query string
    * @param params Query parameters
@@ -83,34 +89,37 @@ export abstract class BaseDbService {
     client: PoolClient,
     query: string,
     params: unknown[] = [],
-    operation: string = 'query'
+    operation = 'query'
   ): Promise<pg.QueryResult<T>> {
     const queryId = Math.random().toString(36).substr(2, 9);
-    
+
     baseDbLogger.debug(`Executing ${operation} ${queryId}`, {
       query: query.replace(/\s+/g, ' ').trim(),
-      paramCount: params.length
+      paramCount: params.length,
     });
-    
+
     try {
       const startTime = Date.now();
       const result = await client.query<T>(query, params);
       const duration = Date.now() - startTime;
-      
+
       baseDbLogger.debug(`${operation} ${queryId} completed`, {
         rowCount: result.rowCount,
-        duration: `${duration}ms`
+        duration: `${duration}ms`,
       });
-      
+
       return result;
     } catch (error) {
       baseDbLogger.error(`${operation} ${queryId} failed`, {
         error: error instanceof Error ? error.message : String(error),
-        query: query.replace(/\s+/g, ' ').trim()
+        query: query.replace(/\s+/g, ' ').trim(),
       });
-      
+
       if (error instanceof Error) {
-        throw new AppError(`Database ${operation} failed: ${error.message}`, 500);
+        throw new AppError(
+          `Database ${operation} failed: ${error.message}`,
+          500
+        );
       } else {
         throw new AppError(`Database ${operation} failed`, 500);
       }
@@ -119,7 +128,7 @@ export abstract class BaseDbService {
 
   /**
    * Check pool health and connectivity
-   * 
+   *
    * @returns Promise resolving to true if healthy
    */
   public async checkHealth(): Promise<boolean> {
@@ -133,7 +142,7 @@ export abstract class BaseDbService {
       }
     } catch (error) {
       baseDbLogger.error('Database health check failed', {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       return false;
     }
@@ -141,14 +150,14 @@ export abstract class BaseDbService {
 
   /**
    * Get current pool statistics
-   * 
+   *
    * @returns Pool statistics object
    */
   public getPoolStats() {
     return {
       totalCount: this.pool.totalCount,
       idleCount: this.pool.idleCount,
-      waitingCount: this.pool.waitingCount
+      waitingCount: this.pool.waitingCount,
     };
   }
 }

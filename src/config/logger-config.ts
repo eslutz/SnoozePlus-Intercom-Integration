@@ -133,7 +133,7 @@ const logger = winston.createLogger({
 export async function closeLogger(): Promise<void> {
   // Close winston logger gracefully
   logger.close();
-  
+
   // Close logtail client if available
   if (logtail) {
     await logtail.flush();

@@ -8,7 +8,11 @@ const validateCanvasSignatureLogger = logger.child({
   module: 'validate-signature-canvas-middleware',
 });
 
-const validateSignature = (req: Request, _res: Response, next: NextFunction): void => {
+const validateSignature = (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): void => {
   // Retrieve the signature from the headers.
   const signature = req.headers['x-body-signature'] as string;
   if (!signature) {

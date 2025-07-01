@@ -26,7 +26,7 @@ const poolConfig = {
   user: config.pgUser,
   password: config.pgPassword,
   max: 20, // Maximum pool size
-  min: 5,  // Minimum pool size
+  min: 5, // Minimum pool size
   idleTimeoutMillis: 30000, // 30s idle timeout
   connectionTimeoutMillis: 2000, // 2s connection timeout
   statement_timeout: 30000, // 30s query timeout
@@ -39,16 +39,16 @@ const pool = new Pool(poolConfig);
 
 // Connection pool monitoring
 pool.on('error', (err, client) => {
-  dbLogger.error('Unexpected database error on idle client', { 
+  dbLogger.error('Unexpected database error on idle client', {
     error: err.message,
     stack: err.stack,
-    client: client ? 'defined' : 'undefined'
+    client: client ? 'defined' : 'undefined',
   });
 });
 
 pool.on('connect', (_client) => {
   dbLogger.debug('New database client connected', {
-    connection: 'established'
+    connection: 'established',
   });
 });
 
@@ -62,7 +62,7 @@ pool.on('remove', (_client) => {
 
 /**
  * Export pool metrics for monitoring.
- * 
+ *
  * @returns {Object} Pool statistics including total, idle, and waiting connection counts
  * @property {number} totalCount - Total number of connections in the pool
  * @property {number} idleCount - Number of idle connections available for use
@@ -79,7 +79,7 @@ export function getPoolMetrics() {
 /**
  * Health check with retry logic.
  * Attempts to verify database connectivity by executing a simple query.
- * 
+ *
  * @returns {Promise<boolean>} Promise that resolves to true if database is healthy, false otherwise
  * @description Performs up to 3 connection attempts with 1-second delays between retries.
  *              Logs errors after all retries are exhausted.
@@ -93,12 +93,12 @@ export async function checkDatabaseHealth(): Promise<boolean> {
     } catch (error) {
       retries--;
       if (retries === 0) {
-        dbLogger.error('Database health check failed after all retries', { 
-          error: error instanceof Error ? error.message : String(error)
+        dbLogger.error('Database health check failed after all retries', {
+          error: error instanceof Error ? error.message : String(error),
         });
         return false;
       }
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
   return false;
@@ -107,7 +107,7 @@ export async function checkDatabaseHealth(): Promise<boolean> {
 /**
  * Graceful shutdown of the database connection pool.
  * Closes all active connections and waits for pending operations to complete.
- * 
+ *
  * @returns {Promise<void>} Promise that resolves when the pool is successfully closed
  * @description Logs the shutdown process and ensures clean resource cleanup.
  */

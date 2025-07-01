@@ -179,7 +179,9 @@ const getSetSnoozeCanvas = (numOfSnoozes: number): CanvasResponse => {
  * @returns {CanvasResponse} A canvas object compatible with Intercom messenger format containing formatted message display
  * @throws AppError if message decryption fails or message/date is invalid
  */
-const getCurrentSnoozesCanvas = async (messages: Message[]): Promise<CanvasResponse> => {
+const getCurrentSnoozesCanvas = async (
+  messages: Message[]
+): Promise<CanvasResponse> => {
   const currentSnoozeCanvas: CanvasResponse = {
     canvas: {
       content: {
