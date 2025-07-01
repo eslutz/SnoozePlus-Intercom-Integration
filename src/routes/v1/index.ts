@@ -1,12 +1,12 @@
 /**
- * Version 1 API routes - current API version.
+ * Version 1 API routes - current API version with improved endpoint naming.
  *
  * @module routes/v1/index
- * @route /healthcheck - Health check endpoints
+ * @route /health - Health check endpoints (improved naming)
  * @route /auth - Authentication routes
- * @route /submit - Form submission endpoints
- * @route /webhook - Webhook handling endpoints
- * @route /initialize - Initialization endpoints
+ * @route /messages - Message handling endpoints (improved naming)
+ * @route /webhooks - Webhook handling endpoints (improved naming)
+ * @route /initialize - Canvas initialization endpoints
  */
 import { Router } from 'express';
 import healthcheckRouter from '../healthcheck-router.js';
@@ -17,11 +17,11 @@ import initializeRouter from '../initialize-router.js';
 
 const v1Router = Router();
 
-// Version 1 routes - current API implementation
-v1Router.use('/healthcheck', healthcheckRouter);
+// Version 1 routes with improved endpoint naming
+v1Router.use('/health', healthcheckRouter); // Improved naming
 v1Router.use('/auth', authRouter);
-v1Router.use('/submit', submitRouter);
-v1Router.use('/webhook', webhookRouter);
-v1Router.use('/initialize', initializeRouter);
+v1Router.use('/messages', submitRouter); // Improved naming for clarity
+v1Router.use('/webhooks', webhookRouter); // Improved naming (pluralized)
+v1Router.use('/initialize', initializeRouter); // Canvas initialization
 
 export default v1Router;

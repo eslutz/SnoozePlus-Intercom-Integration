@@ -86,17 +86,19 @@ The application includes comprehensive monitoring and observability features for
 
 ```bash
 # Prometheus metrics
-GET /healthcheck/metrics
+GET /api/v1/health/metrics
 
 # Comprehensive health check
-GET /healthcheck/health
+GET /api/v1/health/health
 
 # Kubernetes readiness probe
-GET /healthcheck/ready
+GET /api/v1/health/ready
 
 # Version 1 API endpoints (current)
-GET /api/v1/healthcheck
-POST /api/v1/submit
+GET /api/v1/health
+POST /api/v1/messages
+POST /api/v1/webhooks
+POST /api/v1/initialize
 ```
 
 ### 🔍 Metrics Available

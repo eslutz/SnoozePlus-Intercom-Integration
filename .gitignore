@@ -203,3 +203,4 @@ report.json
 # Test files
 test-*.mjs
 test-*.js
+.env.test

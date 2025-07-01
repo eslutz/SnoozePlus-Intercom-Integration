@@ -7,29 +7,31 @@ This document describes the comprehensive monitoring, metrics collection, API ve
 ### Prometheus Metrics
 Access Prometheus metrics at:
 ```
-GET /healthcheck/metrics
+GET /api/v1/health/metrics
 ```
 
 ### Enhanced Health Checks
 ```bash
 # Comprehensive health check
-GET /healthcheck/health
+GET /api/v1/health/health
 
 # Kubernetes readiness probe
-GET /healthcheck/ready
+GET /api/v1/health/ready
 
-# Traditional basic health check (existing)
-GET /healthcheck
+# Traditional basic health check
+GET /api/v1/health
 ```
 
 ### API Versioning
 ```bash
 # Version 1 API (current)
-GET /api/v1/healthcheck
-POST /api/v1/submit
+GET /api/v1/health
+POST /api/v1/messages
+POST /api/v1/webhooks
+POST /api/v1/initialize
 
 # Version via header
-curl -H "api-version: v1" /healthcheck
+curl -H "api-version: v1" /api/v1/health
 ```
 
 ## 📊 Available Metrics
@@ -127,7 +129,7 @@ The SnoozePlus API uses a single version (v1) representing the current state of 
 - job_name: 'snoozeplus'
   static_configs:
     - targets: ['app:3000']
-  metrics_path: '/healthcheck/metrics'
+  metrics_path: '/api/v1/health/metrics'
   scrape_interval: 30s
 ```
 
@@ -135,13 +137,16 @@ The SnoozePlus API uses a single version (v1) representing the current state of 
 ```yaml
 livenessProbe:
   httpGet:
-    path: /healthcheck/health
+    path: /api/v1/health/health
     port: 3000
   initialDelaySeconds: 30
   
 readinessProbe:
   httpGet:
-    path: /healthcheck/ready
+    path: /api/v1/health/ready
+    port: 3000
+  initialDelaySeconds: 10
+```
     port: 3000
   initialDelaySeconds: 10
 ```
