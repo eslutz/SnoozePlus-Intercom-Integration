@@ -2,9 +2,72 @@
 
 ## Overview
 
-This document describes the comprehensive security improvements implemented to address critical vulnerabilities in the SnoozePlus-Intercom-Integration application.
+This document describes the comprehensive security improvements implemented to address critical vulnerabilities in the SnoozePlus-Intercom-Integration application, including both the critical encryption fixes and the enhanced input validation & rate limiting features.
 
-## Critical Security Fixes
+## Enhanced Security Implementation (Issue #14)
+
+### Overview
+The enhanced security implementation provides comprehensive protection against common web application vulnerabilities while maintaining full compatibility with existing Intercom integrations.
+
+### Features Implemented
+
+#### 1. Enhanced Input Validation (`src/middleware/enhanced-validation-middleware.ts`)
+
+**XSS Protection and HTML Sanitization**
+- **DOMPurify Integration**: All user input is sanitized using DOMPurify
+- **Allowlist Approach**: Only safe HTML tags are permitted (`<b>`, `<i>`, `<u>`, `<strong>`, `<em>`, `<br>`, `<p>`)
+- **Content Preservation**: Safe content is preserved while dangerous elements are removed
+- **Automatic Sanitization**: Applied to all string inputs through custom Joi validators
+
+**Enhanced Schema Validation**
+- **Strict Type Checking**: All inputs validated against precise schemas
+- **Length Limits**: Appropriate limits for different input types (messages max 10,000 chars)
+- **Format Validation**: URLs, UUIDs, timestamps validated with proper formats
+- **Future Date Validation**: Scheduled messages must be in the future, max 1 year ahead
+
+#### 2. Advanced Rate Limiting (`src/middleware/advanced-rate-limiting.ts`)
+
+**Differentiated Rate Limits**
+- General API: 100 requests per 15 minutes
+- Authentication: 10 requests per 15 minutes (stricter)
+- Message Submissions: 20 requests per minute (per workspace)
+- Webhooks: 50 requests per minute
+- Canvas Interactions: 30 requests per minute (per workspace)
+- Health Checks: 200 requests per minute (lenient)
+
+**Workspace-based Rate Limiting**
+- Isolation: Rate limits apply per workspace to prevent cross-tenant abuse
+- IP + Workspace Keys: Rate limiting uses combination of IP and workspace ID
+- Fallback Handling: Graceful handling when workspace ID is missing
+
+#### 3. Enhanced Security Headers (`src/middleware/security-headers.ts`)
+
+**Content Security Policy (CSP)**
+- Tailored for Intercom integration while maintaining security
+- Allows necessary Intercom domains and websockets
+- Restricts dangerous content sources
+
+**Additional Security Headers**
+- HSTS: HTTP Strict Transport Security for HTTPS enforcement
+- Frame Protection: Prevents clickjacking attacks
+- XSS Protection: Browser-level XSS protection
+- MIME Sniffing Prevention: Prevents MIME type confusion attacks
+
+#### 4. Request Size Limiting (`src/middleware/request-size-limiting.ts`)
+
+**Per-endpoint Size Limits**
+- General API: 1MB
+- Canvas Submissions: 2MB (for UI data)
+- Webhooks: 512KB (Intercom webhooks are small)
+- Health Checks: 64KB
+
+### Compatibility
+- ✅ All existing Intercom canvas models work unchanged
+- ✅ All existing API endpoints function normally
+- ✅ Webhook processing maintains full compatibility
+- ✅ No breaking changes to existing functionality
+
+## Critical Security Fixes (Previous)
 
 ### 1. Authenticated Encryption (CRITICAL)
 
