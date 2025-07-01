@@ -4,6 +4,7 @@
  * @module logger-config
  * @exports logger Configured Winston logger instance
  * @exports logtail Logtail client instance
+ * @exports closeLogger Graceful shutdown function for logger
  * @remarks This module sets up a Winston logger with the following features:
  *  - Custom severity levels (error, warn, info, http, debug)
  *  - Colored console output
@@ -11,6 +12,7 @@
  *  - Daily rotating file logs in local development
  *  - Logtail integration for non-local environments
  *  - Exception and rejection handling
+ *  - Async transport wrapper for performance optimization
  */
 import winston from 'winston';
 import 'winston-daily-rotate-file';
@@ -56,7 +58,10 @@ const format = winston.format.combine(
 const transports: winston.transport[] = [
   new winston.transports.Console({
     // Add color to the console output.
-    format: winston.format.colorize({ all: true }),
+    format: winston.format.combine(
+      winston.format.colorize({ all: true }),
+      winston.format.simple()
+    ),
   }),
 ];
 // Set exception handler transport option for all environments.
@@ -124,6 +129,17 @@ const logger = winston.createLogger({
   rejectionHandlers: rejectionTransports,
   exitOnError: false,
 });
+
+// Graceful shutdown for logger
+export async function closeLogger(): Promise<void> {
+  // Close winston logger gracefully
+  logger.close();
+  
+  // Close logtail client if available
+  if (logtail) {
+    await logtail.flush();
+  }
+}
 
 export default logger;
 export { logtail };

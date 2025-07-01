@@ -1,8 +1,9 @@
 import { RequestHandler, Request, Response } from 'express';
-import pool from '../config/db-config.js';
+import { getPoolMetrics, checkDatabaseHealth } from '../config/db-config.js';
 import logger from '../config/logger-config.js';
 import { getWorkspace } from '../services/user-db-service.js';
 import { asyncHandler, AppError } from '../middleware/error-middleware.js';
+import { messageScheduler } from '../utilities/scheduler-utility.js';
 
 const healthcheckLogger = logger.child({ module: 'healthcheck-controller' });
 
@@ -22,40 +23,30 @@ const dbHealthcheck: RequestHandler = asyncHandler(
     healthcheckLogger.debug('Checking database connection.');
     healthcheckLogger.profile('dbHealthcheck');
 
-    interface TimeResult {
-      now: Date;
+    const isHealthy = await checkDatabaseHealth();
+    const poolStats = getPoolMetrics();
+    const schedulerStats = {
+      activeJobs: messageScheduler.getActiveJobCount(),
+    };
+
+    if (isHealthy) {
+      healthcheckLogger.profile('dbHealthcheck', {
+        level: 'debug',
+        message: 'Database health check passed',
+      });
+
+      res.status(200).json({
+        status: 'healthy',
+        database: {
+          connected: true,
+          pool: poolStats,
+        },
+        scheduler: schedulerStats,
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      throw new AppError('Database health check failed', 503);
     }
-
-    const result = await new Promise<{ rows: TimeResult[] }>(
-      (
-        resolve: (value: { rows: TimeResult[] }) => void,
-        reject: (reason: Error) => void
-      ) => {
-        pool.query(
-          'SELECT NOW()',
-          (err: Error | null, result: { rows: TimeResult[] }) => {
-            if (err) {
-              reject(
-                new AppError(`Database connection error: ${err.message}`, 503)
-              );
-            } else {
-              resolve(result);
-            }
-          }
-        );
-      }
-    );
-
-    healthcheckLogger.profile('dbHealthcheck', {
-      level: 'debug',
-      message: `Database connected: ${result.rows[0]?.now.toISOString() ?? 'Unknown'}`,
-    });
-
-    res
-      .status(200)
-      .send(
-        `Database connection is active: ${result.rows[0]?.now.toISOString() ?? 'Unknown'}`
-      );
   }
 );
 
