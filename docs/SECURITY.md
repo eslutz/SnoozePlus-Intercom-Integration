@@ -1,79 +1,16 @@
 # Security Implementation Guide
 
-## Overview
-
-This document describes the comprehensive security improvements implemented to address critical vulnerabilities in the SnoozePlus-Intercom-Integration application, including both the critical encryption fixes and the enhanced input validation & rate limiting features.
-
-## Enhanced Security Implementation (Issue #14)
-
-### Overview
-The enhanced security implementation provides comprehensive protection against common web application vulnerabilities while maintaining full compatibility with existing Intercom integrations.
-
-### Features Implemented
-
-#### 1. Enhanced Input Validation (`src/middleware/enhanced-validation-middleware.ts`)
-
-**XSS Protection and HTML Sanitization**
-- **DOMPurify Integration**: All user input is sanitized using DOMPurify
-- **Allowlist Approach**: Only safe HTML tags are permitted (`<b>`, `<i>`, `<u>`, `<strong>`, `<em>`, `<br>`, `<p>`)
-- **Content Preservation**: Safe content is preserved while dangerous elements are removed
-- **Automatic Sanitization**: Applied to all string inputs through custom Joi validators
-
-**Enhanced Schema Validation**
-- **Strict Type Checking**: All inputs validated against precise schemas
-- **Length Limits**: Appropriate limits for different input types (messages max 10,000 chars)
-- **Format Validation**: URLs, UUIDs, timestamps validated with proper formats
-- **Future Date Validation**: Scheduled messages must be in the future, max 1 year ahead
-
-#### 2. Advanced Rate Limiting (`src/middleware/advanced-rate-limiting.ts`)
-
-**Differentiated Rate Limits**
-- General API: 100 requests per 15 minutes
-- Authentication: 10 requests per 15 minutes (stricter)
-- Message Submissions: 20 requests per minute (per workspace)
-- Webhooks: 50 requests per minute
-- Canvas Interactions: 30 requests per minute (per workspace)
-- Health Checks: 200 requests per minute (lenient)
-
-**Workspace-based Rate Limiting**
-- Isolation: Rate limits apply per workspace to prevent cross-tenant abuse
-- IP + Workspace Keys: Rate limiting uses combination of IP and workspace ID
-- Fallback Handling: Graceful handling when workspace ID is missing
-
-#### 3. Enhanced Security Headers (`src/middleware/security-headers.ts`)
-
-**Content Security Policy (CSP)**
-- Tailored for Intercom integration while maintaining security
-- Allows necessary Intercom domains and websockets
-- Restricts dangerous content sources
-
-**Additional Security Headers**
-- HSTS: HTTP Strict Transport Security for HTTPS enforcement
-- Frame Protection: Prevents clickjacking attacks
-- XSS Protection: Browser-level XSS protection
-- MIME Sniffing Prevention: Prevents MIME type confusion attacks
-
-#### 4. Request Size Limiting (`src/middleware/request-size-limiting.ts`)
-
-**Per-endpoint Size Limits**
-- General API: 1MB
-- Canvas Submissions: 2MB (for UI data)
-- Webhooks: 512KB (Intercom webhooks are small)
-- Health Checks: 64KB
-
-### Compatibility
-- ✅ All existing Intercom canvas models work unchanged
-- ✅ All existing API endpoints function normally
-- ✅ Webhook processing maintains full compatibility
-- ✅ No breaking changes to existing functionality
-
-## Critical Security Fixes (Previous)
+## Security Implementation
 
 ### 1. Authenticated Encryption (CRITICAL)
 
-**Problem**: The application was using AES-256-CBC without authentication, making it vulnerable to padding oracle attacks and data tampering.
+#### Problem: Authenticated Encryption
 
-**Solution**: Implemented AES-256-GCM authenticated encryption with proper key derivation.
+The application was using AES-256-CBC without authentication, making it vulnerable to padding oracle attacks and data tampering.
+
+#### Solution: Authenticated Encryption
+
+Implemented AES-256-GCM authenticated encryption with proper key derivation.
 
 #### New Encryption Implementation
 
@@ -86,39 +23,43 @@ The enhanced security implementation provides comprehensive protection against c
 
 ```javascript
 // Automatic format detection supports both formats:
-const encrypted = await encrypt(plaintext);    // New format
-const decrypted = await decrypt(encrypted);    // Auto-detects format
+const encrypted = await encrypt(plaintext); // New format
+const decrypted = await decrypt(encrypted); // Auto-detects format
 
 // Legacy support during transition
-const legacyData = "abc123:def456";  // Old format
-const newData = await decrypt(legacyData);  // Still works
+const legacyData = 'abc123:def456'; // Old format
+const newData = await decrypt(legacyData); // Still works
 ```
 
-#### Security Benefits
+#### Encryption Security Benefits
 
-- **Tamper Resistance**: Authentication tags prevent data modification
-- **Padding Oracle Protection**: GCM mode is not vulnerable to padding oracle attacks
-- **Key Security**: scrypt derivation protects against rainbow table attacks
-- **Forward Compatibility**: Clean migration path from legacy format
+- Tamper Resistance: Authentication tags prevent data modification
+- Padding Oracle Protection: GCM mode is not vulnerable to padding oracle attacks
+- Key Security: scrypt derivation protects against rainbow table attacks
+- Forward Compatibility: Clean migration path from legacy format
 
 ### 2. Database Security Hardening (HIGH)
 
-**Problem**: Basic PostgreSQL connection with no security configuration or timeout protection.
+#### Problem: Database Security
 
-**Solution**: Comprehensive database security configuration.
+Basic PostgreSQL connection with no security configuration or timeout protection.
+
+#### Solution: Database Security
+
+Comprehensive database security configuration.
 
 #### Secure Connection Pool
 
 ```javascript
 const poolConfig = {
-  max: 20,                        // Maximum connections
-  min: 5,                         // Minimum connections
-  idleTimeoutMillis: 30000,       // 30s idle timeout
-  connectionTimeoutMillis: 2000,  // 2s connection timeout
-  statement_timeout: 30000,       // 30s query timeout
-  query_timeout: 30000,           // 30s query timeout
+  max: 20, // Maximum connections
+  min: 5, // Minimum connections
+  idleTimeoutMillis: 30000, // 30s idle timeout
+  connectionTimeoutMillis: 2000, // 2s connection timeout
+  statement_timeout: 30000, // 30s query timeout
+  query_timeout: 30000, // 30s query timeout
   ssl: isProduction ? { rejectUnauthorized: true } : false,
-  application_name: 'snoozeplus-intercom-integration'
+  application_name: 'snoozeplus-intercom-integration',
 };
 ```
 
@@ -139,19 +80,23 @@ class MyService extends BaseDbService {
 }
 ```
 
-#### Security Features
+#### Database Security Features
 
-- **Connection Limits**: Prevents connection exhaustion attacks
-- **Timeouts**: Protects against long-running query attacks
-- **SSL/TLS**: Encrypted connections in production
-- **Error Monitoring**: Comprehensive logging without data leakage
-- **Transaction Safety**: Automatic rollback on errors
+- Connection Limits: Prevents connection exhaustion attacks
+- Timeouts: Protects against long-running query attacks
+- SSL/TLS: Encrypted connections in production
+- Error Monitoring: Comprehensive logging without data leakage
+- Transaction Safety: Automatic rollback on errors
 
 ### 3. Session Security (HIGH)
 
-**Problem**: In-memory sessions with weak security configuration.
+#### Problem: Session Security
 
-**Solution**: PostgreSQL-backed sessions with comprehensive security.
+In-memory sessions with weak security configuration.
+
+#### Solution: Session Security
+
+PostgreSQL-backed sessions with comprehensive security.
 
 #### Secure Session Configuration
 
@@ -176,13 +121,77 @@ class MyService extends BaseDbService {
 }
 ```
 
-#### Security Benefits
+#### Session Security Benefits
 
-- **Persistent Storage**: Sessions survive application restarts
-- **Automatic Cleanup**: Expired sessions are automatically purged
-- **Secure Cookies**: HTTPOnly, Secure, SameSite protection
-- **Session Rotation**: Session ID refreshed on each request
-- **CSRF Protection**: SameSite strict mode prevents cross-site attacks
+- Persistent Storage: Sessions survive application restarts
+- Automatic Cleanup: Expired sessions are automatically purged
+- Secure Cookies: HTTPOnly, Secure, SameSite protection
+- Session Rotation: Session ID refreshed on each request
+- CSRF Protection: SameSite strict mode prevents cross-site attacks
+
+### 4. Enhanced Input Validation
+
+#### XSS Protection and HTML Sanitization
+
+- DOMPurify Integration: All user input is sanitized using DOMPurify
+- Allowlist Approach: Only safe HTML tags are permitted (`<b>`, `<i>`, `<u>`, `<strong>`, `<em>`, `<br>`, `<p>`)
+- Content Preservation: Safe content is preserved while dangerous elements are removed
+- Automatic Sanitization: Applied to all string inputs through custom Joi validators
+
+#### Enhanced Schema Validation
+
+- Strict Type Checking: All inputs validated against precise schemas
+- Length Limits: Appropriate limits for different input types (messages max 10,000 chars)
+- Format Validation: URLs, UUIDs, timestamps validated with proper formats
+- Future Date Validation: Scheduled messages must be in the future, max 1 year ahead
+
+### 5. Advanced Rate Limiting
+
+#### Differentiated Rate Limits
+
+- General API: 100 requests per 15 minutes
+- Authentication: 10 requests per 15 minutes (stricter)
+- Message Submissions: 20 requests per minute (per workspace)
+- Webhooks: 50 requests per minute
+- Canvas Interactions: 30 requests per minute (per workspace)
+- Health Checks: 200 requests per minute (lenient)
+
+#### Workspace-based Rate Limiting
+
+- Isolation: Rate limits apply per workspace to prevent cross-tenant abuse
+- IP + Workspace Keys: Rate limiting uses combination of IP and workspace ID
+- Fallback Handling: Graceful handling when workspace ID is missing
+
+### 6. Enhanced Security Headers
+
+#### Content Security Policy (CSP)
+
+- Tailored for Intercom integration while maintaining security
+- Allows necessary Intercom domains and websockets
+- Restricts dangerous content sources
+
+#### Additional Security Headers
+
+- HSTS: HTTP Strict Transport Security for HTTPS enforcement
+- Frame Protection: Prevents clickjacking attacks
+- XSS Protection: Browser-level XSS protection
+- MIME Sniffing Prevention: Prevents MIME type confusion attacks
+
+### 7. Request Size Limiting
+
+#### Per-endpoint Size Limits
+
+- General API: 1MB
+- Canvas Submissions: 2MB (for UI data)
+- Webhooks: 512KB (Intercom webhooks are small)
+- Health Checks: 64KB
+
+### 8. Compatibility
+
+- All existing Intercom canvas models work unchanged
+- All existing API endpoints function normally
+- Webhook processing maintains full compatibility
+- No breaking changes to existing functionality
 
 ## Security Validation
 
@@ -247,12 +256,12 @@ NODE_ENV=production  # Enables SSL, secure cookies, etc.
 
 ### Development vs Production
 
-| Feature | Development | Production |
-|---------|-------------|------------|
-| SSL/TLS | Disabled | Required |
-| Secure Cookies | No | Yes |
-| SameSite | Lax | Strict |
-| Database SSL | No | Yes |
+| Feature        | Development | Production |
+| -------------- | ----------- | ---------- |
+| SSL/TLS        | Disabled    | Required   |
+| Secure Cookies | No          | Yes        |
+| SameSite       | Lax         | Strict     |
+| Database SSL   | No          | Yes        |
 
 ## Security Checklist
 
@@ -277,18 +286,21 @@ NODE_ENV=production  # Enables SSL, secure cookies, etc.
 ### Common Issues
 
 1. **Encryption Key Format**
+
    ```bash
    # Generate new key
    node -e "console.log(crypto.randomBytes(32).toString('hex'))"
    ```
 
 2. **Database Connection Issues**
+
    ```javascript
    // Check pool status
    console.log(pool.totalCount, pool.idleCount, pool.waitingCount);
    ```
 
 3. **Session Problems**
+
    ```sql
    -- Check session table
    SELECT * FROM user_sessions WHERE sess->>'userId' IS NOT NULL;
@@ -329,11 +341,11 @@ const stats = service.getPoolStats();
 
 ## CVSS Score Improvement
 
-| Vulnerability | Before | After | Improvement |
-|---------------|--------|-------|-------------|
-| Confidentiality | HIGH | NONE | Critical Fix |
-| Integrity | HIGH | NONE | Critical Fix |
-| Availability | MEDIUM | LOW | Significant Improvement |
-| **Overall CVSS** | **9.1** | **2.3** | **75% Reduction** |
+| Vulnerability    | Before  | After   | Improvement             |
+| ---------------- | ------- | ------- | ----------------------- |
+| Confidentiality  | HIGH    | NONE    | Critical Fix            |
+| Integrity        | HIGH    | NONE    | Critical Fix            |
+| Availability     | MEDIUM  | LOW     | Significant Improvement |
+| **Overall CVSS** | **9.1** | **2.3** | **75% Reduction**       |
 
 This represents a critical security improvement from a score of 9.1 (Critical) to 2.3 (Low), effectively eliminating the primary attack vectors while maintaining application functionality.
