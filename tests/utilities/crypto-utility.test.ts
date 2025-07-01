@@ -1,122 +1,13 @@
 import { describe, expect, test } from '@jest/globals';
 import crypto from 'crypto';
-import { CryptoService, encrypt, decrypt, legacyDecrypt } from '../../src/utilities/crypto-utility.js';
-
-// Simple crypto utility functions for testing legacy functionality
-const encryptTextLegacy = (text: string, algorithm: string, key: string): string => {
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv(algorithm, Buffer.from(key, 'hex'), iv);
-  let encrypted = cipher.update(text, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  return `${iv.toString('hex')}:${encrypted}`;
-};
-
-const decryptTextLegacy = (
-  encryptedText: string,
-  algorithm: string,
-  key: string
-): string => {
-  const parts = encryptedText.split(':');
-  if (parts.length !== 2) {
-    throw new Error(
-      'Invalid encrypted text format. Expected format: ivHex:encrypted'
-    );
-  }
-
-  const [ivHex, encrypted] = parts;
-  if (!ivHex || !encrypted) {
-    throw new Error(
-      'Invalid encrypted text format. Missing IV or encrypted data'
-    );
-  }
-
-  const cipher = crypto.createDecipheriv(
-    algorithm,
-    Buffer.from(key, 'hex'),
-    Buffer.from(ivHex, 'hex')
-  );
-  let decrypted = cipher.update(encrypted, 'hex', 'utf8');
-  decrypted += cipher.final('utf8');
-  return decrypted;
-};
+import { CryptoService, encrypt, decrypt } from '../../src/utilities/crypto-utility.js';
 
 describe('Crypto Utility Functions', () => {
   const testMessage = 'Hello, World!';
-  const algorithm = 'AES-256-CBC';
   const key =
     '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
-  describe('Legacy AES-256-CBC encryption (for compatibility)', () => {
-    describe('encrypt', () => {
-      test('should encrypt a message successfully', () => {
-        const encrypted = encryptTextLegacy(testMessage, algorithm, key);
-
-        expect(encrypted).toBeDefined();
-        expect(typeof encrypted).toBe('string');
-        expect(encrypted).toContain(':');
-
-        // Should have IV and encrypted parts
-        const parts = encrypted.split(':');
-        expect(parts).toHaveLength(2);
-        expect(parts[0]).toHaveLength(32); // IV hex length
-      });
-
-      test('should produce different results for same input', () => {
-        const encrypted1 = encryptTextLegacy(testMessage, algorithm, key);
-        const encrypted2 = encryptTextLegacy(testMessage, algorithm, key);
-
-        expect(encrypted1).not.toBe(encrypted2);
-      });
-    });
-
-    describe('decrypt', () => {
-      test('should decrypt encrypted message successfully', () => {
-        const encrypted = encryptTextLegacy(testMessage, algorithm, key);
-        const decrypted = decryptTextLegacy(encrypted, algorithm, key);
-        expect(decrypted).toBe(testMessage);
-      });
-
-      test('should throw error for invalid format', () => {
-        expect(() => decryptTextLegacy('invalid', algorithm, key)).toThrow(
-          'Invalid encrypted text format. Expected format: ivHex:encrypted'
-        );
-        expect(() =>
-          decryptTextLegacy('invalid:format:too:many:parts', algorithm, key)
-        ).toThrow(
-          'Invalid encrypted text format. Expected format: ivHex:encrypted'
-        );
-      });
-
-      test('should throw error for missing parts', () => {
-        expect(() => decryptTextLegacy(':', algorithm, key)).toThrow(
-          'Invalid encrypted text format. Missing IV or encrypted data'
-        );
-        expect(() => decryptTextLegacy('onlyonepart', algorithm, key)).toThrow(
-          'Invalid encrypted text format. Expected format: ivHex:encrypted'
-        );
-      });
-    });
-
-    describe('encrypt/decrypt roundtrip', () => {
-      const testCases = [
-        'Simple text',
-        'Text with symbols !@#$%^&*()',
-        'Multiline\ntext\nwith\nbreaks',
-        '🚀 Unicode and emojis 🎉',
-        '',
-        'a'.repeat(100), // Long text
-      ];
-
-      test.each(testCases)('should handle: %s', (input) => {
-        const encrypted = encryptTextLegacy(input, algorithm, key);
-        const decrypted = decryptTextLegacy(encrypted, algorithm, key);
-
-        expect(decrypted).toBe(input);
-      });
-    });
-  });
-
-  describe('New AES-256-GCM CryptoService', () => {
+  describe('AES-256-GCM CryptoService', () => {
     const masterKey = key;
 
     describe('encrypt', () => {
@@ -246,29 +137,10 @@ describe('Crypto Utility Functions', () => {
       expect(decrypted).toBe(testMessage);
     });
 
-    test('should decrypt legacy format', async () => {
-      const legacyEncrypted = encryptTextLegacy(testMessage, algorithm, key);
-      const decrypted = await decrypt(legacyEncrypted);
-      
-      expect(decrypted).toBe(testMessage);
-    });
-
-    test('should handle format detection correctly', async () => {
-      // Test new format (4 parts)
-      const newEncrypted = await encrypt(testMessage);
-      const newDecrypted = await decrypt(newEncrypted);
-      expect(newDecrypted).toBe(testMessage);
-
-      // Test legacy format (2 parts)
-      const legacyEncrypted = encryptTextLegacy(testMessage, algorithm, key);
-      const legacyDecrypted = await decrypt(legacyEncrypted);
-      expect(legacyDecrypted).toBe(testMessage);
-    });
-
     test('should reject invalid formats', async () => {
-      await expect(decrypt('invalid')).rejects.toThrow('Invalid encrypted text format');
-      await expect(decrypt('one:two:three')).rejects.toThrow('Invalid encrypted text format');
-      await expect(decrypt('one:two:three:four:five')).rejects.toThrow('Invalid encrypted text format');
+      await expect(decrypt('invalid')).rejects.toThrow('Invalid encrypted format');
+      await expect(decrypt('one:two:three')).rejects.toThrow('Invalid encrypted format');
+      await expect(decrypt('one:two:three:four:five')).rejects.toThrow('Invalid encrypted format');
     });
   });
 

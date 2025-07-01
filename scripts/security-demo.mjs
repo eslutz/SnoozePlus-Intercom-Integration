@@ -8,7 +8,7 @@
  */
 
 import crypto from 'crypto';
-import { CryptoService, encrypt, decrypt, legacyDecrypt } from '../dist/utilities/crypto-utility.js';
+import { CryptoService, encrypt, decrypt } from '../dist/utilities/crypto-utility.js';
 
 console.log('🔒 SECURITY IMPROVEMENTS DEMONSTRATION\n');
 
@@ -18,18 +18,11 @@ const key = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
 console.log('📊 VULNERABILITY 1: INSECURE ENCRYPTION\n');
 
-// Demonstrate old vulnerable encryption (AES-256-CBC)
 console.log('❌ BEFORE (Vulnerable AES-256-CBC):');
-const iv = crypto.randomBytes(16);
-const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key, 'hex'), iv);
-let oldEncrypted = cipher.update(sensitiveData, 'utf8', 'hex');
-oldEncrypted += cipher.final('hex');
-const oldFormat = `${iv.toString('hex')}:${oldEncrypted}`;
-console.log(`   Format: iv:encrypted (${oldFormat.split(':').length} parts)`);
-console.log(`   Length: ${oldFormat.length} characters`);
-console.log(`   Authentication: None (vulnerable to tampering)`);
-console.log(`   Key Derivation: None (raw key usage)`);
-console.log(`   Padding Oracle: Vulnerable ⚠️\n`);
+console.log('   Format: iv:encrypted (2 parts)');
+console.log('   Authentication: None (vulnerable to tampering)');
+console.log('   Key Derivation: None (raw key usage)');
+console.log('   Padding Oracle: Vulnerable ⚠️\n');
 
 // Demonstrate new secure encryption (AES-256-GCM)
 console.log('✅ AFTER (Secure AES-256-GCM):');
@@ -105,23 +98,9 @@ console.log('   Availability: LOW risk');
 
 console.log('\n🎯 RISK REDUCTION: 75% (9.1 → 2.3)');
 
-console.log('\n🔄 BACKWARD COMPATIBILITY\n');
-
-// Demonstrate backward compatibility
-console.log('Testing legacy data decryption...');
-const legacyDecrypted = await decrypt(oldFormat);
-const newDecrypted = await decrypt(newEncrypted);
-
-if (legacyDecrypted === sensitiveData && newDecrypted === sensitiveData) {
-  console.log('✅ Both old and new formats decrypt correctly');
-  console.log('✅ Zero-downtime migration possible');
-} else {
-  console.log('❌ Compatibility issue detected');
-}
-
 console.log('\n🚀 DEPLOYMENT READY\n');
 console.log('✅ All critical vulnerabilities fixed');
-console.log('✅ Backward compatibility maintained');
+console.log('✅ Modern AES-256-GCM encryption implemented');
 console.log('✅ Migration tools provided');
 console.log('✅ Comprehensive testing (51 tests passing)');
 console.log('✅ Security validation (90/100 score)');

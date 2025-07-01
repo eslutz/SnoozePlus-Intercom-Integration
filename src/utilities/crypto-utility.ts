@@ -85,56 +85,13 @@ class CryptoService {
   }
 }
 
-/**
- * Legacy decrypt function for backwards compatibility with existing AES-256-CBC data.
- * This should only be used during migration from old encryption format.
- * 
- * @deprecated Use CryptoService.decrypt instead for new data
- */
-const legacyDecrypt = (encryptedText: string): string => {
-  const parts = encryptedText.split(':');
-  if (parts.length !== 2) {
-    throw new AppError(
-      'Invalid encrypted text format. Expected format: ivHex:encrypted',
-      400
-    );
-  }
 
-  const [ivHex, encrypted] = parts;
-  if (!ivHex || !encrypted) {
-    throw new AppError(
-      'Invalid encrypted text format. Missing IV or encrypted data',
-      400
-    );
-  }
-
-  const cipher = crypto.createDecipheriv(
-    config.encryptionAlgorithm,
-    Buffer.from(config.encryptionKey, 'hex'),
-    Buffer.from(ivHex, 'hex')
-  );
-  let decrypted = cipher.update(encrypted, 'hex', 'utf8');
-  decrypted += cipher.final('utf8');
-  return decrypted;
-};
 
 /**
- * Decrypts text using the appropriate method based on format detection.
- * Supports both new AES-256-GCM format and legacy AES-256-CBC format.
+ * Decrypts text using the secure AES-256-GCM format.
  */
 const decrypt = async (encryptedText: string): Promise<string> => {
-  // Detect format: new format has 4 parts (salt:iv:tag:encrypted), old has 2 (iv:encrypted)
-  const parts = encryptedText.split(':');
-  
-  if (parts.length === 4) {
-    // New AES-256-GCM format
-    return await CryptoService.decrypt(encryptedText, config.encryptionKey);
-  } else if (parts.length === 2) {
-    // Legacy AES-256-CBC format
-    return legacyDecrypt(encryptedText);
-  } else {
-    throw new AppError('Invalid encrypted text format', 400);
-  }
+  return await CryptoService.decrypt(encryptedText, config.encryptionKey);
 };
 
 /**
@@ -165,4 +122,4 @@ const signatureValidator = (
   return digest === signature;
 };
 
-export { encrypt, decrypt, signatureValidator, CryptoService, legacyDecrypt };
+export { encrypt, decrypt, signatureValidator, CryptoService };
