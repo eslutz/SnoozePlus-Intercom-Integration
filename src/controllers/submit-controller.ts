@@ -53,7 +53,9 @@ const submit: RequestHandler = asyncHandler(
       // Create the snooze request from the input values.
       submitLogger.info('Parsing request for snooze request.');
       submitLogger.profile('createSnoozeRequest');
-      const snoozeRequest = await createSnoozeRequest(canvasRequest.input_values);
+      const snoozeRequest = await createSnoozeRequest(
+        canvasRequest.input_values
+      );
       submitLogger.profile('createSnoozeRequest', {
         level: 'info',
         message: 'Snooze request created.',

@@ -247,10 +247,16 @@ const saveMessages = async (
     ];
 
     return retryAsyncOperation<string>(async () => {
-      const response = await pool.query<{ id: string }>(insertMessage, messageParameters);
+      const response = await pool.query<{ id: string }>(
+        insertMessage,
+        messageParameters
+      );
       const id = response.rows[0]?.id;
       if (typeof id !== 'string') {
-        throw new AppError('Insert message query returned invalid or missing id', 500);
+        throw new AppError(
+          'Insert message query returned invalid or missing id',
+          500
+        );
       }
       return id;
     }, 'saveMessages');

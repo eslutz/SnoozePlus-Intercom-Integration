@@ -7,17 +7,6 @@ jest.mock('../../src/config/config.js', () => ({
   },
 }));
 
-jest.mock('../../src/config/logger-config.js', () => ({
-  default: {
-    child: () => ({
-      error: jest.fn(),
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-    }),
-  },
-}));
-
 jest.mock('../../src/services/heartbeat-service.js', () => ({
   default: jest.fn(),
 }));
@@ -152,6 +141,25 @@ describe('MessageScheduler', () => {
 
     expect(scheduler.getActiveJobCount()).toBe(0);
     expect(mockJob.cancel).toHaveBeenCalled();
+  });
+
+  test('should clean up jobs scheduled more than 24 hours ahead after timeout', async () => {
+    const messageId = 'test-long-scheduled-job';
+    const sendDate = new Date(Date.now() + 30 * 60 * 60 * 1000); // 30 hours from now
+    const callback = jest.fn();
+
+    // Mock the job as active (has next invocation)
+    mockJob.nextInvocation.mockReturnValue(sendDate);
+
+    await scheduler.scheduleMessage(messageId, sendDate, callback);
+    expect(scheduler.getActiveJobCount()).toBe(1);
+
+    // Fast-forward 24 hours to trigger the cleanup timeout
+    jest.advanceTimersByTime(24 * 60 * 60 * 1000);
+
+    // The job should be cancelled after the 24-hour timeout
+    expect(mockJob.cancel).toHaveBeenCalled();
+    expect(scheduler.getActiveJobCount()).toBe(0);
   });
 
   test('should shutdown gracefully', async () => {

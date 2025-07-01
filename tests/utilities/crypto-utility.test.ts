@@ -23,7 +23,7 @@ describe('Crypto Utility Functions', () => {
         
         // Verify all parts are base64 encoded
         parts.forEach(part => {
-          expect(part).toMatch(/^[A-Za-z0-9+\/]+(=*)$/);
+          expect(part).toMatch(/^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{4})$/);
         });
       });
 

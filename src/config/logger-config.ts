@@ -12,7 +12,6 @@
  *  - Daily rotating file logs in local development
  *  - Logtail integration for non-local environments
  *  - Exception and rejection handling
- *  - Async transport wrapper for performance optimization
  */
 import winston from 'winston';
 import 'winston-daily-rotate-file';
@@ -134,7 +133,7 @@ const logger = winston.createLogger({
 export async function closeLogger(): Promise<void> {
   // Close winston logger gracefully
   logger.close();
-  
+
   // Close logtail client if available
   if (logtail) {
     await logtail.flush();

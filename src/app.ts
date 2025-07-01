@@ -21,7 +21,9 @@ import {
 } from './middleware/error-middleware.js';
 import { handleValidationError } from './middleware/validation-middleware.js';
 import router from './routes/router.js';
-import scheduleJobs, { messageScheduler } from './utilities/scheduler-utility.js';
+import scheduleJobs, {
+  messageScheduler,
+} from './utilities/scheduler-utility.js';
 import './config/auth-config.js';
 
 const app = express();
@@ -155,7 +157,7 @@ const server = app
 // Graceful shutdown handlers
 const enhancedGracefulShutdown = (server: any) => async (signal: string) => {
   appLogger.info(`Received ${signal}, starting graceful shutdown...`);
-  
+
   try {
     // Stop accepting new connections
     server.close(() => {
@@ -166,7 +168,7 @@ const enhancedGracefulShutdown = (server: any) => async (signal: string) => {
     await messageScheduler.shutdown();
     await closePool();
     await closeLogger();
-    
+
     appLogger.info('Graceful shutdown completed');
     process.exit(0);
   } catch (error) {

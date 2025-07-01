@@ -32,7 +32,9 @@ const calculateDaysUntilSending = (sendDate: Date): number => {
  * @returns {SnoozeRequest} A `SnoozeRequest` object containing the messages, note, and snooze until timestamp.
  * @throws Will throw an error if message encryption fails.
  */
-const createSnoozeRequest = async (input: IntercomCanvasInput): Promise<SnoozeRequest> => {
+const createSnoozeRequest = async (
+  input: IntercomCanvasInput
+): Promise<SnoozeRequest> => {
   snoozeLogger.debug('Getting number of snoozes set.');
   // Get the keys from the inputs object and use array length property to get number of inputs.
   const keysArray = Object.keys(input as unknown as Record<string, unknown>);
