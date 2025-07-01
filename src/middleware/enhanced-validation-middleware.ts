@@ -23,7 +23,7 @@ const secureString = Joi.string().custom((value: string) => {
     ALLOWED_ATTR: [],
     KEEP_CONTENT: true,
   });
-  
+
   // Return sanitized value - DOMPurify handles the XSS protection
   return sanitized;
 }, 'XSS protection');
@@ -162,12 +162,21 @@ export const enhancedSchemas = {
   }),
 };
 
-// Validation middleware factory
+/**
+ * Validation middleware factory that creates middleware to validate request data against Joi schemas.
+ * Supports validation of body, query parameters, and route parameters with enhanced security features.
+ *
+ * @param schema - Joi schema to validate against
+ * @param source - Source of data to validate ('body', 'query', or 'params')
+ * @returns Express middleware function that validates the specified request data
+ * @throws {CategorizedError} When validation fails, throws error with validation details
+ */
 export function validateSchema(
   schema: Joi.ObjectSchema,
   source: 'body' | 'query' | 'params' = 'body'
 ) {
   return (req: Request, _res: Response, next: NextFunction) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const data = req[source];
 
     const { error, value } = schema.validate(data, {
@@ -177,9 +186,11 @@ export function validateSchema(
     });
 
     if (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-array-destructuring
       const details = error.details.map((detail) => ({
         field: detail.path.join('.'),
         message: detail.message,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         value: detail.context?.value,
       }));
 
@@ -194,19 +205,31 @@ export function validateSchema(
     }
 
     // Replace original data with validated/sanitized data
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     req[source] = value;
     next();
   };
 }
 
-// File upload validation
+/**
+ * File upload validation middleware factory that validates uploaded files.
+ * Checks file type against allowed MIME types and validates file size limits.
+ *
+ * @param allowedTypes - Array of allowed MIME types (default: image types)
+ * @param maxSize - Maximum file size in bytes (default: 5MB)
+ * @returns Express middleware function that validates uploaded files
+ * @throws {CategorizedError} When file validation fails
+ */
 export const validateFileUpload = (
   allowedTypes: string[] = ['image/jpeg', 'image/png', 'image/gif'],
   maxSize: number = 5 * 1024 * 1024 // 5MB
 ) => {
   return (req: Request, _res: Response, next: NextFunction) => {
     // Type assertion for multer file property - using any for Express.Multer compatibility
-    const file = (req as any).file as { mimetype: string; size: number } | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+    const file = (req as any).file as
+      | { mimetype: string; size: number }
+      | undefined;
 
     if (!file) {
       return next();

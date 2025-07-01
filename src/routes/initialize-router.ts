@@ -13,7 +13,10 @@ import * as initializeController from '../controllers/initialize-controller.js';
 import validateSignature from '../middleware/validate-signature-canvas-middleware.js';
 import { rateLimitConfigs } from '../middleware/advanced-rate-limiting.js';
 import { requestSizeLimits } from '../middleware/request-size-limiting.js';
-import { validateSchema, enhancedSchemas } from '../middleware/enhanced-validation-middleware.js';
+import {
+  validateSchema,
+  enhancedSchemas,
+} from '../middleware/enhanced-validation-middleware.js';
 
 const initializeRouter = express.Router();
 
