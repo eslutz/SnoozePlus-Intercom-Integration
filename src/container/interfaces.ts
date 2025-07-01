@@ -1,5 +1,20 @@
 import { Message } from '../models/message-model.js';
 import { Workspace } from '../models/workspace-model.js';
+import { CircuitState } from '../utilities/circuit-breaker.js';
+
+/**
+ * Circuit breaker state information
+ */
+export interface CircuitBreakerState {
+  /** Current state of the circuit breaker */
+  state: CircuitState;
+  /** Number of consecutive failures */
+  failures: number;
+  /** Timestamp of the last failure */
+  lastFailureTime: number;
+  /** Number of successful operations */
+  successCount: number;
+}
 
 /**
  * Interface for message database operations
@@ -34,7 +49,12 @@ export interface IIntercomService {
   cancelSnooze(params: CancelSnoozeParams): Promise<void>;
   setSnooze(params: SetSnoozeParams): Promise<void>;
   closeConversation(params: CloseConversationParams): Promise<void>;
-  getCircuitBreakerState(): any;
+  /**
+   * Get the current state of the circuit breaker protecting Intercom API calls.
+   *
+   * @returns Current circuit breaker state and metrics
+   */
+  getCircuitBreakerState(): CircuitBreakerState;
 }
 
 /**

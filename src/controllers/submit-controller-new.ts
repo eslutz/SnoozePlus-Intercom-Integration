@@ -1,6 +1,7 @@
 import { injectable, inject } from 'inversify';
 import { RequestHandler, Request, Response } from 'express';
 import { Logger } from 'winston';
+import { Workspace } from '../models/workspace-model.js';
 import { TYPES } from '../container/types.js';
 import type {
   IMessageService,
@@ -29,82 +30,94 @@ export class SubmitController {
   ) {}
 
   /**
-   * Handle canvas submit requests
+   * Handle canvas submit requests from Intercom.
+   * Processes different types of canvas submissions (snooze, cancel) and
+   * coordinates with services to handle the requested actions.
+   *
+   * @param req - Express request object containing canvas submission data
+   * @param res - Express response object for sending response canvas
+   * @returns Promise that resolves when the submission is processed
+   * @throws {AppError} When validation fails or processing encounters errors
    */
-  submit: RequestHandler = asyncHandler(async (req: Request, res: Response) => {
-    const logger = this.logger.child({ module: 'submit-controller' });
+  public submit: RequestHandler = asyncHandler(
+    async (req: Request, res: Response) => {
+      const logger = this.logger.child({ module: 'submit-controller' });
 
-    logger.info('Submit request received.');
-    logger.profile('submit');
+      logger.info('Submit request received.');
+      logger.profile('submit');
 
-    const canvasRequest = req.body as IntercomCanvasRequest;
-    logger.info(`Request type: ${canvasRequest.component_id}`);
-    logger.debug(`POST request body: ${JSON.stringify(req.body)}`);
+      const canvasRequest = req.body as IntercomCanvasRequest;
+      logger.info(`Request type: ${canvasRequest.component_id}`);
+      logger.debug(`POST request body: ${JSON.stringify(req.body)}`);
 
-    const workspaceId = canvasRequest.workspace_id;
-    logger.debug(`workspace_id: ${workspaceId}`);
-    const conversationId = Number(canvasRequest.conversation.id);
-    logger.debug(`conversation:id: ${conversationId}`);
+      const workspaceId = canvasRequest.workspace_id;
+      logger.debug(`workspace_id: ${workspaceId}`);
+      const conversationId = Number(canvasRequest.conversation.id);
+      logger.debug(`conversation:id: ${conversationId}`);
 
-    try {
-      // Retrieve user based on workspace_id
-      const user = await this.workspaceService.getWorkspace(workspaceId);
-      if (!user) {
-        throw new AppError(`User not found. Workspace ID: ${workspaceId}`, 404);
-      }
-
-      logger.debug(`User found: ${JSON.stringify(user)}`);
-
-      // Process different submission types
-      switch (canvasRequest.component_id) {
-        case 'set_snoozes':
-          await this.handleSetSnoozes(canvasRequest, logger, res);
-          break;
-
-        case 'submit_snoozes':
-          await this.handleSubmitSnoozes(
-            canvasRequest,
-            workspaceId,
-            conversationId,
-            user,
-            logger,
-            res
-          );
-          break;
-
-        case 'cancel':
-        case 'cancel_snoozes':
-          await this.handleCancelSnoozes(
-            workspaceId,
-            conversationId,
-            user,
-            logger,
-            res
-          );
-          break;
-
-        default:
-          logger.warn(`Unknown component_id: ${canvasRequest.component_id}`);
+      try {
+        // Retrieve user based on workspace_id
+        const user = await this.workspaceService.getWorkspace(workspaceId);
+        if (!user) {
           throw new AppError(
-            `Unknown component_id: ${canvasRequest.component_id}`,
-            400
+            `User not found. Workspace ID: ${workspaceId}`,
+            404
           );
-      }
+        }
 
-      logger.profile('submit', {
-        level: 'info',
-        message: 'Completed submit request.',
-      });
-    } catch (error) {
-      logger.error('Submit request failed', {
-        workspaceId,
-        conversationId,
-        componentId: canvasRequest.component_id,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+        logger.debug(`User found: ${JSON.stringify(user)}`);
+
+        // Process different submission types
+        switch (canvasRequest.component_id) {
+          case 'set_snoozes':
+            await this.handleSetSnoozes(canvasRequest, logger, res);
+            break;
+
+          case 'submit_snoozes':
+            await this.handleSubmitSnoozes(
+              canvasRequest,
+              workspaceId,
+              conversationId,
+              user,
+              logger,
+              res
+            );
+            break;
+
+          case 'cancel':
+          case 'cancel_snoozes':
+            await this.handleCancelSnoozes(
+              workspaceId,
+              conversationId,
+              user,
+              logger,
+              res
+            );
+            break;
+
+          default:
+            logger.warn(`Unknown component_id: ${canvasRequest.component_id}`);
+            throw new AppError(
+              `Unknown component_id: ${canvasRequest.component_id}`,
+              400
+            );
+        }
+
+        logger.profile('submit', {
+          level: 'info',
+          message: 'Completed submit request.',
+        });
+      } catch (error) {
+        logger.error('Submit request failed', {
+          workspaceId,
+          conversationId,
+          componentId: canvasRequest.component_id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+      }
     }
-  });
+  );
 
   /**
    * Handle setting snoozes - show canvas for message input
@@ -145,12 +158,20 @@ export class SubmitController {
 
   /**
    * Handle submitting snoozes - save messages and schedule them
+   *
+   * @param canvasRequest - The validated canvas request from Intercom
+   * @param workspaceId - The workspace identifier
+   * @param conversationId - The conversation identifier
+   * @param user - The workspace configuration with authentication details
+   * @param logger - Logger instance for request tracking
+   * @param res - Express response object
+   * @returns Promise that resolves when the snooze request is processed
    */
   private async handleSubmitSnoozes(
     canvasRequest: IntercomCanvasRequest,
     workspaceId: string,
     conversationId: number,
-    user: any,
+    user: Workspace,
     logger: Logger,
     res: Response
   ): Promise<void> {
@@ -225,11 +246,18 @@ export class SubmitController {
 
   /**
    * Handle cancelling snoozes - archive messages and reset to initial state
+   *
+   * @param workspaceId - The workspace identifier
+   * @param conversationId - The conversation identifier
+   * @param user - The workspace configuration with authentication details
+   * @param logger - Logger instance for request tracking
+   * @param res - Express response object
+   * @returns Promise that resolves when the snooze cancellation is processed
    */
   private async handleCancelSnoozes(
     workspaceId: string,
     conversationId: number,
-    user: any,
+    user: Workspace,
     logger: Logger,
     res: Response
   ): Promise<void> {

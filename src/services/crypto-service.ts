@@ -17,6 +17,8 @@ export class CryptoService implements ICryptoService {
   private static readonly IV_LENGTH = 16;
   private static readonly KEY_LENGTH = 32;
 
+  // Empty constructor required by injectable pattern
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor() {}
 
   /**
@@ -28,8 +30,12 @@ export class CryptoService implements ICryptoService {
 
   /**
    * Encrypts text using AES-256-GCM with authenticated encryption
+   * 
+   * @param text - The plaintext string to encrypt
+   * @returns Promise resolving to base64-encoded encrypted string with salt, IV, tag, and ciphertext
+   * @throws {Error} When encryption fails or text is invalid
    */
-  async encrypt(text: string): Promise<string> {
+  public async encrypt(text: string): Promise<string> {
     const salt = crypto.randomBytes(CryptoService.SALT_LENGTH);
     const iv = crypto.randomBytes(CryptoService.IV_LENGTH);
     const key = await this.deriveKey(config.encryptionKey, salt);
@@ -56,8 +62,12 @@ export class CryptoService implements ICryptoService {
 
   /**
    * Decrypts text encrypted with encrypt method
+   * 
+   * @param encryptedText - Base64-encoded encrypted string with format "salt:iv:tag:ciphertext"
+   * @returns Promise resolving to the original plaintext string
+   * @throws {AppError} When decryption fails or format is invalid
    */
-  async decrypt(encryptedText: string): Promise<string> {
+  public async decrypt(encryptedText: string): Promise<string> {
     const parts = encryptedText.split(':');
     if (parts.length !== 4) {
       throw new AppError('Invalid encrypted format', 400);

@@ -1,5 +1,6 @@
 import config from './config/config.js';
 import express from 'express';
+import { Server } from 'http';
 import session from 'express-session';
 import passport from 'passport';
 import path, { dirname } from 'path';
@@ -22,7 +23,10 @@ import { metricsMiddleware } from './middleware/metrics-middleware.js';
 import { correlationMiddleware } from './middleware/correlation-middleware.js';
 import { apiVersionMiddleware } from './middleware/api-version-middleware.js';
 import { enhancedErrorHandler } from './middleware/enhanced-error-middleware.js';
-import { securityHeaders, additionalSecurityHeaders } from './middleware/security-headers.js';
+import {
+  securityHeaders,
+  additionalSecurityHeaders,
+} from './middleware/security-headers.js';
 import { rateLimitConfigs } from './middleware/advanced-rate-limiting.js';
 import { requestSizeLimits } from './middleware/request-size-limiting.js';
 import router from './routes/router.js';
@@ -147,8 +151,14 @@ const server = app
     appLogger.debug(`Error name: ${err.name}, stack: ${err.stack}`);
   });
 
-// Graceful shutdown handlers
-const enhancedGracefulShutdown = (server: any) => async (signal: string) => {
+/**
+ * Enhanced graceful shutdown handler for the HTTP server.
+ * Handles cleanup of resources in the correct order to prevent data loss.
+ *
+ * @param server - The HTTP server instance to shutdown
+ * @returns Function that handles the actual shutdown process
+ */
+const enhancedGracefulShutdown = (server: Server) => async (signal: string) => {
   appLogger.info(`Received ${signal}, starting graceful shutdown...`);
 
   try {
