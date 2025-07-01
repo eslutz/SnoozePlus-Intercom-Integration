@@ -53,7 +53,7 @@ const submit: RequestHandler = asyncHandler(
       // Create the snooze request from the input values.
       submitLogger.info('Parsing request for snooze request.');
       submitLogger.profile('createSnoozeRequest');
-      const snoozeRequest = createSnoozeRequest(canvasRequest.input_values);
+      const snoozeRequest = await createSnoozeRequest(canvasRequest.input_values);
       submitLogger.profile('createSnoozeRequest', {
         level: 'info',
         message: 'Snooze request created.',
@@ -82,7 +82,7 @@ const submit: RequestHandler = asyncHandler(
         workspaceId,
         conversationId
       );
-      const finalCanvas = canvasService.getFinalCanvas(messages);
+      const finalCanvas = await canvasService.getFinalCanvas(messages);
       submitLogger.profile('finalCanvas', {
         level: 'info',
         message: 'Completed final canvas.',

@@ -89,20 +89,8 @@ app.use(express.static('public'));
 app.use(express.static(path.join(__dirname)));
 
 // Configure session and add passport.
-const sessionSecret = config.sessionSecret;
-app.use(
-  session({
-    secret: sessionSecret,
-    resave: false,
-    saveUninitialized: false,
-    name: 'snoozeplus.sid',
-    cookie: {
-      secure: config.isProduction,
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    },
-  })
-);
+import sessionConfig from './config/session-config.js';
+app.use(session(sessionConfig));
 app.use(passport.initialize());
 app.use(passport.session());
 

@@ -33,7 +33,7 @@ const addNote = async (
   intercomLogger.info('Decrypting access token.');
   intercomLogger.profile('decrypt');
   try {
-    decryptedAccessToken = decrypt(adminAccessToken);
+    decryptedAccessToken = await decrypt(adminAccessToken);
   } catch (err) {
     intercomLogger.error(`Error decrypting access token: ${String(err)}`);
     throw new AppError('Failed to decrypt access token', 500);
@@ -97,7 +97,7 @@ const cancelSnooze = async (
   intercomLogger.info('Decrypting access token.');
   intercomLogger.profile('decrypt');
   try {
-    decryptedAccessToken = decrypt(adminAccessToken);
+    decryptedAccessToken = await decrypt(adminAccessToken);
   } catch (err) {
     intercomLogger.error(`Error decrypting access token: ${String(err)}`);
     throw new AppError('Failed to decrypt access token', 500);
@@ -156,7 +156,7 @@ const closeConversation = async (
   intercomLogger.info('Decrypting access token.');
   intercomLogger.profile('decrypt');
   try {
-    decryptedAccessToken = decrypt(adminAccessToken);
+    decryptedAccessToken = await decrypt(adminAccessToken);
   } catch (err) {
     intercomLogger.error(`Error decrypting access token: ${String(err)}`);
     throw new AppError('Failed to decrypt access token', 500);
@@ -219,7 +219,7 @@ const sendMessage = async (message: Message): Promise<IntercomResponse> => {
   intercomLogger.info('Decrypting message.');
   intercomLogger.profile('decrypt');
   try {
-    decryptedMessage = decrypt(message.message);
+    decryptedMessage = await decrypt(message.message);
   } catch (err) {
     intercomLogger.error(`Error decrypting message: ${String(err)}`);
     throw new AppError('Failed to decrypt message', 500);
@@ -232,7 +232,7 @@ const sendMessage = async (message: Message): Promise<IntercomResponse> => {
   intercomLogger.info('Decrypting access token.');
   intercomLogger.profile('decrypt');
   try {
-    decryptedAccessToken = decrypt(message.accessToken);
+    decryptedAccessToken = await decrypt(message.accessToken);
   } catch (err) {
     intercomLogger.error(`Error decrypting access token: ${String(err)}`);
     throw new AppError('Failed to decrypt access token', 500);
@@ -298,7 +298,7 @@ const setSnooze = async (
   intercomLogger.info('Decrypting access token.');
   intercomLogger.profile('decrypt');
   try {
-    decryptedAccessToken = decrypt(adminAccessToken);
+    decryptedAccessToken = await decrypt(adminAccessToken);
   } catch (err) {
     intercomLogger.error(`Error decrypting access token: ${String(err)}`);
     throw new AppError('Failed to decrypt access token', 500);

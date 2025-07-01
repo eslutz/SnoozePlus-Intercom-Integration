@@ -49,7 +49,7 @@ passport.use(
         authLogger.info('Encrypting access token.');
         authLogger.profile('encrypt');
         try {
-          encryptedAccessToken = encrypt(accessToken);
+          encryptedAccessToken = await encrypt(accessToken);
         } catch (err) {
           authLogger.error(`Error encrypting access token: ${String(err)}`);
           throw err;
@@ -64,7 +64,7 @@ passport.use(
         authLogger.info('Encrypting authorization code.');
         authLogger.profile('encrypt');
         try {
-          encryptedAuthorizationCode = encrypt(req.query.code as string);
+          encryptedAuthorizationCode = await encrypt(req.query.code as string);
         } catch (err) {
           authLogger.error(
             `Error encrypting authorization code: ${String(err)}`

@@ -45,7 +45,9 @@
   "dependencies": {
     "@logtail/node": "^0.5.5",
     "@logtail/winston": "^0.5.5",
+    "@types/connect-pg-simple": "^7.0.3",
     "compression": "^1.8.0",
+    "connect-pg-simple": "^10.0.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.1",
