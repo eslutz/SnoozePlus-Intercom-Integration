@@ -22,16 +22,6 @@ export default {
     '^../src/config/config$': '<rootDir>/tests/__mocks__/config.ts',
     '^../src/config/logger-config$':
       '<rootDir>/tests/__mocks__/logger-config.ts',
-    '^../src/config/db-config$': '<rootDir>/tests/mocks/db-config.ts',
-    '^../src/services/message-db-service$':
-      '<rootDir>/tests/mocks/message-db-service.ts',
-    '^../src/services/user-db-service$':
-      '<rootDir>/tests/mocks/user-db-service.ts',
-    '^../src/services/heartbeat-service$':
-      '<rootDir>/tests/mocks/heartbeat-service.ts',
-    '^../src/services/intercom-service$':
-      '<rootDir>/tests/mocks/intercom-service.ts',
-    '^node-fetch$': '<rootDir>/tests/mocks/node-fetch.ts',
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
   testTimeout: 10000,

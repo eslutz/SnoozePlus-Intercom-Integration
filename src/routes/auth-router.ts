@@ -5,11 +5,16 @@
  * @route GET/POST /intercom/callback - Callback for Intercom OAuth
  * @route GET /failure - Authentication failures
  * @route GET /logout - Logout of current session
+ * @middleware rateLimitConfigs.auth - Strict rate limiting for auth endpoints
  */
 import express from 'express';
 import * as authController from '../controllers/auth-controller.js';
+import { rateLimitConfigs } from '../middleware/advanced-rate-limiting.js';
 
 const authRouter = express.Router();
+
+// Apply strict rate limiting for authentication endpoints
+authRouter.use(rateLimitConfigs.auth);
 
 /**
  * @swagger

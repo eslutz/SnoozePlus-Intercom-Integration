@@ -48,7 +48,8 @@ export const addCorrelationToLogger = (
         status: res.statusCode,
         method: req.method,
         path: req.path,
-        duration: Date.now() - ((req as unknown) as { startTime?: number }).startTime!,
+        duration:
+          Date.now() - (req as unknown as { startTime?: number }).startTime!,
       });
     }
     return originalJson.call(this, body);

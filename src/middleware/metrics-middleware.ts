@@ -12,10 +12,14 @@ interface RequestWithMetrics extends Request {
   correlationId?: string;
 }
 
-export const metricsMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const metricsMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const start = Date.now();
   (req as RequestWithMetrics).startTime = start;
-  
+
   const route = req.route?.path ?? req.path ?? 'unknown';
   const method = req.method;
   const version = getApiVersion(req);
@@ -26,28 +30,26 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
   res.on('finish', () => {
     const duration = (Date.now() - start) / 1000;
     const statusCode = res.statusCode.toString();
-    
+
     // Record metrics
     Metrics.httpRequestDuration
       .labels(method, route, statusCode, version)
       .observe(duration);
-    
-    Metrics.httpRequestTotal
-      .labels(method, route, statusCode, version)
-      .inc();
-    
+
+    Metrics.httpRequestTotal.labels(method, route, statusCode, version).inc();
+
     // Decrement active requests
     Metrics.httpActiveRequests.dec({ method, route });
   });
-  
+
   next();
 };
 
 function getApiVersion(req: Request): string {
   // Extract version from URL path (/api/v1/...) or header
-  const pathVersion = (/^\/api\/v(\d+)\//.exec(req.path))?.[1];
+  const pathVersion = /^\/api\/v(\d+)\//.exec(req.path)?.[1];
   const headerVersion = req.headers['api-version'] as string;
-  
+
   const version = pathVersion ?? headerVersion ?? '1';
   return version.startsWith('v') ? version : `v${version}`;
 }

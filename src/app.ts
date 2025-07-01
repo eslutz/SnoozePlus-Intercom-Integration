@@ -4,10 +4,8 @@ import session from 'express-session';
 import passport from 'passport';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import helmet from 'helmet';
 import compression from 'compression';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpecs from './config/swagger-config.js';
 import logger, { closeLogger } from './config/logger-config.js';
@@ -24,6 +22,9 @@ import { metricsMiddleware } from './middleware/metrics-middleware.js';
 import { correlationMiddleware } from './middleware/correlation-middleware.js';
 import { apiVersionMiddleware } from './middleware/api-version-middleware.js';
 import { enhancedErrorHandler } from './middleware/enhanced-error-middleware.js';
+import { securityHeaders, additionalSecurityHeaders } from './middleware/security-headers.js';
+import { rateLimitConfigs } from './middleware/advanced-rate-limiting.js';
+import { requestSizeLimits } from './middleware/request-size-limiting.js';
 import router from './routes/router.js';
 import scheduleJobs, {
   messageScheduler,
@@ -39,21 +40,9 @@ const __dirname = dirname(__filename);
 // Trust proxy for rate limiting and IP detection
 app.set('trust proxy', 1);
 
-// Security middleware
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Added for Swagger UI
-        imgSrc: ["'self'", 'data:', 'https:'],
-        fontSrc: ["'self'", 'data:'], // Added for Swagger UI fonts
-      },
-    },
-    crossOriginEmbedderPolicy: false, // Required for Intercom embedding
-  })
-);
+// Enhanced security middleware
+app.use(securityHeaders);
+app.use(additionalSecurityHeaders);
 
 // CORS configuration
 app.use(
@@ -72,23 +61,17 @@ app.use(
   })
 );
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use(limiter);
+// General rate limiting - will be overridden by specific endpoint limits
+app.use(rateLimitConfigs.general);
 
 // Compression middleware
 app.use(compression());
 
-// Request parsing middleware
+// Request parsing middleware with enhanced size limits
 app.use(morganMiddleware);
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+app.use(requestSizeLimits.general);
+app.use(express.json({ limit: '1mb' })); // Reduced from 10mb for better security
+app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
 // Static file serving
 app.use(express.static('public'));

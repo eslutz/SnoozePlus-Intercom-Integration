@@ -5,14 +5,25 @@
  * @route HEAD / - Validates the webhook configuration
  * @route POST / - Receives and processes webhook events
  * @middleware validateSignature - Authenticates requests from Intercom webhook notification service
+ * @middleware rateLimitConfigs.webhook - Rate limiting for webhook requests
+ * @middleware requestSizeLimits.webhooks - Request size limiting
+ * @middleware validateSchema - Enhanced input validation
  */
 import express from 'express';
 import * as webhookController from '../controllers/webhook-controller.js';
 import validateSignature from '../middleware/validate-signature-webhook-middleware.js';
+import { rateLimitConfigs } from '../middleware/advanced-rate-limiting.js';
+import { requestSizeLimits } from '../middleware/request-size-limiting.js';
+import { validateSchema, enhancedSchemas } from '../middleware/enhanced-validation-middleware.js';
 
 const webhookRouter = express.Router();
 
-webhookRouter.use(validateSignature);
+// Apply security middleware in order
+webhookRouter.use(rateLimitConfigs.webhook); // Rate limiting first
+webhookRouter.use(requestSizeLimits.webhooks); // Size limiting
+webhookRouter.use(validateSignature); // Signature validation
+// Apply validation only to POST requests (HEAD doesn't have body)
+webhookRouter.post('/', validateSchema(enhancedSchemas.webhook, 'body'));
 
 /**
  * @swagger

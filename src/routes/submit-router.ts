@@ -4,14 +4,24 @@
  * @module submitRouter
  * @route POST / - Submits the form
  * @middleware validateSignature - Authenticates requests from Intercom Canvas Kit
+ * @middleware rateLimitConfigs.canvas - Rate limiting for canvas interactions
+ * @middleware requestSizeLimits.canvas - Request size limiting
+ * @middleware validateSchema - Enhanced input validation with XSS protection
  */
 import express from 'express';
 import * as submitController from '../controllers/submit-controller.js';
 import validateSignature from '../middleware/validate-signature-canvas-middleware.js';
+import { rateLimitConfigs } from '../middleware/advanced-rate-limiting.js';
+import { requestSizeLimits } from '../middleware/request-size-limiting.js';
+import { validateSchema, enhancedSchemas } from '../middleware/enhanced-validation-middleware.js';
 
 const submitRouter = express.Router();
 
-submitRouter.use(validateSignature);
+// Apply security middleware in order
+submitRouter.use(rateLimitConfigs.canvas); // Rate limiting first
+submitRouter.use(requestSizeLimits.canvas); // Size limiting
+submitRouter.use(validateSignature); // Signature validation
+submitRouter.use(validateSchema(enhancedSchemas.canvasSubmission, 'body')); // Enhanced input validation
 
 /**
  * @swagger
