@@ -70,7 +70,7 @@ export class SubmitController {
         // Process different submission types
         switch (canvasRequest.component_id) {
           case 'set_snoozes':
-            await this.handleSetSnoozes(canvasRequest, logger, res);
+            this.handleSetSnoozes(canvasRequest, logger, res);
             break;
 
           case 'submit_snoozes':
@@ -121,12 +121,18 @@ export class SubmitController {
 
   /**
    * Handle setting snoozes - show canvas for message input
+   *
+   * @param canvasRequest - The validated canvas request from Intercom
+   * @param logger - Logger instance for request tracking
+   * @param res - Express response object
+   * @returns void - Synchronously sends the canvas response
+   * @throws {AppError} When number of snoozes is invalid or canvas generation fails
    */
-  private async handleSetSnoozes(
+  private handleSetSnoozes(
     canvasRequest: IntercomCanvasRequest,
     logger: Logger,
     res: Response
-  ): Promise<void> {
+  ): void {
     logger.info('Handling set snoozes request');
 
     const numOfSnoozes = parseInt(

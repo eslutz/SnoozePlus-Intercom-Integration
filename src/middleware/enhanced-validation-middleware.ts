@@ -186,11 +186,11 @@ export function validateSchema(
     });
 
     if (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-array-destructuring
       const details = error.details.map((detail) => ({
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         field: detail.path.join('.'),
         message: detail.message,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         value: detail.context?.value,
       }));
 
@@ -200,7 +200,6 @@ export function validateSchema(
         ErrorCategory.VALIDATION,
         ErrorSeverity.LOW,
         'validation-middleware',
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         new Error(JSON.stringify(details))
       );
     }
