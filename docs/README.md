@@ -70,11 +70,54 @@ The circuit breaker automatically handles:
 - Automatic service recovery detection
 - Operational monitoring and logging
 
+## Monitoring & Observability
+
+The application includes comprehensive monitoring and observability features for production deployment:
+
+### 🚀 Key Features
+
+- **Prometheus Metrics**: Complete metrics collection for HTTP requests, database operations, business logic, and system resources
+- **API Versioning**: Built-in versioning support (`/api/v1/`, `/api/v2/`) with deprecation warnings
+- **Request Tracing**: Automatic correlation ID generation for distributed tracing
+- **Enhanced Health Checks**: Kubernetes-ready liveness and readiness probes
+- **Error Categorization**: Structured error handling with severity levels and correlation
+
+### 📊 Available Endpoints
+
+```bash
+# Prometheus metrics
+GET /healthcheck/metrics
+
+# Comprehensive health check
+GET /healthcheck/health
+
+# Kubernetes readiness probe
+GET /healthcheck/ready
+
+# Version 2 API endpoints (recommended)
+GET /api/v2/health
+POST /api/v2/messages
+```
+
+### 🔍 Metrics Available
+
+- HTTP request duration and count
+- Database connection pool monitoring
+- Message scheduling and processing metrics
+- External service request tracking
+- Error rates by category and severity
+- Node.js process metrics (CPU, memory, etc.)
+
+### 📚 Documentation
+
+For detailed monitoring setup and configuration, see [MONITORING.md](./MONITORING.md).
+
 ## Table of Contents
 
 - [Architecture](#architecture)
   - [Dependency Injection](#dependency-injection)
   - [Circuit Breaker Protection](#circuit-breaker-protection)
+- [Monitoring & Observability](#monitoring--observability)
 - [Local Development](#local-development)
 - [Development Tools](#development-tools)
   - [Code Quality](#code-quality)
