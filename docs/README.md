@@ -5,8 +5,76 @@
 
 Snooze+ is an inbox app for Intercom used to automate sending delayed responses to customers.
 
+## Architecture
+
+The application is built using a modern, resilient architecture that provides high reliability and testability through dependency injection and circuit breaker patterns.
+
+### Dependency Injection
+
+The application uses [Inversify](https://inversify.io/) as a comprehensive dependency injection (DI) container to manage service dependencies and improve testability:
+
+**Key Benefits:**
+
+- **Loose Coupling**: Services are decoupled through interface-based design
+- **Testability**: All dependencies can be easily mocked for unit testing
+- **Maintainability**: Clear separation of concerns and SOLID principles
+- **Type Safety**: Full TypeScript support with compile-time interface verification
+
+**Core Components:**
+
+- **Container**: Centralized DI container configuration (`src/container/`)
+- **Interfaces**: Type-safe service contracts (`src/container/interfaces.ts`)
+- **Injectable Services**: Class-based services using `@injectable()` decorator
+- **Type Definitions**: Service identifier constants (`src/container/types.ts`)
+
+**Example Usage:**
+
+```typescript
+@injectable()
+export class SubmitController {
+  constructor(
+    @inject(TYPES.MessageService) private messageService: IMessageService,
+    @inject(TYPES.IntercomService) private intercomService: IIntercomService
+  ) {}
+}
+```
+
+### Circuit Breaker Protection
+
+External API calls are protected by a circuit breaker pattern to prevent cascade failures and ensure system resilience:
+
+**Circuit States:**
+
+- **CLOSED**: Normal operation, requests flow through
+- **OPEN**: Circuit trips after failure threshold, requests fail fast
+- **HALF_OPEN**: Testing recovery, limited requests allowed
+
+**Configuration:**
+
+- **Failure Threshold**: 5 failures trigger circuit opening
+- **Timeout**: 10 second timeout per operation
+- **Reset Timeout**: 60 seconds before attempting recovery
+- **Monitoring Period**: 30 second health check window
+
+**Protected Operations:**
+
+- Intercom API message sending
+- Conversation management
+- User workspace operations
+- All external service calls
+
+The circuit breaker automatically handles:
+
+- Timeout protection for slow API responses
+- Exponential backoff and retry logic
+- Automatic service recovery detection
+- Operational monitoring and logging
+
 ## Table of Contents
 
+- [Architecture](#architecture)
+  - [Dependency Injection](#dependency-injection)
+  - [Circuit Breaker Protection](#circuit-breaker-protection)
 - [Local Development](#local-development)
 - [Development Tools](#development-tools)
   - [Code Quality](#code-quality)
@@ -95,6 +163,24 @@ VS Code launch configurations are provided for:
 - TypeScript support
 - Environment variables from .env.test
 - Watch mode for development
+- **Dependency Injection Testing**: Services can be easily mocked using the DI container
+- **Circuit Breaker Testing**: Comprehensive tests for all circuit states and failure scenarios
+- **Integration Testing**: Full system testing with injectable mock services
+
+**Testing with Dependency Injection:**
+
+```typescript
+// Easy service mocking with DI container
+const mockMessageService: IMessageService = {
+  saveMessages: jest.fn().mockResolvedValue(['id1', 'id2']),
+  getMessages: jest.fn().mockResolvedValue([]),
+};
+container
+  .bind<IMessageService>(TYPES.MessageService)
+  .toConstantValue(mockMessageService);
+```
+
+The architecture enables complete isolation testing where any service can be mocked without affecting the core business logic.
 
 ## Database
 
@@ -136,14 +222,23 @@ database/
 scripts/             # Deployment scripts
 src/
   config/            # Configuration files
+  container/         # Dependency injection container setup
+    container.ts     # Main DI container configuration
+    interfaces.ts    # Service interface definitions
+    types.ts         # Service type identifiers
   controllers/       # Controllers for handling HTTP requests
   middleware/        # Custom middleware functions
   models/            # Database models or schemas
   routes/            # Route definitions
-  services/          # Business logic and data access logic
+  services/          # Business logic and data access logic (injectable services)
   types/             # TypeScript type definitions
   utilities/         # Utility functions and helpers
+    circuit-breaker.ts # Circuit breaker implementation
   app.ts             # Main application file
+tests/
+  integration/       # Integration tests with DI container
+  services/          # Service unit tests with mocking
+  utilities/         # Utility function tests (circuit breaker, etc.)
 ```
 
 ## Scripts
@@ -232,6 +327,7 @@ The application uses the following tools:
 
 - [Node.js](https://nodejs.org/): JavaScript runtime environment
 - [TypeScript](https://www.typescriptlang.org/): Typed superset of JavaScript that compiles to plain JavaScript
+- [Inversify](https://inversify.io/): Powerful and lightweight inversion of control container for JavaScript & Node.js apps
 - [ESLint](https://eslint.org/): Linting utility for JavaScript and TypeScript
 - [Prettier](https://prettier.io/): Opinionated code formatter
 - [Jest](https://jestjs.io/): JavaScript testing framework
@@ -240,18 +336,37 @@ The application uses the following tools:
 
 The application leverages the following packages:
 
+**Core Framework:**
+
 - [Express](https://expressjs.com/): Web framework for Node.js
+- [Inversify](https://inversify.io/): Dependency injection container
+- [Reflect Metadata](https://www.npmjs.com/package/reflect-metadata): Metadata reflection API for decorators
+
+**Authentication & Security:**
+
+- [Passport](https://www.passportjs.org/): Authentication middleware for Node.js
+- [Passport-Intercom](https://www.passportjs.org/packages/passport-intercom/): Intercom authentication strategy for Passport
 - [Express Session](https://expressjs.com/en/resources/middleware/session.html): Session middleware for Express
+- [Node.js Crypto Module](https://nodejs.org/api/crypto.html): Provides cryptographic functionality
+
+**External Service Integration:**
+
+- [Node Fetch](https://www.npmjs.com/package/node-fetch): A light-weight module that brings Fetch API to Node.js
+- [Retry](https://www.npmjs.com/package/retry): Abstraction for exponential and custom retry strategies
+
+**Database & Data Management:**
+
+- [pg](https://www.npmjs.com/package/pg): PostgreSQL client for Node.js
+
+**Logging & Monitoring:**
+
 - [Morgan](https://www.npmjs.com/package/morgan): HTTP request logger middleware for Node.js
 - [Winston](https://www.npmjs.com/package/winston): Logging library for Node.js
 - [Logtail](https://www.npmjs.com/package/@logtail/node): Cloud-based logging solution
-- [Passport](https://www.passportjs.org/): Authentication middleware for Node.js
-- [Passport-Intercom](https://www.passportjs.org/packages/passport-intercom/): Intercom authentication strategy for Passport
-- [Node.js Crypto Module](https://nodejs.org/api/crypto.html): Provides cryptographic functionality
-- [Node Fetch](https://www.npmjs.com/package/node-fetch): A light-weight module that brings Fetch API to Node.js
+
+**Task Scheduling:**
+
 - [Node Schedule](https://www.npmjs.com/package/node-schedule): Cron-like and not-cron-like job scheduler for Node.js
-- [Retry](https://www.npmjs.com/package/retry): Abstraction for exponential and custom retry strategies
-- [pg](https://www.npmjs.com/package/pg): PostgreSQL client for Node.js
 
 ## Postman Collection
 
