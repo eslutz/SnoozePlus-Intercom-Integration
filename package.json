@@ -61,6 +61,7 @@
     "passport": "^0.7.0",
     "passport-intercom": "^0.0.4",
     "pg": "^8.16.2",
+    "prom-client": "^15.1.3",
     "reflect-metadata": "^0.2.2",
     "retry": "^0.13.1",
     "swagger-jsdoc": "^6.2.8",

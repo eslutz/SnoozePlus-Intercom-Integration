@@ -20,6 +20,10 @@ import {
   uncaughtExceptionHandler,
 } from './middleware/error-middleware.js';
 import { handleValidationError } from './middleware/validation-middleware.js';
+import { metricsMiddleware } from './middleware/metrics-middleware.js';
+import { correlationMiddleware } from './middleware/correlation-middleware.js';
+import { apiVersionMiddleware } from './middleware/api-version-middleware.js';
+import { enhancedErrorHandler } from './middleware/enhanced-error-middleware.js';
 import router from './routes/router.js';
 import scheduleJobs, {
   messageScheduler,
@@ -96,7 +100,12 @@ app.use(session(sessionConfig));
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Request ID middleware for tracking
+// Monitoring and observability middleware
+app.use(correlationMiddleware);
+app.use(metricsMiddleware);
+app.use(apiVersionMiddleware);
+
+// Request ID middleware for tracking (enhanced with correlation)
 app.use((req, _res, next) => {
   req.headers['x-request-id'] =
     req.headers['x-request-id'] ??
@@ -120,9 +129,10 @@ if (process.env.NODE_ENV !== 'production') {
 // Routes
 app.use('/', router);
 
-// Error handling middleware
+// Error handling middleware (order matters - enhanced error handler should be last)
 app.use(handleValidationError);
 app.use(notFoundHandler);
+app.use(enhancedErrorHandler);
 app.use(globalErrorHandler);
 
 const appLogger = logger.child({ module: 'app' });

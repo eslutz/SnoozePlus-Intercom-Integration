@@ -9,6 +9,7 @@
  */
 import express from 'express';
 import * as healthcheckController from '../controllers/healthcheck-controller.js';
+import * as monitoringController from '../controllers/monitoring-controller.js';
 import validateSignature from '../middleware/validate-signature-canvas-middleware.js';
 
 const healthcheckRouter = express.Router();
@@ -144,5 +145,84 @@ healthcheckRouter
 healthcheckRouter
   .route('/installation-healthcheck')
   .post(validateSignature, healthcheckController.installationHealthcheck);
+
+/**
+ * @swagger
+ * /healthcheck/metrics:
+ *   get:
+ *     summary: Prometheus metrics endpoint
+ *     description: Returns Prometheus metrics for monitoring and alerting
+ *     tags: [Monitoring]
+ *     responses:
+ *       200:
+ *         description: Prometheus metrics in text format
+ *         content:
+ *           text/plain:
+ *             schema:
+ *               type: string
+ *               example: |
+ *                 # HELP snoozeplus_http_requests_total Total number of HTTP requests
+ *                 # TYPE snoozeplus_http_requests_total counter
+ *                 snoozeplus_http_requests_total{method="GET",route="/",status_code="200",version="v1"} 1
+ */
+healthcheckRouter.route('/metrics').get(monitoringController.metricsEndpoint);
+
+/**
+ * @swagger
+ * /healthcheck/health:
+ *   get:
+ *     summary: Enhanced health check
+ *     description: Comprehensive health check including database, scheduler, and resource usage
+ *     tags: [Health Check]
+ *     responses:
+ *       200:
+ *         description: System is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [healthy, unhealthy]
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 checks:
+ *                   type: object
+ *                   properties:
+ *                     database:
+ *                       type: boolean
+ *                     scheduler:
+ *                       type: boolean
+ *                     memory:
+ *                       type: boolean
+ *                     uptime:
+ *                       type: boolean
+ *                 uptime:
+ *                   type: number
+ *                 version:
+ *                   type: string
+ *       503:
+ *         description: System is unhealthy
+ */
+healthcheckRouter
+  .route('/health')
+  .get(monitoringController.enhancedHealthCheck);
+
+/**
+ * @swagger
+ * /healthcheck/ready:
+ *   get:
+ *     summary: Readiness check
+ *     description: Kubernetes readiness probe endpoint
+ *     tags: [Health Check]
+ *     responses:
+ *       200:
+ *         description: Service is ready
+ *       503:
+ *         description: Service is not ready
+ */
+healthcheckRouter.route('/ready').get(monitoringController.readinessCheck);
 
 export default healthcheckRouter;

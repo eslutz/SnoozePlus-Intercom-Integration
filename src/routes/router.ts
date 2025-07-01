@@ -1,17 +1,18 @@
 /**
  * Express router configuration for Snooze+ API.
  * Sets up main routing with middleware and sub-routers for different endpoints.
+ * Supports API versioning with /api/v1/ and /api/v2/ prefixes.
  *
  * @module router
  * @route GET / - Welcome message
- * @route /auth - Authentication related routes
- * @route /healthcheck - Health check endpoints
- * @route /initialize - Initialization endpoints
- * @route /submit - Form submission endpoints
- * @route /webhook - Webhook handling endpoints
+ * @route /api/v1 - Version 1 API endpoints (deprecated)
+ * @route /api/v2 - Version 2 API endpoints
+ * @route /auth - Authentication related routes (unversioned)
+ * @route /healthcheck - Health check endpoints (unversioned for backward compatibility)
  * @remarks
  *  - Includes 404 catch-all handler for undefined routes
  *  - IP validation middleware currently disabled (TODO)
+ *  - Backward compatibility maintained for unversioned endpoints
  */
 import express, { Request, Response } from 'express';
 import authRouter from './auth-router.js';
@@ -19,6 +20,8 @@ import healthcheckRouter from './healthcheck-router.js';
 import initializeRouter from './initialize-router.js';
 import submitRouter from './submit-router.js';
 import webhookRouter from './webhook-router.js';
+import v1Router from './v1/index.js';
+import v2Router from './v2/index.js';
 import logger from '../config/logger-config.js';
 // import validateIp from '../middleware/validate-ip-middleware.js';
 
@@ -49,6 +52,12 @@ router.route('/').get((_req: Request, res: Response) => {
       : '';
   res.status(200).send(welcomeMessage + apiDocsMessage);
 });
+
+// Versioned API routes
+router.use('/api/v1', v1Router);
+router.use('/api/v2', v2Router);
+
+// Unversioned routes for backward compatibility
 router.use('/auth', authRouter);
 
 // TODO: Enable validateIp middleware.
@@ -56,6 +65,7 @@ router.use('/auth', authRouter);
 // router.use(validateIp);
 
 router.use('/healthcheck', healthcheckRouter);
+// Legacy unversioned routes for backward compatibility
 router.use('/initialize', initializeRouter);
 router.use('/submit', submitRouter);
 router.use('/webhook', webhookRouter);
