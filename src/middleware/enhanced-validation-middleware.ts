@@ -179,6 +179,7 @@ export function validateSchema(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const data = req[source];
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Joi validation result includes any type
     const { error, value } = schema.validate(data, {
       abortEarly: false,
       stripUnknown: true,
@@ -186,11 +187,10 @@ export function validateSchema(
     });
 
     if (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-array-destructuring
       const details = error.details.map((detail) => ({
         field: detail.path.join('.'),
         message: detail.message,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Joi context may contain any values
         value: detail.context?.value,
       }));
 

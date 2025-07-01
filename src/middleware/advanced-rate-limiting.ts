@@ -24,6 +24,7 @@ interface RateLimitStore {
 class MemoryStore implements RateLimitStore {
   private store = new Map<string, { count: number; resetTime: number }>();
 
+  // eslint-disable-next-line @typescript-eslint/require-await -- Interface requires async method
   async incr(
     key: string
   ): Promise<{ totalHits: number; timeToExpire: number }> {
@@ -46,6 +47,7 @@ class MemoryStore implements RateLimitStore {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await -- Interface requires async method
   async decrement(key: string): Promise<void> {
     const entry = this.store.get(key);
     if (entry && entry.count > 0) {
@@ -54,6 +56,7 @@ class MemoryStore implements RateLimitStore {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await -- Interface requires async method
   async resetKey(key: string): Promise<void> {
     this.store.delete(key);
   }
