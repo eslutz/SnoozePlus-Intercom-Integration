@@ -6,13 +6,20 @@
  * @route GET /db-healthcheck - Verifies database connection health
  * @route POST /installation-healthcheck - Validates that app has been installed in an Intercom workspace
  * @middleware validateSignature - Authenticates requests from Intercom installation healthcheck
+ * @middleware rateLimitConfigs.health - Lenient rate limiting for health checks
  */
 import express from 'express';
 import * as healthcheckController from '../controllers/healthcheck-controller.js';
 import * as monitoringController from '../controllers/monitoring-controller.js';
 import validateSignature from '../middleware/validate-signature-canvas-middleware.js';
+import { rateLimitConfigs } from '../middleware/advanced-rate-limiting.js';
+import { requestSizeLimits } from '../middleware/request-size-limiting.js';
 
 const healthcheckRouter = express.Router();
+
+// Apply lenient rate limiting for health checks
+healthcheckRouter.use(rateLimitConfigs.health);
+healthcheckRouter.use(requestSizeLimits.health);
 
 /**
  * @swagger

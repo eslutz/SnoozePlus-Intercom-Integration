@@ -126,7 +126,11 @@ export class Metrics {
   }
 
   // Helper method to update database pool metrics
-  static updateDbPoolMetrics(pool: { totalCount: number; idleCount: number; waitingCount: number }) {
+  static updateDbPoolMetrics(pool: {
+    totalCount: number;
+    idleCount: number;
+    waitingCount: number;
+  }) {
     this.dbConnectionPoolSize.set({ state: 'total' }, pool.totalCount);
     this.dbConnectionPoolSize.set({ state: 'idle' }, pool.idleCount);
     this.dbConnectionPoolSize.set({ state: 'waiting' }, pool.waitingCount);
