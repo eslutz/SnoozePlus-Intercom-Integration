@@ -60,4 +60,41 @@ pool.on('remove', (_client) => {
   dbLogger.debug('Database client removed from pool');
 });
 
+// Export pool metrics for monitoring
+export function getPoolMetrics() {
+  return {
+    totalCount: pool.totalCount,
+    idleCount: pool.idleCount,
+    waitingCount: pool.waitingCount,
+  };
+}
+
+// Health check with retry logic
+export async function checkDatabaseHealth(): Promise<boolean> {
+  let retries = 3;
+  while (retries > 0) {
+    try {
+      const result = await pool.query('SELECT 1');
+      return result.rows.length > 0;
+    } catch (error) {
+      retries--;
+      if (retries === 0) {
+        dbLogger.error('Database health check failed after all retries', { 
+          error: error instanceof Error ? error.message : String(error)
+        });
+        return false;
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  return false;
+}
+
+// Graceful shutdown
+export async function closePool(): Promise<void> {
+  dbLogger.info('Closing database connection pool...');
+  await pool.end();
+  dbLogger.info('Database connection pool closed');
+}
+
 export default pool;

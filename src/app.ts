@@ -10,18 +10,18 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpecs from './config/swagger-config.js';
-import logger from './config/logger-config.js';
+import logger, { closeLogger } from './config/logger-config.js';
+import { closePool } from './config/db-config.js';
 import { morganMiddleware } from './middleware/logger-middleware.js';
 import {
   globalErrorHandler,
   notFoundHandler,
-  gracefulShutdown,
   unhandledRejectionHandler,
   uncaughtExceptionHandler,
 } from './middleware/error-middleware.js';
 import { handleValidationError } from './middleware/validation-middleware.js';
 import router from './routes/router.js';
-import scheduleJobs from './utilities/scheduler-utility.js';
+import scheduleJobs, { messageScheduler } from './utilities/scheduler-utility.js';
 import './config/auth-config.js';
 
 const app = express();
@@ -153,9 +153,27 @@ const server = app
   });
 
 // Graceful shutdown handlers
-process.on('SIGTERM', (signal) => {
-  void gracefulShutdown(server)(signal);
-});
-process.on('SIGINT', (signal) => {
-  void gracefulShutdown(server)(signal);
-});
+const enhancedGracefulShutdown = (server: any) => async (signal: string) => {
+  appLogger.info(`Received ${signal}, starting graceful shutdown...`);
+  
+  try {
+    // Stop accepting new connections
+    server.close(() => {
+      appLogger.info('HTTP server closed');
+    });
+
+    // Shutdown services in order
+    await messageScheduler.shutdown();
+    await closePool();
+    await closeLogger();
+    
+    appLogger.info('Graceful shutdown completed');
+    process.exit(0);
+  } catch (error) {
+    appLogger.error('Error during graceful shutdown', { error });
+    process.exit(1);
+  }
+};
+
+process.on('SIGTERM', enhancedGracefulShutdown(server));
+process.on('SIGINT', enhancedGracefulShutdown(server));
