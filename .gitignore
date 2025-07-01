@@ -199,3 +199,8 @@ report.html
 report.json
 
 ### User Specific ###
+
+# Test files
+test-*.mjs
+test-*.js
+.env.test
